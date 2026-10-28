@@ -116,7 +116,7 @@ function registerIpc(): void {
         onLog: log,
         onExit: (code) => {
           emit('game:exit', { instanceId: id, code })
-          if (settings.closeOnLaunch && code !== 0) win?.show()
+          if (settings.closeOnLaunch) win?.show()
         }
       })
       t.finish()

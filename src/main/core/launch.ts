@@ -176,9 +176,13 @@ export async function launchInstance(
       buf += chunk
       const lines = buf.split(/\r?\n/)
       buf = lines.pop() ?? ''
-      for (const l of lines) cb.onLog(l, name)
+      for (const l of lines) {
+        const out = name === 'stdout' ? log4j.push(l) : [l]
+        for (const o of out) cb.onLog(o, name)
+      }
     })
   }
+  const log4j = new Log4jXmlParser()
   pipeLines(child.stdout, 'stdout')
   pipeLines(child.stderr, 'stderr')
   child.on('error', (err) => {
@@ -190,4 +194,36 @@ export async function launchInstance(
     running.delete(instance.id)
     cb.onExit(code)
   })
+}
+
+const unescapeXml = (s: string) =>
+  s.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&apos;/g, "'").replace(/&amp;/g, '&')
+
+/**
+ * Modern versions log through log4j's XMLLayout (meant for launchers to parse).
+ * Turn each <log4j:Event> back into a readable "[time] [thread/LEVEL]: message" line.
+ */
+class Log4jXmlParser {
+  private event: string[] | null = null
+
+  push(line: string): string[] {
+    if (this.event === null) {
+      if (!line.trimStart().startsWith('<log4j:Event')) return [line]
+      this.event = []
+    }
+    this.event.push(line)
+    if (!line.includes('</log4j:Event>')) return []
+    const xml = this.event.join('\n')
+    this.event = null
+    const attr = (k: string) => new RegExp(`${k}="([^"]*)"`).exec(xml)?.[1] ?? ''
+    const cdata = (tag: string) => {
+      const m = new RegExp(`<log4j:${tag}><!\\[CDATA\\[([\\s\\S]*?)\\]\\]></log4j:${tag}>`).exec(xml)
+      return m ? m[1] : unescapeXml(new RegExp(`<log4j:${tag}>([\\s\\S]*?)</log4j:${tag}>`).exec(xml)?.[1] ?? '')
+    }
+    const time = new Date(Number(attr('timestamp'))).toTimeString().slice(0, 8)
+    const out = [`[${time}] [${unescapeXml(attr('thread'))}/${attr('level')}]: ${cdata('Message')}`]
+    const throwable = cdata('Throwable')
+    if (throwable) out.push(...throwable.split('\n'))
+    return out
+  }
 }

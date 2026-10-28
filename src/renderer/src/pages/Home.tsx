@@ -56,7 +56,7 @@ export function Home() {
                   >
                     {instances.map((i) => (
                       <option key={i.id} value={i.id}>
-                        {i.name} — {i.versionId}
+                        {i.name === i.versionId ? i.name : `${i.name} — ${i.versionId}`}
                       </option>
                     ))}
                   </select>

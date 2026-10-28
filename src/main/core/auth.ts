@@ -20,9 +20,8 @@ async function load(): Promise<StoredAccount[]> {
   if (accounts) return accounts
   try {
     const raw = await readFile(paths.accounts())
-    const text = raw.subarray(0, 4).toString() === 'enc:'
-      ? safeStorage.decryptString(raw.subarray(4))
-      : raw.toString('utf8')
+    const encrypted = raw.subarray(0, 4).toString() === 'enc:'
+    const text = encrypted ? (await safeStorage.decryptStringAsync(raw.subarray(4))).result : raw.toString('utf8')
     accounts = JSON.parse(text) as StoredAccount[]
   } catch {
     accounts = []
@@ -33,8 +32,8 @@ async function load(): Promise<StoredAccount[]> {
 async function save(): Promise<void> {
   const text = JSON.stringify(accounts ?? [])
   await mkdir(dirname(paths.accounts()), { recursive: true })
-  const data = safeStorage.isEncryptionAvailable()
-    ? Buffer.concat([Buffer.from('enc:'), safeStorage.encryptString(text)])
+  const data = (await safeStorage.isAsyncEncryptionAvailable())
+    ? Buffer.concat([Buffer.from('enc:'), await safeStorage.encryptStringAsync(text)])
     : Buffer.from(text)
   await writeFile(paths.accounts(), data)
 }

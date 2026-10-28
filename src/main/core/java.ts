@@ -155,18 +155,27 @@ async function runtimeIndex(): Promise<RuntimeIndex> {
 export async function availableRuntimes(): Promise<JavaRuntimeOption[]> {
   const index = await runtimeIndex()
   const platform = index[javaRuntimePlatform()] ?? {}
-  const out: JavaRuntimeOption[] = []
+  // Mojang publishes several components with the same major version (e.g. three Java 17 builds);
+  // show one per major version, preferring one that is already installed, then the newest.
+  const byMajor = new Map<number, JavaRuntimeOption & { released: string }>()
   for (const [component, entries] of Object.entries(platform)) {
     const entry = entries[0]
     if (!entry || component === 'minecraft-java-exe') continue
-    out.push({
+    const option = {
       component,
       version: entry.version.name,
       majorVersion: majorOf(entry.version.name.replace(/^8u/, '1.8.')),
-      installed: existsSync(join(runtimeHome(component), '.installed'))
-    })
+      installed: existsSync(join(runtimeHome(component), '.installed')),
+      released: entry.version.released
+    }
+    const prev = byMajor.get(option.majorVersion)
+    const better =
+      !prev || (option.installed && !prev.installed) || (option.installed === prev.installed && option.released > prev.released)
+    if (better) byMajor.set(option.majorVersion, option)
   }
-  return out.sort((a, b) => b.majorVersion - a.majorVersion)
+  return [...byMajor.values()]
+    .map(({ released: _, ...o }) => o)
+    .sort((a, b) => b.majorVersion - a.majorVersion)
 }
 
 /** Download a Mojang Java runtime component (e.g. "java-runtime-delta" = Java 21). Returns the java executable. */
@@ -234,6 +243,9 @@ export async function resolveJava(opts: {
   if (component && existsSync(join(runtimeHome(component), '.installed')) && existsSync(runtimeExe(component))) {
     return runtimeExe(component)
   }
+  // Any other downloaded runtime with the same major version works too (e.g. Java 17 "gamma" vs "beta").
+  const managedSameMajor = (await listManagedRuntimes()).find((j) => j.majorVersion === opts.majorVersion)
+  if (managedSameMajor) return managedSameMajor.path
   if (component && opts.autoDownload) {
     try {
       return await installRuntime(component, opts.concurrency, opts.onProgress)

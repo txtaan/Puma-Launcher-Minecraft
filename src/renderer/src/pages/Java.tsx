@@ -56,8 +56,8 @@ export function Java() {
               <div className="runtime-major">{r.majorVersion}</div>
               <div>
                 <strong>Java {r.majorVersion}</strong>
-                <span className="muted">
-                  {r.version} · {r.component}
+                <span className="muted" title={r.component}>
+                  {r.version}
                 </span>
               </div>
               {r.installed ? (
