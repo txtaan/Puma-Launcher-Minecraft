@@ -1,0 +1,113 @@
+// Types shared between the main process, preload bridge and renderer.
+
+export type VersionType = 'release' | 'snapshot' | 'old_beta' | 'old_alpha'
+
+export interface VersionSummary {
+  id: string
+  type: VersionType
+  url: string
+  sha1: string
+  releaseTime: string
+  installed: boolean
+}
+
+export interface VersionList {
+  latest: { release: string; snapshot: string }
+  versions: VersionSummary[]
+  fetchedAt: number
+}
+
+export type AccountType = 'microsoft' | 'offline'
+
+export interface Account {
+  id: string
+  type: AccountType
+  username: string
+  uuid: string
+  /** Minecraft access token. "0" for offline accounts. */
+  accessToken: string
+  xuid?: string
+  /** Epoch ms after which accessToken must be refreshed. */
+  expiresAt?: number
+}
+
+/** Account data safe to hand to the renderer (no tokens). */
+export interface PublicAccount {
+  id: string
+  type: AccountType
+  username: string
+  uuid: string
+}
+
+export interface DeviceCodePrompt {
+  userCode: string
+  verificationUri: string
+  message: string
+}
+
+export interface JavaInstall {
+  path: string
+  version: string
+  majorVersion: number
+  arch: string
+  /** "managed" = downloaded by this launcher from Mojang, "system" = found on this PC. */
+  source: 'managed' | 'system' | 'custom'
+}
+
+export interface JavaRuntimeOption {
+  component: string
+  version: string
+  majorVersion: number
+  installed: boolean
+}
+
+export interface Instance {
+  id: string
+  name: string
+  versionId: string
+  createdAt: number
+  lastPlayed?: number
+  /** Explicit java executable. Empty = pick automatically (managed runtime or best system Java). */
+  javaPath?: string
+  minMemoryMb?: number
+  maxMemoryMb?: number
+  jvmArgs?: string
+  width?: number
+  height?: number
+}
+
+export interface Settings {
+  /** Azure application (client) ID used for Microsoft login. */
+  msClientId: string
+  defaultMaxMemoryMb: number
+  defaultMinMemoryMb: number
+  /** Download the Java version required by Mojang automatically when launching. */
+  autoDownloadJava: boolean
+  /** Minutes between background refreshes of the version manifest. */
+  versionRefreshMinutes: number
+  concurrentDownloads: number
+  closeOnLaunch: boolean
+  selectedAccountId?: string
+  selectedInstanceId?: string
+}
+
+export interface ProgressEvent {
+  taskId: string
+  title: string
+  stage: string
+  done: number
+  total: number
+  finished?: boolean
+  error?: string
+}
+
+export interface GameLogEvent {
+  instanceId: string
+  line: string
+  stream: 'stdout' | 'stderr' | 'launcher'
+}
+
+export interface GameExitEvent {
+  instanceId: string
+  code: number | null
+}

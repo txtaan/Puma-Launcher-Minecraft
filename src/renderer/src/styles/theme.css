@@ -1,0 +1,46 @@
+/*
+ * Design tokens. Every colour, radius and gradient used by the UI lives here,
+ * so re-theming the launcher only means editing this file.
+ */
+:root {
+  --font: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --mono: ui-monospace, 'JetBrains Mono', 'Cascadia Code', Menlo, Consolas, monospace;
+
+  --bg: #0b0b14;
+  --bg-elev: #12121e;
+  --surface: rgba(255, 255, 255, 0.04);
+  --surface-hover: rgba(255, 255, 255, 0.07);
+  --surface-strong: rgba(255, 255, 255, 0.1);
+  --border: rgba(255, 255, 255, 0.08);
+  --border-strong: rgba(255, 255, 255, 0.16);
+
+  --text: #f4f4fb;
+  --text-muted: #9a9ab3;
+  --text-on-accent: #ffffff;
+
+  --accent: #8b5cf6;
+  --accent-2: #ec4899;
+  --accent-3: #f59e0b;
+  --accent-4: #06b6d4;
+  --success: #22c55e;
+  --danger: #ef4444;
+  --warning: #f59e0b;
+
+  /* Home screen hero gradient (animated) */
+  --hero-gradient: linear-gradient(125deg, #4c1d95 0%, #7c3aed 22%, #db2777 48%, #f97316 72%, #06b6d4 100%);
+  --hero-glow-1: rgba(236, 72, 153, 0.55);
+  --hero-glow-2: rgba(6, 182, 212, 0.45);
+  --hero-glow-3: rgba(124, 58, 237, 0.6);
+
+  /* Primary button / brand gradient */
+  --brand-gradient: linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%);
+
+  --radius-s: 8px;
+  --radius: 12px;
+  --radius-l: 20px;
+  --shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+  --shadow-glow: 0 10px 40px rgba(139, 92, 246, 0.35);
+
+  --sidebar-w: 220px;
+  --titlebar-h: 40px;
+}
