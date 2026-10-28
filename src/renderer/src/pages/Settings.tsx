@@ -41,7 +41,7 @@ export function SettingsPage() {
               <Avatar account={a} size={32} />
               <div className="grow">
                 <strong>{a.username}</strong>
-                <div className="muted">{a.type === 'microsoft' ? 'Microsoft account' : 'Offline account'}</div>
+                <div className="muted">{a.type === 'microsoft' ? 'Microsoft account' : a.type === 'authlib' ? `${a.serverName} account` : 'Offline account'}</div>
               </div>
               {a.id === account?.id ? (
                 <span className="pill pill-accent">Active</span>

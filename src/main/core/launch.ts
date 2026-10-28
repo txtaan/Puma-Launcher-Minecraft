@@ -1,28 +1,31 @@
 import { spawn, type ChildProcess } from 'node:child_process'
-import { createWriteStream } from 'node:fs'
 import { mkdir, rm } from 'node:fs/promises'
-import { delimiter, join, normalize, sep } from 'node:path'
-import yauzl from 'yauzl'
+import { delimiter, join } from 'node:path'
+import { unzip } from './archive'
 import type { Account, Instance, Settings } from '@shared/types'
 import {
   activeLibraries,
   assetIndexId,
   classpath,
   installVersion,
+  libraryArtifact,
   legacyAssetsDir,
   logConfigPath,
   nativeClassifier,
+  nativePath,
   readAssetIndex,
   type Argument,
   type VersionJson
 } from './install'
 import { resolveJava } from './java'
+import { authlibAgentArgs } from './auth'
+import { loaderComponents } from './meta'
 import { paths } from './paths'
 import { rulesAllow } from './platform'
 import { gameDir } from './instances'
 
 export const LAUNCHER_NAME = 'txtaan-launcher'
-export const LAUNCHER_VERSION = '0.1.0'
+export const LAUNCHER_VERSION = '0.2.0'
 
 const running = new Map<string, ChildProcess>()
 
@@ -43,32 +46,10 @@ async function extractNatives(version: VersionJson, dest: string): Promise<void>
     const art = classifier ? lib.downloads?.classifiers?.[classifier] : undefined
     if (!art) continue
     const exclude = lib.extract?.exclude ?? ['META-INF/']
-    await unzip(join(paths.libraries(), art.path), dest, (name) => !exclude.some((e) => name.startsWith(e)))
-  }
-}
-
-function unzip(file: string, dest: string, filter: (name: string) => boolean): Promise<void> {
-  return new Promise((resolve, reject) => {
-    yauzl.open(file, { lazyEntries: true }, (err, zip) => {
-      if (err || !zip) return reject(err)
-      zip.on('error', reject)
-      zip.on('end', () => resolve())
-      zip.on('entry', (entry: yauzl.Entry) => {
-        const target = normalize(join(dest, entry.fileName))
-        // Guard against zip-slip and skip directories / filtered entries.
-        if (entry.fileName.endsWith('/') || !filter(entry.fileName) || !target.startsWith(normalize(dest) + sep)) {
-          zip.readEntry()
-          return
-        }
-        zip.openReadStream(entry, async (e, stream) => {
-          if (e || !stream) return reject(e)
-          await mkdir(join(target, '..'), { recursive: true })
-          stream.pipe(createWriteStream(target)).on('finish', () => zip.readEntry()).on('error', reject)
-        })
-      })
-      zip.readEntry()
+    await unzip(join(paths.libraries(), nativePath(lib, art, classifier!)), dest, {
+      filter: (name) => !exclude.some((e) => name.startsWith(e))
     })
-  })
+  }
 }
 
 function expandArgs(args: Argument[], vars: Record<string, string>, features: Record<string, boolean>): string[] {
@@ -78,6 +59,23 @@ function expandArgs(args: Argument[], vars: Record<string, string>, features: Re
     else if (rulesAllow(arg.rules, features)) out.push(...(Array.isArray(arg.value) ? arg.value : [arg.value]))
   }
   return out.map((a) => a.replace(/\$\{(\w+)\}/g, (m, k: string) => vars[k] ?? m))
+}
+
+const FORGE_WRAPPER_MAIN = 'io.github.zekerzhayard.forgewrapper.installer.Main'
+
+/**
+ * Modern Forge/NeoForge run through Prism's ForgeWrapper, which executes the official installer's
+ * processors on first launch. Tell it where our libraries, the installer and the vanilla jar are.
+ */
+function forgeWrapperArgs(version: VersionJson): string[] {
+  const installer = (version.mavenFiles ?? []).find((l) => l.name.endsWith(':installer'))
+  const art = installer && libraryArtifact(installer)
+  if (!art) throw new Error('This Forge version is missing its installer in the metadata')
+  return [
+    `-Dforgewrapper.librariesDir=${paths.libraries()}`,
+    `-Dforgewrapper.installer=${join(paths.libraries(), art.path)}`,
+    `-Dforgewrapper.minecraft=${paths.versionJar(version.jar ?? version.id)}`
+  ]
 }
 
 export interface LaunchCallbacks {
@@ -96,7 +94,10 @@ export async function launchInstance(
   const dir = gameDir(instance.id)
   await mkdir(dir, { recursive: true })
 
-  const version = await installVersion(instance.versionId, dir, settings.concurrentDownloads, cb.onProgress)
+  cb.onProgress('Resolving version', 0, 1)
+  const components = instance.loader ? await loaderComponents(instance.loader, instance.versionId) : []
+  const version = await installVersion(instance.versionId, dir, settings.concurrentDownloads, cb.onProgress, components)
+  const agent = account.type === 'authlib' && account.authServer ? await authlibAgentArgs(account.authServer) : []
   const java = await resolveJava({
     explicitPath: instance.javaPath,
     component: version.javaVersion?.component,
@@ -119,7 +120,7 @@ export async function launchInstance(
     auth_session: `token:${account.accessToken}:${account.uuid}`,
     auth_xuid: account.xuid ?? '0',
     clientid: '',
-    user_type: account.type === 'microsoft' ? 'msa' : 'legacy',
+    user_type: account.type === 'microsoft' ? 'msa' : account.type === 'authlib' ? 'mojang' : 'legacy',
     user_properties: '{}',
     version_name: version.id,
     version_type: version.type,
@@ -148,6 +149,9 @@ export async function launchInstance(
     if (process.platform === 'darwin') jvm.push('-XstartOnFirstThread')
     jvm.push(`-Djava.library.path=${nativesDir}`, '-cp', vars.classpath)
   }
+  jvm.push(...agent)
+  for (const arg of version.extraJvmArgs ?? []) jvm.push(arg.replace(/\$\{(\w+)\}/g, (m, k: string) => vars[k] ?? m))
+  if (version.mainClass === FORGE_WRAPPER_MAIN) jvm.push(...forgeWrapperArgs(version))
   const logArg = version.logging?.client?.argument
   const logFile = logConfigPath(version)
   if (logArg && logFile) jvm.push(logArg.replace('${path}', logFile))
@@ -159,9 +163,11 @@ export async function launchInstance(
     ? expandArgs(version.arguments.game, vars, features)
     : (version.minecraftArguments ?? '').split(' ').filter(Boolean).map((a) => a.replace(/\$\{(\w+)\}/g, (m, k: string) => vars[k] ?? m))
   if (!version.arguments?.game && hasResolution) game.push('--width', vars.resolution_width, '--height', vars.resolution_height)
+  for (const tweaker of version.tweakers ?? []) game.push('--tweakClass', tweaker)
 
   const args = [...jvm, version.mainClass, ...game]
-  cb.onLog(`Launching ${version.id} with ${java}`, 'launcher')
+  const loaderLabel = instance.loader ? ` + ${instance.loader.type} ${instance.loader.version}` : ''
+  cb.onLog(`Launching ${version.id}${loaderLabel} with ${java}`, 'launcher')
   cb.onLog(
     `Arguments: ${args.map((a) => (a === account.accessToken && a !== '0' ? '<access token>' : a)).join(' ')}`,
     'launcher'

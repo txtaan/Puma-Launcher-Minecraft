@@ -1,36 +1,50 @@
 # Txtaan Launcher
 
 A modern, open-source Minecraft: Java Edition launcher built with Electron, React and TypeScript.
-It borrows the best ideas from two popular open-source launchers:
+It is modelled on the most active open-source launchers, checked in October 2026:
+
+| Project | Activity in 2026 | Latest release | What we took from it |
+| --- | --- | --- | --- |
+| **Prism Launcher** (most active) | ~1,550 commits, 52 contributors | 11.1.1 | Instance model, mod loaders through Prism's metadata server, ForgeWrapper for modern Forge/NeoForge, Temurin Java auto-install, mod management |
+| **HMCL** | ~900 commits, 37 contributors | 3.17.0 | One-click Mojang Java runtimes, authlib-injector accounts, Modrinth downloads |
+| ElyPrism / Fjord / Freesm | Prism forks that track upstream | 11.1.1-based | Third-party login servers (Ely.by, custom authlib-injector servers) |
 
 ![Home screen](docs/screenshots/home.png)
 
-| Idea | Inspired by | How it works here |
+| Feature | Comes from | How it works here |
 | --- | --- | --- |
-| Always up-to-date version list (every release and snapshot) | HMCL, Prism Launcher | Reads Mojang's official `version_manifest_v2.json` and re-checks it in the background (every 10 min by default). New versions show up with a notification, no restart needed. |
-| One-click Java download (e.g. Java 21/25 for recent versions) | HMCL | Uses Mojang's own Java runtime index, the same one the official launcher uses. When you press **Play**, the exact Java version the game needs is downloaded automatically. You can also download runtimes yourself from the **Java** page. |
-| Use the Java already installed on your PC | Prism Launcher forks | Scans `JAVA_HOME`, `PATH` and the usual install folders (Adoptium, Zulu, Microsoft, Corretto, `/usr/lib/jvm`, macOS JavaVirtualMachines, SDKMAN, `~/.jdks`). Each instance can be pinned to any detected Java or to a custom path. |
-| Isolated instances | Prism Launcher | Every instance has its own game folder (worlds, mods, resource packs, options), memory, JVM arguments and window size. |
-| Microsoft and offline accounts | HMCL, Prism Launcher | Microsoft sign-in with the device-code flow (Xbox Live → XSTS → Minecraft services). Offline accounts use the same UUID derivation as vanilla servers. Tokens are stored encrypted with the OS keychain via Electron `safeStorage`. |
+| Always up-to-date versions | HMCL, Prism | Mojang's `version_manifest_v2.json`, re-checked in the background (every 10 min by default). New releases and snapshots trigger a notification. |
+| Fabric, Quilt, Forge, NeoForge | Prism | Loader versions and libraries come from Prism's metadata server (`meta.prismlauncher.org`), which is updated within hours of each loader release. Components are applied over vanilla the same way Prism's `LaunchProfile` does. Modern Forge/NeoForge run through Prism's **ForgeWrapper**, which runs the official installer steps on first launch. Legacy Forge (1.12.2 and older) uses LaunchWrapper tweakers. |
+| One-click Java | HMCL, Prism | Mojang's own runtimes first (Java 8/16/17/21/25), then **Eclipse Temurin** from Prism's metadata for anything Mojang doesn't ship (Linux ARM64, newer Java). The right Java is downloaded automatically when you press **Play**. |
+| Use the Java already on your PC | Prism forks | Scans `JAVA_HOME`, `PATH` and the usual install folders. Each instance can be pinned to any detected Java or a custom path. |
+| Mods from Modrinth | Prism, HMCL | Search mods compatible with the instance's loader and version, install them with their required dependencies (SHA-1 verified), and enable, disable or delete installed mods. |
+| Isolated instances | Prism | Each instance has its own game folder, loader, Java, memory, JVM arguments and window size. |
+| Accounts | HMCL, Prism, ElyPrism, Fjord | Microsoft (device code), offline, and **authlib-injector** servers (Ely.by, LittleSkin or any custom Yggdrasil server). Tokens are encrypted with the OS keychain. |
 
-No code was copied from HMCL or Prism Launcher. This project re-implements the same publicly documented
-Mojang formats. It is licensed under GPL-3.0-or-later, like both of them.
+No code was copied from HMCL or Prism Launcher. The launcher uses their public metadata services and the
+ForgeWrapper and authlib-injector jars at runtime. It is licensed GPL-3.0-or-later, the same licence as both projects.
 
 ## Features
 
-- Login screen with Microsoft and offline sign-in, plus saved accounts to switch between
+- Login screen: Microsoft, offline, or Ely.by / LittleSkin / custom server, plus saved accounts to switch between
 - Home screen with an animated gradient hero, latest release/snapshot cards and a large **Play** button
-- Instances: create, edit (version, Java, memory, JVM args, resolution), open folder, delete
+- Instances: create with any version and mod loader; edit version, loader, Java, memory, JVM args and resolution
+- Mods: Modrinth browser with dependency resolution, plus installed-mod list with enable, disable and delete
 - Versions browser: releases, snapshots, beta and alpha, with search and "installed" badges
-- Java manager: one-click Mojang runtimes plus a list of the Java installations on this PC
-- Download manager: parallel downloads with SHA-1 checks, retries and live progress
-- Game console showing the game log, with warnings and errors highlighted
-- Handles modern (`arguments`) and legacy (`minecraftArguments`) version formats, legacy LWJGL 2 natives,
-  pre-1.7 virtual assets, log4j configs and `inheritsFrom` profiles (Fabric/Quilt/Forge JSONs placed in `versions/`)
+- Java manager: one-click Mojang and Temurin runtimes plus the Java installations found on this PC
+- Download manager: parallel downloads with SHA-1/SHA-256 checks, retries and live progress
+- Game console showing the game log (log4j XML converted to readable lines), with errors highlighted
 
-| Login | Java manager |
-| --- | --- |
-| ![Login](docs/screenshots/login.png) | ![Java](docs/screenshots/java.png) |
+| New instance | Mods | Java |
+| --- | --- | --- |
+| ![New instance](docs/screenshots/new-instance.png) | ![Mods](docs/screenshots/mods.png) | ![Java](docs/screenshots/java.png) |
+
+### Tested
+
+Each of these was installed and launched from a clean data folder. All of them got as far as opening the
+game window; the test machine had no GPU, so actual rendering was not checked:
+vanilla 26.3 (Java 25) and 1.12.2 (Java 8), Fabric 0.20.1 on 26.3 with Fabric API from Modrinth,
+NeoForge 26.3.0.99, Forge 52.1.20 on 1.21.1, and Forge 14.23.5 on 1.12.2.
 
 ## Getting started
 
@@ -77,10 +91,13 @@ src/
   main/            Electron main process
     core/
       versions.ts  Mojang version manifest + background refresh
+      meta.ts      Prism metadata client (mod loaders, intermediary mappings)
+      mods.ts      Modrinth search/install and local mod management
+      archive.ts   zip/tar extraction
       install.ts   version JSON resolution, libraries, natives, assets
-      java.ts      Java detection + Mojang runtime downloads
+      java.ts      Java detection + Mojang / Temurin runtime downloads
       launch.ts    argument building and process spawning
-      auth.ts      Microsoft (device code) and offline accounts
+      auth.ts      Microsoft (device code), offline and authlib-injector accounts
       instances.ts instance storage
       http.ts      downloads with SHA-1 checks, retries and concurrency
   preload/         typed, sandboxed IPC bridge (window.launcher)

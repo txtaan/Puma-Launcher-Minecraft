@@ -31,7 +31,7 @@ export function Sidebar() {
           <Avatar account={account} size={34} />
           <div className="account-meta">
             <strong>{account.username}</strong>
-            <span>{account.type === 'microsoft' ? 'Microsoft' : 'Offline'}</span>
+            <span>{account.type === 'microsoft' ? 'Microsoft' : account.type === 'authlib' ? account.serverName : 'Offline'}</span>
           </div>
           <button className="icon-btn" aria-label="Sign out" title="Switch account" onClick={() => void selectAccount(undefined)}>
             <Icon name="logout" />

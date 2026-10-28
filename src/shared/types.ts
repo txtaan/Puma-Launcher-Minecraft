@@ -17,7 +17,8 @@ export interface VersionList {
   fetchedAt: number
 }
 
-export type AccountType = 'microsoft' | 'offline'
+/** "authlib" = third-party Yggdrasil servers (Ely.by, LittleSkin, ...) through authlib-injector. */
+export type AccountType = 'microsoft' | 'offline' | 'authlib'
 
 export interface Account {
   id: string
@@ -29,6 +30,10 @@ export interface Account {
   xuid?: string
   /** Epoch ms after which accessToken must be refreshed. */
   expiresAt?: number
+  /** authlib-injector API root, for "authlib" accounts. */
+  authServer?: string
+  serverName?: string
+  clientToken?: string
 }
 
 /** Account data safe to hand to the renderer (no tokens). */
@@ -37,6 +42,7 @@ export interface PublicAccount {
   type: AccountType
   username: string
   uuid: string
+  serverName?: string
 }
 
 export interface DeviceCodePrompt {
@@ -55,9 +61,39 @@ export interface JavaInstall {
 }
 
 export interface JavaRuntimeOption {
+  /** Mojang component name (e.g. "java-runtime-delta") or "adoptium-<major>". */
   component: string
   version: string
   majorVersion: number
+  installed: boolean
+  vendor: 'mojang' | 'adoptium'
+}
+
+export type LoaderType = 'vanilla' | 'fabric' | 'quilt' | 'forge' | 'neoforge'
+
+export interface LoaderVersion {
+  version: string
+  recommended: boolean
+  releaseTime: string
+  stable: boolean
+}
+
+export interface InstalledMod {
+  fileName: string
+  enabled: boolean
+  name: string
+  version?: string
+  projectId?: string
+}
+
+export interface ModSearchHit {
+  projectId: string
+  slug: string
+  title: string
+  description: string
+  author: string
+  downloads: number
+  iconUrl?: string
   installed: boolean
 }
 
@@ -65,6 +101,8 @@ export interface Instance {
   id: string
   name: string
   versionId: string
+  /** Mod loader installed on top of vanilla (resolved through Prism Launcher's metadata). */
+  loader?: { type: Exclude<LoaderType, 'vanilla'>; version: string }
   createdAt: number
   lastPlayed?: number
   /** Explicit java executable. Empty = pick automatically (managed runtime or best system Java). */

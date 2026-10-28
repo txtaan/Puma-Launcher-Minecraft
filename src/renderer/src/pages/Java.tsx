@@ -46,7 +46,7 @@ export function Java() {
         </button>
       </div>
 
-      <h2 className="section-title">One-click downloads (official Mojang runtimes)</h2>
+      <h2 className="section-title">One-click downloads (Mojang runtimes, Eclipse Temurin where Mojang has none)</h2>
       {error && <div className="error-box">{error}</div>}
       <div className="runtime-grid">
         {runtimes?.map((r) => {
@@ -57,7 +57,7 @@ export function Java() {
               <div>
                 <strong>Java {r.majorVersion}</strong>
                 <span className="muted" title={r.component}>
-                  {r.version}
+                  {r.vendor === 'mojang' ? `${r.version} · Mojang` : 'Eclipse Temurin'}
                 </span>
               </div>
               {r.installed ? (

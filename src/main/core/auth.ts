@@ -1,9 +1,10 @@
 import { safeStorage } from 'electron'
 import { createHash, randomUUID } from 'node:crypto'
-import { readFile, writeFile, mkdir } from 'node:fs/promises'
-import { dirname } from 'node:path'
+import { existsSync } from 'node:fs'
+import { readdir, readFile, writeFile, mkdir } from 'node:fs/promises'
+import { dirname, join } from 'node:path'
 import type { Account, DeviceCodePrompt, PublicAccount } from '@shared/types'
-import { USER_AGENT } from './http'
+import { downloadAll, fetchJson, USER_AGENT } from './http'
 import { paths } from './paths'
 
 interface StoredAccount extends Account {
@@ -39,7 +40,7 @@ async function save(): Promise<void> {
 }
 
 export function toPublic(a: Account): PublicAccount {
-  return { id: a.id, type: a.type, username: a.username, uuid: a.uuid }
+  return { id: a.id, type: a.type, username: a.username, uuid: a.uuid, serverName: a.serverName }
 }
 
 export async function listAccounts(): Promise<PublicAccount[]> {
@@ -53,7 +54,9 @@ export async function removeAccount(id: string): Promise<void> {
 
 async function upsert(account: StoredAccount): Promise<PublicAccount> {
   const list = await load()
-  const existing = list.findIndex((a) => a.type === account.type && a.uuid === account.uuid)
+  const existing = list.findIndex(
+    (a) => a.type === account.type && a.uuid === account.uuid && a.authServer === account.authServer
+  )
   if (existing >= 0) {
     account.id = list[existing].id
     list[existing] = account
@@ -231,6 +234,7 @@ export async function getLaunchAccount(id: string, clientId: string): Promise<Ac
   const list = await load()
   const account = list.find((a) => a.id === id)
   if (!account) throw new Error('Account not found. Please sign in again.')
+  if (account.type === 'authlib') return refreshAuthlib(account)
   if (account.type !== 'microsoft' || (account.expiresAt ?? 0) > Date.now()) return account
   if (!account.msRefreshToken || !clientId) throw new Error('Your Microsoft session expired. Please sign in again.')
 
@@ -245,4 +249,116 @@ export async function getLaunchAccount(id: string, clientId: string): Promise<Ac
   Object.assign(account, mc, { msRefreshToken: token.refresh_token ?? account.msRefreshToken })
   await save()
   return account
+}
+
+// ---------------------------------------------------------------------------
+// authlib-injector accounts (Ely.by, LittleSkin, any Yggdrasil server) — as in HMCL,
+// ElyPrismLauncher and FjordLauncher. Logs in with the Yggdrasil protocol and launches the
+// game with the authlib-injector Java agent pointed at that server.
+// ---------------------------------------------------------------------------
+
+export const AUTH_SERVER_PRESETS = {
+  'Ely.by': 'https://authserver.ely.by/api/authlib-injector',
+  LittleSkin: 'https://littleskin.cn/api/yggdrasil'
+}
+
+/** Resolve a server URL to its API root, following the API Location Indication header. */
+async function resolveAuthServer(url: string): Promise<{ api: string; name: string }> {
+  let api = /^https?:\/\//.test(url.trim()) ? url.trim() : `https://${url.trim()}`
+  const first = await fetch(api, { headers: { 'User-Agent': USER_AGENT } })
+  const location = first.headers.get('x-authlib-injector-api-location')
+  if (location) api = new URL(location, api).toString()
+  api = api.replace(/\/$/, '')
+  const meta = (await (await fetch(api, { headers: { 'User-Agent': USER_AGENT } })).json().catch(() => null)) as {
+    meta?: { serverName?: string }
+  } | null
+  if (!meta?.meta) throw new Error('That address is not an authlib-injector authentication server.')
+  return { api, name: meta.meta.serverName ?? new URL(api).hostname }
+}
+
+async function yggdrasil<T>(api: string, path: string, body: unknown): Promise<{ status: number; data: T }> {
+  const res = await fetch(`${api}/authserver/${path}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'User-Agent': USER_AGENT },
+    body: JSON.stringify(body)
+  })
+  const text = await res.text()
+  const data = (text ? JSON.parse(text) : {}) as T & { errorMessage?: string; error?: string }
+  if (!res.ok && res.status !== 204) throw new Error(data.errorMessage ?? data.error ?? `HTTP ${res.status}`)
+  return { status: res.status, data }
+}
+
+interface YggdrasilSession {
+  accessToken: string
+  clientToken: string
+  selectedProfile?: { id: string; name: string }
+  availableProfiles?: { id: string; name: string }[]
+}
+
+export async function addAuthlibAccount(server: string, username: string, password: string): Promise<PublicAccount> {
+  const { api, name } = await resolveAuthServer(server)
+  const clientToken = randomUUID().replace(/-/g, '')
+  const { data } = await yggdrasil<YggdrasilSession>(api, 'authenticate', {
+    agent: { name: 'Minecraft', version: 1 },
+    username,
+    password,
+    clientToken,
+    requestUser: true
+  })
+  const profile = data.selectedProfile ?? data.availableProfiles?.[0]
+  if (!profile) throw new Error(`No Minecraft character on this ${name} account. Create one on the website first.`)
+  return upsert({
+    id: randomUUID(),
+    type: 'authlib',
+    username: profile.name,
+    uuid: profile.id,
+    accessToken: data.accessToken,
+    clientToken: data.clientToken ?? clientToken,
+    authServer: api,
+    serverName: name
+  })
+}
+
+async function refreshAuthlib(account: StoredAccount): Promise<Account> {
+  const api = account.authServer!
+  const { status } = await yggdrasil(api, 'validate', { accessToken: account.accessToken, clientToken: account.clientToken }).catch(
+    () => ({ status: 403 })
+  )
+  if (status === 204) return account
+  try {
+    const { data } = await yggdrasil<YggdrasilSession>(api, 'refresh', {
+      accessToken: account.accessToken,
+      clientToken: account.clientToken,
+      requestUser: true
+    })
+    account.accessToken = data.accessToken
+    if (data.selectedProfile) Object.assign(account, { uuid: data.selectedProfile.id, username: data.selectedProfile.name })
+    await save()
+    return account
+  } catch {
+    throw new Error(`Your ${account.serverName ?? 'authentication server'} session expired. Please sign in again.`)
+  }
+}
+
+/** Download authlib-injector (verified by sha256) and build its JVM arguments for a server. */
+export async function authlibAgentArgs(api: string): Promise<string[]> {
+  const latest = await fetchJson<{ version: string; download_url: string; checksums: { sha256: string } }>(
+    'https://authlib-injector.yushi.moe/artifact/latest.json'
+  ).catch(() => null)
+  const dir = join(paths.libraries(), 'moe', 'yushi', 'authlib-injector')
+  let jar: string
+  if (latest) {
+    jar = join(dir, latest.version, `authlib-injector-${latest.version}.jar`)
+    await downloadAll([{ url: latest.download_url, dest: jar, sha256: latest.checksums.sha256 }], 1, () => undefined)
+  } else {
+    // Offline: use whatever version we downloaded before.
+    const versions = existsSync(dir) ? (await readdir(dir)).sort() : []
+    if (!versions.length) throw new Error('authlib-injector could not be downloaded. Check your connection.')
+    const v = versions[versions.length - 1]
+    jar = join(dir, v, `authlib-injector-${v}.jar`)
+  }
+  const meta = await fetch(api, { headers: { 'User-Agent': USER_AGENT } })
+    .then((r) => r.text())
+    .catch(() => '')
+  return [`-javaagent:${jar}=${api}`, ...(meta ? [`-Dauthlibinjector.yggdrasil.prefetched=${Buffer.from(meta).toString('base64')}`] : [])]
 }

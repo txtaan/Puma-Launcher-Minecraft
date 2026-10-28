@@ -3,8 +3,12 @@ import type {
   DeviceCodePrompt,
   GameExitEvent,
   GameLogEvent,
+  InstalledMod,
   Instance,
   JavaInstall,
+  LoaderType,
+  LoaderVersion,
+  ModSearchHit,
   JavaRuntimeOption,
   ProgressEvent,
   PublicAccount,
@@ -47,6 +51,9 @@ const api = {
     loginMicrosoft: () => invoke<PublicAccount>('accounts:loginMicrosoft'),
     cancelLogin: () => invoke<void>('accounts:cancelLogin'),
     remove: (id: string) => invoke<void>('accounts:remove', id),
+    addAuthlib: (server: string, username: string, password: string) =>
+      invoke<PublicAccount>('accounts:addAuthlib', server, username, password),
+    authPresets: () => invoke<Record<string, string>>('accounts:authPresets'),
     onDeviceCode: (cb: (p: DeviceCodePrompt) => void) => on('auth:deviceCode', cb)
   },
   java: {
@@ -56,12 +63,26 @@ const api = {
   },
   instances: {
     list: () => invoke<InstanceWithState[]>('instances:list'),
-    create: (name: string, versionId: string) => invoke<Instance>('instances:create', name, versionId),
+    create: (name: string, versionId: string, loader?: Instance['loader']) =>
+      invoke<Instance>('instances:create', name, versionId, loader),
     update: (id: string, patch: Partial<Instance>) => invoke<Instance>('instances:update', id, patch),
     remove: (id: string) => invoke<void>('instances:delete', id),
     openFolder: (id: string) => invoke<string>('instances:openFolder', id),
     launch: (id: string, accountId: string) => invoke<void>('instances:launch', id, accountId),
     kill: (id: string) => invoke<void>('instances:kill', id)
+  },
+  loaders: {
+    versions: (type: Exclude<LoaderType, 'vanilla'>, mcVersion: string) =>
+      invoke<LoaderVersion[]>('loaders:versions', type, mcVersion)
+  },
+  mods: {
+    list: (id: string) => invoke<InstalledMod[]>('mods:list', id),
+    setEnabled: (id: string, file: string, enabled: boolean) => invoke<void>('mods:setEnabled', id, file, enabled),
+    remove: (id: string, file: string) => invoke<void>('mods:delete', id, file),
+    search: (id: string, query: string, offset = 0) =>
+      invoke<{ hits: ModSearchHit[]; total: number }>('mods:search', id, query, offset),
+    install: (id: string, projectId: string) => invoke<string[]>('mods:install', id, projectId),
+    openFolder: (id: string) => invoke<string>('mods:openFolder', id)
   },
   events: {
     onProgress: (cb: (e: ProgressEvent) => void) => on('progress', cb),

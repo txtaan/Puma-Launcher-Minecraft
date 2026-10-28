@@ -31,8 +31,8 @@ export async function getInstance(id: string): Promise<Instance> {
   return inst
 }
 
-export async function createInstance(name: string, versionId: string): Promise<Instance> {
-  const inst: Instance = { id: randomUUID(), name: name.trim() || versionId, versionId, createdAt: Date.now() }
+export async function createInstance(name: string, versionId: string, loader?: Instance['loader']): Promise<Instance> {
+  const inst: Instance = { id: randomUUID(), name: name.trim() || versionId, versionId, loader, createdAt: Date.now() }
   await mkdir(gameDir(inst.id), { recursive: true })
   await writeJson(metaFile(inst.id), inst)
   return inst

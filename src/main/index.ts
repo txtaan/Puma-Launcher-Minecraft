@@ -1,10 +1,13 @@
 import { app, BrowserWindow, clipboard, ipcMain, shell } from 'electron'
+import { mkdir } from 'node:fs/promises'
 import { join } from 'node:path'
-import type { Instance, Settings } from '@shared/types'
+import type { Instance, LoaderType, Settings } from '@shared/types'
 import * as auth from './core/auth'
 import * as instances from './core/instances'
 import { availableRuntimes, detectJava, installRuntime } from './core/java'
 import { isRunning, killInstance, launchInstance } from './core/launch'
+import { loaderVersions } from './core/meta'
+import * as mods from './core/mods'
 import { paths } from './core/paths'
 import { emit, setProgressTarget, task } from './core/progress'
 import { getSettings, updateSettings } from './core/settings'
@@ -76,6 +79,27 @@ function registerIpc(): void {
     return auth.loginMicrosoft(msClientId, (prompt) => emit('auth:deviceCode', prompt))
   })
   handle('accounts:cancelLogin', () => auth.cancelLogin())
+  handle('accounts:addAuthlib', (server: string, username: string, password: string) =>
+    auth.addAuthlibAccount(server, username, password)
+  )
+  handle('accounts:authPresets', () => auth.AUTH_SERVER_PRESETS)
+
+  handle('loaders:versions', (type: Exclude<LoaderType, 'vanilla'>, mcVersion: string) => loaderVersions(type, mcVersion))
+
+  handle('mods:list', (id: string) => mods.listMods(id))
+  handle('mods:setEnabled', (id: string, file: string, enabled: boolean) => mods.setModEnabled(id, file, enabled))
+  handle('mods:delete', (id: string, file: string) => mods.deleteMod(id, file))
+  handle('mods:search', async (id: string, query: string, offset?: number) =>
+    mods.searchMods(await instances.getInstance(id), query, offset)
+  )
+  handle('mods:install', async (id: string, projectId: string) =>
+    mods.installMod(await instances.getInstance(id), projectId)
+  )
+  handle('mods:openFolder', async (id: string) => {
+    const dir = join(instances.gameDir(id), 'mods')
+    await mkdir(dir, { recursive: true })
+    return shell.openPath(dir)
+  })
 
   handle('java:detect', () => detectJava())
   handle('java:runtimes', () => availableRuntimes())
@@ -95,7 +119,9 @@ function registerIpc(): void {
   handle('instances:list', async () =>
     (await instances.listInstances()).map((i) => ({ ...i, running: isRunning(i.id) }))
   )
-  handle('instances:create', (name: string, versionId: string) => instances.createInstance(name, versionId))
+  handle('instances:create', (name: string, versionId: string, loader?: Instance['loader']) =>
+    instances.createInstance(name, versionId, loader)
+  )
   handle('instances:update', (id: string, patch: Partial<Instance>) => instances.updateInstance(id, patch))
   handle('instances:delete', (id: string) => {
     if (isRunning(id)) throw new Error('Stop the game before deleting this instance.')

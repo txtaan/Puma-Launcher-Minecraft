@@ -7,13 +7,32 @@ import { useStore } from '../store'
 
 export function Login() {
   const { accounts, refreshAccounts, selectAccount, toast, settings } = useStore()
-  const [mode, setMode] = useState<'choose' | 'offline' | 'microsoft'>('choose')
+  const [mode, setMode] = useState<'choose' | 'offline' | 'microsoft' | 'server'>('choose')
+  const [presets, setPresets] = useState<Record<string, string>>({})
+  const [server, setServer] = useState('https://authserver.ely.by/api/authlib-injector')
+  const [password, setPassword] = useState('')
   const [username, setUsername] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const [prompt, setPrompt] = useState<DeviceCodePrompt | null>(null)
 
   useEffect(() => api.accounts.onDeviceCode(setPrompt), [])
+  useEffect(() => void api.accounts.authPresets().then(setPresets), [])
+
+  const loginServer = async () => {
+    setBusy(true)
+    setError('')
+    try {
+      const acc = await api.accounts.addAuthlib(server, username, password)
+      setPassword('')
+      toast(`Signed in as ${acc.username} (${acc.serverName})`, 'success')
+      await finish(acc.id)
+    } catch (err) {
+      setError(errorMessage(err))
+    } finally {
+      setBusy(false)
+    }
+  }
 
   const finish = async (id: string) => {
     await refreshAccounts()
@@ -82,7 +101,7 @@ export function Login() {
                       <Avatar account={a} size={32} />
                       <div>
                         <strong>{a.username}</strong>
-                        <span>{a.type === 'microsoft' ? 'Microsoft account' : 'Offline'}</span>
+                        <span>{a.type === 'microsoft' ? 'Microsoft account' : a.type === 'authlib' ? a.serverName : 'Offline'}</span>
                       </div>
                     </button>
                     <button
@@ -108,6 +127,9 @@ export function Login() {
             <button className="btn btn-ghost btn-lg w-full" onClick={() => setMode('offline')}>
               <Icon name="user" /> Play offline
             </button>
+            <button className="btn btn-ghost w-full" onClick={() => setMode('server')}>
+              <Icon name="server" /> Ely.by, LittleSkin or other server
+            </button>
             {!settings?.msClientId && (
               <p className="hint">
                 Microsoft login needs an Azure client ID. You can add it later in Settings; offline mode works right away.
@@ -130,6 +152,51 @@ export function Login() {
             </label>
             <button className="btn btn-primary btn-lg w-full" disabled={busy || username.length < 3}>
               Continue
+            </button>
+            <button type="button" className="btn btn-ghost w-full" onClick={cancel}>
+              Back
+            </button>
+          </form>
+        )}
+
+        {mode === 'server' && (
+          <form
+            className="stack"
+            onSubmit={(e) => {
+              e.preventDefault()
+              void loginServer()
+            }}
+          >
+            <label className="field">
+              <span>Authentication server</span>
+              <select
+                value={Object.values(presets).includes(server) ? server : '__custom'}
+                onChange={(e) => setServer(e.target.value === '__custom' ? '' : e.target.value)}
+              >
+                {Object.entries(presets).map(([name, url]) => (
+                  <option key={url} value={url}>
+                    {name}
+                  </option>
+                ))}
+                <option value="__custom">Custom (authlib-injector URL)…</option>
+              </select>
+            </label>
+            {!Object.values(presets).includes(server) && (
+              <label className="field">
+                <span>Server URL</span>
+                <input value={server} placeholder="https://example.com/api/yggdrasil" onChange={(e) => setServer(e.target.value)} />
+              </label>
+            )}
+            <label className="field">
+              <span>Email or username</span>
+              <input autoFocus value={username} onChange={(e) => setUsername(e.target.value)} />
+            </label>
+            <label className="field">
+              <span>Password</span>
+              <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
+            </label>
+            <button className="btn btn-primary btn-lg w-full" disabled={busy || !username || !password || !server}>
+              {busy ? 'Signing in…' : 'Sign in'}
             </button>
             <button type="button" className="btn btn-ghost w-full" onClick={cancel}>
               Back

@@ -3,13 +3,16 @@ import type { Instance, JavaInstall } from '@shared/types'
 import { api, errorMessage } from '../api'
 import { CreateInstance } from '../components/CreateInstance'
 import { Icon } from '../components/Icon'
+import { LoaderPicker, loaderLabel } from '../components/LoaderPicker'
 import { Modal } from '../components/Modal'
+import { ModsManager } from '../components/ModsManager'
 import { useStore } from '../store'
 
 export function Instances() {
   const { instances, launch, tasks, refreshInstances, toast, saveSettings, settings } = useStore()
   const [creating, setCreating] = useState(false)
   const [editing, setEditing] = useState<Instance | null>(null)
+  const [modding, setModding] = useState<Instance | null>(null)
 
   return (
     <div className="page">
@@ -44,7 +47,7 @@ export function Instances() {
               <div className="instance-info">
                 <strong title={i.name}>{i.name}</strong>
                 <span className="muted">
-                  {i.versionId}
+                  {i.versionId} · {loaderLabel(i.loader)}
                   {i.lastPlayed ? ` · played ${new Date(i.lastPlayed).toLocaleDateString()}` : ''}
                 </span>
               </div>
@@ -58,6 +61,9 @@ export function Instances() {
                     <Icon name="play" size={14} /> {launching ? 'Starting…' : 'Play'}
                   </button>
                 )}
+                <button className="icon-btn" title="Mods" aria-label="Mods" onClick={() => setModding(i)}>
+                  <Icon name="puzzle" size={16} />
+                </button>
                 <button className="icon-btn" title="Settings" aria-label="Instance settings" onClick={() => setEditing(i)}>
                   <Icon name="sliders" size={16} />
                 </button>
@@ -88,6 +94,7 @@ export function Instances() {
 
       {creating && <CreateInstance onClose={() => setCreating(false)} />}
       {editing && <EditInstance instance={editing} onClose={() => setEditing(null)} />}
+      {modding && <ModsManager instance={modding} onClose={() => setModding(null)} />}
     </div>
   )
 }
@@ -96,6 +103,7 @@ function EditInstance({ instance, onClose }: { instance: Instance; onClose: () =
   const { refreshInstances, toast, settings, versions } = useStore()
   const [draft, setDraft] = useState<Instance>(instance)
   const [javas, setJavas] = useState<JavaInstall[] | null>(null)
+  const [loaderReady, setLoaderReady] = useState(true)
 
   useEffect(() => {
     void api.java.detect().then(setJavas)
@@ -106,7 +114,7 @@ function EditInstance({ instance, onClose }: { instance: Instance; onClose: () =
 
   const save = async () => {
     try {
-      await api.instances.update(instance.id, draft)
+      await api.instances.update(instance.id, { ...draft, loader: draft.loader })
       await refreshInstances()
       onClose()
     } catch (err) {
@@ -136,6 +144,16 @@ function EditInstance({ instance, onClose }: { instance: Instance; onClose: () =
               ))}
           </select>
         </label>
+        <div className="span-2">
+          <LoaderPicker
+            mcVersion={draft.versionId}
+            value={draft.loader}
+            onChange={(l, ready) => {
+              setDraft((d) => ({ ...d, loader: l }))
+              setLoaderReady(ready)
+            }}
+          />
+        </div>
         <label className="field span-2">
           <span>Java runtime</span>
           <select value={custom ? '__custom' : draft.javaPath ?? ''} onChange={(e) => set('javaPath', e.target.value === '__custom' ? draft.javaPath || ' ' : e.target.value || undefined)}>
@@ -180,7 +198,7 @@ function EditInstance({ instance, onClose }: { instance: Instance; onClose: () =
         <button className="btn btn-ghost" onClick={onClose}>
           Cancel
         </button>
-        <button className="btn btn-primary" onClick={() => void save()}>
+        <button className="btn btn-primary" disabled={!loaderReady} onClick={() => void save()}>
           Save
         </button>
       </div>

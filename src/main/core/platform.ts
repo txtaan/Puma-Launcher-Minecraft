@@ -20,6 +20,8 @@ export function javaRuntimePlatform(): string {
     case 'darwin':
       return arm ? 'mac-os-arm64' : 'mac-os'
     default:
+      // Mojang ships no Linux ARM builds; this key matches nothing, so Temurin is used instead.
+      if (process.arch === 'arm64' || process.arch === 'arm') return `linux-${process.arch}`
       return process.arch === 'ia32' ? 'linux-i386' : 'linux'
   }
 }

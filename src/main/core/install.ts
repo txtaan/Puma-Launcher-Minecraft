@@ -6,13 +6,15 @@ import { readJson, writeJson } from './fsutil'
 import { paths } from './paths'
 import { mojangArch, mojangOs, rulesAllow, type Rule } from './platform'
 import { findVersion } from './versions'
+import type { Component } from './meta'
 
 // ---------------------------------------------------------------------------
 // Version JSON model (subset of Mojang's format, plus Fabric/Quilt style libraries)
 // ---------------------------------------------------------------------------
 
 export interface Artifact {
-  path: string
+  /** Missing in Prism metadata; derived from the maven coordinate then. */
+  path?: string
   sha1?: string
   size?: number
   url: string
@@ -43,6 +45,13 @@ export interface VersionJson {
   downloads?: { client?: Artifact & { path?: string } }
   javaVersion?: { component: string; majorVersion: number }
   logging?: { client?: { argument: string; file: { id: string; sha1: string; size: number; url: string } } }
+  // Added by mod loader components (Prism metadata):
+  /** Files downloaded into libraries/ but not put on the classpath (e.g. the Forge installer). */
+  mavenFiles?: Library[]
+  /** LaunchWrapper tweakers (legacy Forge), passed as --tweakClass. */
+  tweakers?: string[]
+  extraJvmArgs?: string[]
+  traits?: string[]
 }
 
 interface AssetIndex {
@@ -103,14 +112,43 @@ export async function resolveVersion(id: string): Promise<VersionJson> {
   }
 }
 
+export function nativePath(lib: Library, art: Artifact, classifier: string): string {
+  return art.path ?? mavenPath(`${lib.name}:${classifier}`)
+}
+
+/**
+ * Apply mod loader components (Prism's OneSix format) on top of a vanilla version, the way
+ * Prism Launcher's LaunchProfile does: libraries are prepended (so they win de-duplication),
+ * mainClass / minecraftArguments are replaced, tweakers, JVM args and maven files are appended.
+ */
+export function applyComponents(vanilla: VersionJson, components: Component[]): VersionJson {
+  const out: VersionJson = { ...vanilla, libraries: [...vanilla.libraries] }
+  for (const c of components) {
+    const libs = [...(c.libraries ?? []), ...(c['+libraries'] ?? [])]
+    out.libraries = [...libs, ...out.libraries]
+    if (c.mainClass) out.mainClass = c.mainClass
+    if (c.minecraftArguments) {
+      // Forge/NeoForge ship a complete legacy-style argument string; it replaces vanilla's game args.
+      out.minecraftArguments = c.minecraftArguments
+      if (out.arguments) out.arguments = { ...out.arguments, game: undefined }
+    }
+    if (c.mavenFiles) out.mavenFiles = [...(out.mavenFiles ?? []), ...c.mavenFiles]
+    if (c['+tweakers']) out.tweakers = [...(out.tweakers ?? []), ...c['+tweakers']]
+    if (c['+jvmArgs']) out.extraJvmArgs = [...(out.extraJvmArgs ?? []), ...c['+jvmArgs']]
+    if (c['+traits']) out.traits = [...(out.traits ?? []), ...c['+traits']]
+  }
+  return out
+}
+
 /** Native classifier for a legacy (LWJGL 2 era) library on this OS, if any. */
 export function nativeClassifier(lib: Library): string | undefined {
   const key = lib.natives?.[mojangOs()]
   return key?.replace('${arch}', mojangArch() === 'x86' ? '32' : '64')
 }
 
-function libraryArtifact(lib: Library): Artifact | undefined {
-  if (lib.downloads?.artifact) return lib.downloads.artifact
+export function libraryArtifact(lib: Library): (Artifact & { path: string }) | undefined {
+  const art = lib.downloads?.artifact
+  if (art) return { ...art, path: art.path ?? mavenPath(lib.name) }
   if (lib.downloads) return undefined
   // Fabric/Quilt style: only maven coordinates + repository URL.
   const path = mavenPath(lib.name)
@@ -166,10 +204,11 @@ export async function installVersion(
   id: string,
   gameDir: string,
   concurrency: number,
-  onProgress: (stage: string, done: number, total: number) => void
+  onProgress: (stage: string, done: number, total: number) => void,
+  loaderComponents: Component[] = []
 ): Promise<VersionJson> {
   onProgress('Resolving version', 0, 1)
-  const version = await resolveVersion(id)
+  const version = applyComponents(await resolveVersion(id), loaderComponents)
   const files: DownloadItem[] = []
 
   const jarId = version.jar ?? version.id
@@ -182,7 +221,11 @@ export async function installVersion(
     if (art) files.push({ url: art.url, dest: join(paths.libraries(), art.path), sha1: art.sha1, size: art.size })
     const classifier = nativeClassifier(lib)
     const native = classifier ? lib.downloads?.classifiers?.[classifier] : undefined
-    if (native) files.push({ url: native.url, dest: join(paths.libraries(), native.path), sha1: native.sha1, size: native.size })
+    if (native) files.push({ url: native.url, dest: join(paths.libraries(), nativePath(lib, native, classifier!)), sha1: native.sha1, size: native.size })
+  }
+  for (const lib of version.mavenFiles ?? []) {
+    const art = libraryArtifact(lib)
+    if (art) files.push({ url: art.url, dest: join(paths.libraries(), art.path), sha1: art.sha1, size: art.size })
   }
 
   const logging = version.logging?.client?.file

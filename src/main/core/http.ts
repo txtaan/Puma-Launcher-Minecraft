@@ -5,7 +5,7 @@ import { dirname } from 'node:path'
 import { Readable } from 'node:stream'
 import { pipeline } from 'node:stream/promises'
 
-export const USER_AGENT = 'TxtaanLauncher/0.1 (+https://github.com/txtaan/Minecraft-Launcher-txtaan-)'
+export const USER_AGENT = 'TxtaanLauncher/0.2 (+https://github.com/txtaan/Minecraft-Launcher-txtaan-)'
 
 export async function fetchJson<T>(url: string, init?: RequestInit): Promise<T> {
   const res = await fetch(url, { ...init, headers: { 'User-Agent': USER_AGENT, ...init?.headers } })
@@ -13,8 +13,8 @@ export async function fetchJson<T>(url: string, init?: RequestInit): Promise<T> 
   return (await res.json()) as T
 }
 
-export async function sha1File(file: string): Promise<string> {
-  const hash = createHash('sha1')
+export async function sha1File(file: string, algo: 'sha1' | 'sha256' = 'sha1'): Promise<string> {
+  const hash = createHash(algo)
   await pipeline(createReadStream(file), hash)
   return hash.digest('hex')
 }
@@ -23,6 +23,7 @@ export interface DownloadItem {
   url: string
   dest: string
   sha1?: string
+  sha256?: string
   size?: number
 }
 
@@ -32,6 +33,7 @@ export async function isValid(item: DownloadItem): Promise<boolean> {
     const st = await stat(item.dest)
     if (item.size !== undefined && st.size !== item.size) return false
     if (item.sha1) return (await sha1File(item.dest)) === item.sha1
+    if (item.sha256) return (await sha1File(item.dest, 'sha256')) === item.sha256
     return true
   } catch {
     return false
@@ -46,12 +48,14 @@ export async function download(item: DownloadItem, retries = 3): Promise<void> {
     try {
       const res = await fetch(item.url, { headers: { 'User-Agent': USER_AGENT } })
       if (!res.ok || !res.body) throw new Error(`HTTP ${res.status} for ${item.url}`)
-      const hash = createHash('sha1')
+      const hash = createHash(item.sha256 && !item.sha1 ? 'sha256' : 'sha1')
       const body = Readable.fromWeb(res.body as import('node:stream/web').ReadableStream)
       body.on('data', (chunk: Buffer) => hash.update(chunk))
       await pipeline(body, createWriteStream(tmp))
       const digest = hash.digest('hex')
-      if (item.sha1 && digest !== item.sha1) throw new Error(`Checksum mismatch for ${item.url}`)
+      if ((item.sha1 && digest !== item.sha1) || (!item.sha1 && item.sha256 && digest !== item.sha256)) {
+        throw new Error(`Checksum mismatch for ${item.url}`)
+      }
       await rename(tmp, item.dest)
       return
     } catch (err) {

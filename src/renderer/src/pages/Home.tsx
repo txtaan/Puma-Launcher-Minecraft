@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { CreateInstance } from '../components/CreateInstance'
 import { Icon } from '../components/Icon'
+import { loaderLabel } from '../components/LoaderPicker'
 import { api } from '../api'
 import { useStore } from '../store'
 
@@ -57,6 +58,7 @@ export function Home() {
                     {instances.map((i) => (
                       <option key={i.id} value={i.id}>
                         {i.name === i.versionId ? i.name : `${i.name} — ${i.versionId}`}
+                        {i.loader ? ` · ${loaderLabel(i.loader)}` : ''}
                       </option>
                     ))}
                   </select>
@@ -134,7 +136,10 @@ export function Home() {
                 <span className="recent-icon">{i.name[0]?.toUpperCase()}</span>
                 <div>
                   <strong>{i.name}</strong>
-                  <span className="muted">{i.versionId}</span>
+                  <span className="muted">
+                    {i.versionId}
+                    {i.loader ? ` · ${loaderLabel(i.loader)}` : ''}
+                  </span>
                 </div>
                 {i.running && <span className="dot-running" title="Running" />}
               </button>

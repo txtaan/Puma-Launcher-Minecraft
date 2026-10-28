@@ -1,7 +1,8 @@
 import { useMemo, useState } from 'react'
-import type { VersionType } from '@shared/types'
+import type { Instance, VersionType } from '@shared/types'
 import { api, errorMessage } from '../api'
 import { useStore } from '../store'
+import { LoaderPicker } from './LoaderPicker'
 import { Modal } from './Modal'
 
 const FILTERS: { key: VersionType; label: string }[] = [
@@ -18,13 +19,15 @@ export function CreateInstance({ presetVersion, onClose }: { presetVersion?: str
   const [versionId, setVersionId] = useState(presetVersion ?? versions?.latest.release ?? '')
   const [name, setName] = useState('')
   const [busy, setBusy] = useState(false)
+  const [loader, setLoader] = useState<Instance['loader']>()
+  const [loaderReady, setLoaderReady] = useState(true)
 
   const list = useMemo(() => versions?.versions.filter((v) => v.type === filter) ?? [], [versions, filter])
 
   const create = async () => {
     setBusy(true)
     try {
-      const inst = await api.instances.create(name || versionId, versionId)
+      const inst = await api.instances.create(name || versionId, versionId, loader)
       await saveSettings({ selectedInstanceId: inst.id })
       await refreshInstances()
       toast(`Created ${inst.name}`, 'success')
@@ -37,7 +40,7 @@ export function CreateInstance({ presetVersion, onClose }: { presetVersion?: str
   }
 
   return (
-    <Modal title="New instance" onClose={onClose}>
+    <Modal title="New instance" onClose={onClose} wide>
       <div className="stack">
         <label className="field">
           <span>Name</span>
@@ -62,11 +65,19 @@ export function CreateInstance({ presetVersion, onClose }: { presetVersion?: str
             {!list.length && <div className="muted pad">No versions loaded yet.</div>}
           </div>
         </div>
+        <LoaderPicker
+          mcVersion={versionId}
+          value={loader}
+          onChange={(l, ready) => {
+            setLoader(l)
+            setLoaderReady(ready)
+          }}
+        />
         <div className="row end gap-s">
           <button className="btn btn-ghost" onClick={onClose}>
             Cancel
           </button>
-          <button className="btn btn-primary" disabled={!versionId || busy} onClick={() => void create()}>
+          <button className="btn btn-primary" disabled={!versionId || busy || !loaderReady} onClick={() => void create()}>
             Create
           </button>
         </div>
