@@ -4,14 +4,21 @@ A modern, open-source Minecraft: Java Edition launcher for Windows, macOS and Li
 version, with or without Fabric, Quilt, Forge or NeoForge, downloads the right Java for you and installs mods from
 Modrinth. Available in English and Italian.
 
+<p align="center">
+  <a href="https://github.com/txtaan/Puma-Launcher-Minecraft/releases/latest"><img src="docs/download-button.png" alt="Download Puma Launcher for Windows, macOS and Linux" width="454"></a>
+</p>
+
 ![Puma Launcher home screen](docs/screenshots/home.png)
 
 ## Step by step: from download to playing
 
 ### 1. Download
 
-**[Download the latest version](https://github.com/txtaan/Puma-Launcher-Minecraft/releases/latest)**: open the page,
-scroll down to **Assets** and pick the file for your computer.
+<p align="center">
+  <a href="https://github.com/txtaan/Puma-Launcher-Minecraft/releases/latest"><img src="docs/download-button.png" alt="Download Puma Launcher for Windows, macOS and Linux" width="454"></a>
+</p>
+
+The button opens the latest release: scroll down to **Assets** and pick the file for your computer.
 
 | Your computer | File to download |
 | --- | --- |
