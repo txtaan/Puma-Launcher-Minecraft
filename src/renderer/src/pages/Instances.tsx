@@ -157,7 +157,7 @@ function EditInstance({ instance, onClose }: { instance: Instance; onClose: () =
         <label className="field span-2">
           <span>Java runtime</span>
           <select value={custom ? '__custom' : draft.javaPath ?? ''} onChange={(e) => set('javaPath', e.target.value === '__custom' ? draft.javaPath || ' ' : e.target.value || undefined)}>
-            <option value="">Automatic (recommended — uses the Java version Mojang requires)</option>
+            <option value="">Automatic (recommended) — the launcher downloads the Java this version needs</option>
             {javas?.map((j) => (
               <option key={j.path} value={j.path}>
                 Java {j.version} · {j.arch} · {j.source === 'managed' ? 'downloaded' : 'installed on PC'} — {j.path}

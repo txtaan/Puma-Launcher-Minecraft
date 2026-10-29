@@ -37,8 +37,9 @@ export function Java() {
         <div>
           <h1>Java</h1>
           <p className="muted">
-            Minecraft 26.x needs Java 25, 1.20.5–1.21 need Java 21, 1.18–1.20.4 need Java 17 and older versions use Java 8.
-            Instances set to “Automatic” download the right one for you.
+            You don’t need to install Java yourself: the launcher downloads the right version as soon as you create an
+            instance (Java 25 for Minecraft 26.x, 21 for 1.20.5–1.21, 17 for 1.18–1.20.4, 8 for older versions). You can
+            also download any version here.
           </p>
         </div>
         <button className="btn btn-ghost" onClick={() => void load()}>

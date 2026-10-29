@@ -89,7 +89,7 @@ export function SettingsPage() {
             <input type="number" value={draft.defaultMaxMemoryMb} onChange={(e) => set('defaultMaxMemoryMb', Number(e.target.value))} />
           </label>
         </div>
-        <Toggle label="Download required Java automatically" checked={draft.autoDownloadJava} onChange={(v) => set('autoDownloadJava', v)} />
+        <Toggle label="Let the launcher download Java (recommended). When off, Java installed on this PC is used" checked={draft.autoDownloadJava} onChange={(v) => set('autoDownloadJava', v)} />
         <Toggle label="Hide launcher while the game is running" checked={draft.closeOnLaunch} onChange={(v) => set('closeOnLaunch', v)} />
       </section>
 

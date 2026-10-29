@@ -239,7 +239,34 @@ export async function availableRuntimes(): Promise<JavaRuntimeOption[]> {
 
 type Progress = (stage: string, done: number, total: number) => void
 
-async function installMojangRuntime(component: string, concurrency: number, onProgress: Progress): Promise<string> {
+/**
+ * Downloads in progress, keyed by runtime. A second request for the same runtime (e.g. pressing Play
+ * while the background download started at instance creation is still running) joins the first one
+ * and receives its progress instead of writing the same files twice.
+ */
+const inflight = new Map<string, { promise: Promise<string>; listeners: Set<Progress> }>()
+
+function shared(key: string, onProgress: Progress, run: (progress: Progress) => Promise<string>): Promise<string> {
+  let entry = inflight.get(key)
+  if (!entry) {
+    const listeners = new Set<Progress>()
+    const promise = run((s, d, t) => listeners.forEach((l) => l(s, d, t))).finally(() => inflight.delete(key))
+    entry = { promise, listeners }
+    inflight.set(key, entry)
+  }
+  entry.listeners.add(onProgress)
+  return entry.promise
+}
+
+function installMojangRuntime(component: string, concurrency: number, onProgress: Progress): Promise<string> {
+  return shared(component, onProgress, (progress) => downloadMojangRuntime(component, concurrency, progress))
+}
+
+function installAdoptium(major: number, onProgress: Progress): Promise<string> {
+  return shared(`${ADOPTIUM_PREFIX}${major}`, onProgress, (progress) => downloadAdoptium(major, progress))
+}
+
+async function downloadMojangRuntime(component: string, concurrency: number, onProgress: Progress): Promise<string> {
   const home = runtimeHome(component)
   const marker = join(home, '.installed')
   const exe = runtimeExe(component)
@@ -279,7 +306,7 @@ async function installMojangRuntime(component: string, concurrency: number, onPr
   return exe
 }
 
-async function installAdoptium(major: number, onProgress: Progress): Promise<string> {
+async function downloadAdoptium(major: number, onProgress: Progress): Promise<string> {
   const component = `${ADOPTIUM_PREFIX}${major}`
   const home = runtimeHome(component)
   onProgress(`Finding Java ${major}`, 0, 1)

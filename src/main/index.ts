@@ -4,7 +4,8 @@ import { join } from 'node:path'
 import type { Instance, LoaderType, Settings } from '@shared/types'
 import * as auth from './core/auth'
 import * as instances from './core/instances'
-import { availableRuntimes, detectJava, installRuntime } from './core/java'
+import { resolveVersion } from './core/install'
+import { availableRuntimes, detectJava, installRuntime, resolveJava } from './core/java'
 import { isRunning, killInstance, launchInstance } from './core/launch'
 import { loaderVersions } from './core/meta'
 import * as mods from './core/mods'
@@ -49,6 +50,32 @@ function handle<A extends unknown[], R>(channel: string, fn: (...args: A) => Pro
       throw new Error(err instanceof Error ? err.message : String(err))
     }
   })
+}
+
+/**
+ * Download the Java an instance needs in the background, so it is ready before the user presses Play.
+ * Shows up in the download dock only when something actually has to be downloaded.
+ */
+async function prepareJava(inst: Instance): Promise<void> {
+  const settings = await getSettings()
+  if (inst.javaPath || !settings.autoDownloadJava) return
+  let t: ReturnType<typeof task> | undefined
+  try {
+    const version = await resolveVersion(inst.versionId)
+    await resolveJava({
+      component: version.javaVersion?.component,
+      majorVersion: version.javaVersion?.majorVersion ?? 8,
+      autoDownload: true,
+      concurrency: settings.concurrentDownloads,
+      onProgress: (stage, done, total) => {
+        t ??= task(`java-prepare:${inst.id}`, `Java for ${inst.name}`)
+        t.update(stage, done, total)
+      }
+    })
+    t?.finish()
+  } catch (err) {
+    t?.fail(err)
+  }
 }
 
 function registerIpc(): void {
@@ -119,10 +146,17 @@ function registerIpc(): void {
   handle('instances:list', async () =>
     (await instances.listInstances()).map((i) => ({ ...i, running: isRunning(i.id) }))
   )
-  handle('instances:create', (name: string, versionId: string, loader?: Instance['loader']) =>
-    instances.createInstance(name, versionId, loader)
-  )
-  handle('instances:update', (id: string, patch: Partial<Instance>) => instances.updateInstance(id, patch))
+  handle('instances:create', async (name: string, versionId: string, loader?: Instance['loader']) => {
+    const inst = await instances.createInstance(name, versionId, loader)
+    void prepareJava(inst)
+    return inst
+  })
+  handle('instances:update', async (id: string, patch: Partial<Instance>) => {
+    const before = await instances.getInstance(id)
+    const inst = await instances.updateInstance(id, patch)
+    if (inst.versionId !== before.versionId || inst.javaPath !== before.javaPath) void prepareJava(inst)
+    return inst
+  })
   handle('instances:delete', (id: string) => {
     if (isRunning(id)) throw new Error('Stop the game before deleting this instance.')
     return instances.deleteInstance(id)
@@ -162,7 +196,12 @@ app.whenReady().then(async () => {
   registerIpc()
   createWindow()
   const settings = await getSettings()
-  void refreshVersions().catch(() => undefined)
+  void refreshVersions()
+    .catch(() => undefined)
+    .then(async () => {
+      // Re-download Java for existing instances if it is missing (e.g. after a fresh install or cleanup).
+      for (const inst of await instances.listInstances()) await prepareJava(inst)
+    })
   startVersionWatcher(settings.versionRefreshMinutes)
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow()
