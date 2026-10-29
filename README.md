@@ -4,6 +4,8 @@ A modern, open-source Minecraft: Java Edition launcher for Windows, macOS and Li
 version, with or without Fabric, Quilt, Forge or NeoForge, downloads the right Java for you and installs mods from
 Modrinth. Available in English and Italian.
 
+<sub>NOT AN OFFICIAL MINECRAFT PRODUCT. NOT APPROVED BY OR ASSOCIATED WITH MOJANG OR MICROSOFT.</sub>
+
 <p align="center">
   <a href="https://github.com/txtaan/Puma-Launcher-Minecraft/releases/latest"><img src="docs/download-button.png" alt="Download Puma Launcher for Windows, macOS and Linux" width="454"></a>
 </p>
@@ -239,5 +241,11 @@ use `tr('key')`. `{name}` placeholders are filled from the second argument.
 
 ## License
 
-GPL-3.0-or-later. See [LICENSE](LICENSE). Minecraft is a trademark of Mojang AB; this project is
-not affiliated with Mojang or Microsoft.
+GPL-3.0-or-later. See [LICENSE](LICENSE).
+
+NOT AN OFFICIAL MINECRAFT PRODUCT. NOT APPROVED BY OR ASSOCIATED WITH MOJANG OR MICROSOFT. Minecraft is a
+trademark of Mojang AB.
+
+## Security
+
+To report a security problem, see [SECURITY.md](SECURITY.md). Please don't open a public issue for it.
