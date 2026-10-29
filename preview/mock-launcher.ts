@@ -34,6 +34,7 @@ const uuid = () => crypto.randomUUID()
 
 let settings: Settings = {
   msClientId: '',
+  theme: 'dark',
   defaultMaxMemoryMb: 4096,
   defaultMinMemoryMb: 512,
   autoDownloadJava: true,

@@ -114,9 +114,13 @@ export interface Instance {
   height?: number
 }
 
+/** "system" follows the operating system's light/dark setting. */
+export type ThemePreference = 'system' | 'light' | 'dark'
+
 export interface Settings {
   /** Azure application (client) ID used for Microsoft login. */
   msClientId: string
+  theme: ThemePreference
   defaultMaxMemoryMb: number
   defaultMinMemoryMb: number
   /** Download the Java version required by Mojang automatically when launching. */

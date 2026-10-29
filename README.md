@@ -34,6 +34,7 @@ ForgeWrapper and authlib-injector jars at runtime. It is licensed GPL-3.0-or-lat
 - Java manager: one-click Mojang and Temurin runtimes plus the Java installations found on this PC
 - Download manager: parallel downloads with SHA-1/SHA-256 checks, retries and live progress
 - Game console showing the game log (log4j XML converted to readable lines), with errors highlighted
+- Light and dark themes, or follow the system setting (**Settings → Appearance**); dark is the default
 
 | New instance | Mods | Java |
 | --- | --- | --- |
@@ -139,7 +140,7 @@ src/
       http.ts      downloads with SHA-1 checks, retries and concurrency
   preload/         typed, sandboxed IPC bridge (window.launcher)
   renderer/        React UI
-    src/styles/theme.css  all colours, gradients and radii (edit this file to re-theme)
+    src/styles/theme.css  all colours, gradients and radii for the dark and light themes (edit this file to re-theme)
     src/styles/app.css    layout and components
     src/pages/            Login, Home, Instances, Versions, Java, Settings
   shared/types.ts  types shared by all three layers
@@ -157,7 +158,8 @@ Downloads and launches are simulated, so you can click through every screen with
 The UI only talks to the launcher through `window.launcher` (see `src/preload/index.ts`), so the
 renderer can be redesigned or replaced freely. To change the look, start with the tokens in
 `src/renderer/src/styles/theme.css`, for example `--hero-gradient` for the home screen gradient
-and `--brand-gradient` for buttons.
+and `--brand-gradient` for buttons. `:root` holds the dark theme and `:root[data-theme='light']` overrides
+its colours for the light theme, so a new colour token needs a value in both.
 
 ## License
 

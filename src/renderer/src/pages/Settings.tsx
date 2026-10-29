@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react'
-import type { Settings } from '@shared/types'
+import { useState } from 'react'
+import type { Settings, ThemePreference } from '@shared/types'
 import { api, errorMessage } from '../api'
 import { Avatar } from '../components/Avatar'
 import { Icon } from '../components/Icon'
@@ -7,14 +7,16 @@ import { useStore } from '../store'
 
 export function SettingsPage() {
   const { settings, saveSettings, accounts, account, selectAccount, refreshAccounts, toast } = useStore()
-  const [draft, setDraft] = useState<Settings | null>(settings)
-  useEffect(() => setDraft(settings), [settings])
-  if (!draft) return null
+  // Only unsaved edits live here, so settings that apply instantly (theme, accounts) don't discard them.
+  const [edits, setEdits] = useState<Partial<Settings>>({})
+  if (!settings) return null
+  const draft = { ...settings, ...edits }
 
-  const set = <K extends keyof Settings>(k: K, v: Settings[K]) => setDraft({ ...draft, [k]: v })
+  const set = <K extends keyof Settings>(k: K, v: Settings[K]) => setEdits({ ...edits, [k]: v })
   const save = async () => {
     try {
-      await saveSettings(draft)
+      await saveSettings(edits)
+      setEdits({})
       toast('Settings saved', 'success')
     } catch (err) {
       toast(errorMessage(err), 'error')
@@ -32,6 +34,25 @@ export function SettingsPage() {
           Save changes
         </button>
       </div>
+
+      <section className="card settings-section">
+        <h2>Appearance</h2>
+        <div className="field">
+          <span>Theme</span>
+          <div className="segmented self-start">
+            {THEMES.map((t) => (
+              <button
+                key={t.key}
+                className={settings.theme === t.key ? 'active' : ''}
+                aria-pressed={settings.theme === t.key}
+                onClick={() => void saveSettings({ theme: t.key }).catch((err) => toast(errorMessage(err), 'error'))}
+              >
+                <Icon name={t.icon} size={15} /> {t.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      </section>
 
       <section className="card settings-section">
         <h2>Accounts</h2>
@@ -112,6 +133,12 @@ export function SettingsPage() {
     </div>
   )
 }
+
+const THEMES: { key: ThemePreference; label: string; icon: string }[] = [
+  { key: 'system', label: 'System', icon: 'monitor' },
+  { key: 'light', label: 'Light', icon: 'sun' },
+  { key: 'dark', label: 'Dark', icon: 'moon' }
+]
 
 function Toggle({ label, checked, onChange }: { label: string; checked: boolean; onChange: (v: boolean) => void }) {
   return (
