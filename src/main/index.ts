@@ -10,7 +10,7 @@ import { isRunning, isWindowOpen, killInstance, launchInstance } from './core/la
 import { loaderVersions } from './core/meta'
 import * as mods from './core/mods'
 import { paths } from './core/paths'
-import { setLanguage, tr } from './core/i18n'
+import { seconds, setLanguage, tr } from './core/i18n'
 import { emit, setProgressTarget, task } from './core/progress'
 import { getSettings, updateSettings } from './core/settings'
 import { getVersions, refreshVersions, startVersionWatcher } from './core/versions'
@@ -181,10 +181,14 @@ function registerIpc(): void {
   handle('instances:launch', async (id: string, accountId: string) => {
     const settings = await getSettings()
     const instance = await instances.getInstance(id)
+    const signInStartedAt = performance.now()
     const account = await auth.getLaunchAccount(accountId, settings.msClientId)
+    const signInMs = performance.now() - signInStartedAt
     const t = task(`launch:${id}`, tr('task.launching', { name: instance.name }))
     const log = (line: string, stream: 'stdout' | 'stderr' | 'launcher') =>
       emit('game:log', { instanceId: id, line, stream })
+    // Only worth a line when the account had to be renewed online (Microsoft about once a day).
+    if (signInMs >= 100) log(tr('log.signedIn', { seconds: seconds(signInMs) }), 'launcher')
     try {
       await launchInstance(instance, account, settings, {
         onProgress: t.update,

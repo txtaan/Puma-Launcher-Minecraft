@@ -11,3 +11,8 @@ export function setLanguage(preference: LanguagePreference): void {
 export function tr(key: MessageKey, vars?: Record<string, string | number>): string {
   return translate(language, key, vars)
 }
+
+/** A duration as seconds with one decimal, written the way the current language writes numbers (1.5 / 1,5). */
+export function seconds(ms: number): string {
+  return (ms / 1000).toLocaleString(language === 'it' ? 'it-IT' : 'en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 })
+}

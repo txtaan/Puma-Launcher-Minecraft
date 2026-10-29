@@ -241,7 +241,11 @@ export const en = {
   'stage.legacyAssets': 'Preparing legacy assets',
 
   // Main process: game console lines
+  'log.prepared': 'Ready to start in {total} s (game files {files} s, Java {java} s, natives {natives} s)',
   'log.launching': 'Launching {version}{loader} with {java}',
+  'log.windowOpened': 'Minecraft opened its window {seconds} s after starting',
+  'log.windowAssumed': 'No sign of Minecraft’s window after {seconds} s: showing Stop anyway',
+  'log.signedIn': 'Signing in took {seconds} s',
   'log.arguments': 'Arguments: {args}',
   'log.javaFailed': 'Failed to start Java: {error}',
   'log.launchFailed': 'Launch failed: {error}',

@@ -244,7 +244,11 @@ export const it: Messages = {
   'stage.legacyAssets': 'Preparazione delle risorse legacy',
 
   // Main process: game console lines
+  'log.prepared': 'Pronto per l’avvio in {total} s (file di gioco {files} s, Java {java} s, librerie native {natives} s)',
   'log.launching': 'Avvio di {version}{loader} con {java}',
+  'log.windowOpened': 'Minecraft ha aperto la finestra {seconds} s dopo l’avvio',
+  'log.windowAssumed': 'Nessun segno della finestra di Minecraft dopo {seconds} s: mostro comunque Ferma',
+  'log.signedIn': 'L’accesso ha richiesto {seconds} s',
   'log.arguments': 'Argomenti: {args}',
   'log.javaFailed': 'Impossibile avviare Java: {error}',
   'log.launchFailed': 'Avvio non riuscito: {error}',
