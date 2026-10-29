@@ -329,3 +329,6 @@ select option { background: var(--bg-elev); }
 .clamp { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; margin: 2px 0; }
 .toggle.compact { margin-top: 0; }
 .mod-list.browse { max-height: 380px; }
+
+/* macOS: leave room for the native traffic-light buttons */
+.titlebar-mac { padding-left: 84px; }

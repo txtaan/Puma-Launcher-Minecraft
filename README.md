@@ -41,10 +41,30 @@ ForgeWrapper and authlib-injector jars at runtime. It is licensed GPL-3.0-or-lat
 
 ### Tested
 
-Each of these was installed and launched from a clean data folder. All of them got as far as opening the
-game window; the test machine had no GPU, so actual rendering was not checked:
+Each of these was installed and launched from a clean data folder on Linux:
 vanilla 26.3 (Java 25) and 1.12.2 (Java 8), Fabric 0.20.1 on 26.3 with Fabric API from Modrinth,
 NeoForge 26.3.0.99, Forge 52.1.20 on 1.21.1, and Forge 14.23.5 on 1.12.2.
+
+The test machine has no GPU, so vanilla 26.3 was also run with Mesa's software renderer (llvmpipe/lavapipe)
+on a virtual display. The game reached the title screen and loaded into a new singleplayer world:
+
+| Title screen | In a world |
+| --- | --- |
+| ![Title screen](docs/screenshots/in-game-title.png) | ![In game](docs/screenshots/in-game-world.png) |
+
+### Platforms
+
+| Platform | Status |
+| --- | --- |
+| Windows 10/11 (x64) | Supported: Mojang Java for every version. Not tested on real hardware yet. |
+| macOS Intel | Supported: Mojang Java for every version, native window buttons. Not tested on real hardware yet. |
+| macOS Apple Silicon (M1–M4) | Minecraft 1.19 and newer run natively with Mojang's ARM Java (17, 21, 25). Older versions use LWJGL 2 without ARM builds and are not supported yet. |
+| Linux x64 / ARM64 | Tested on x64. ARM64 gets Java from Eclipse Temurin. |
+
+Installers are built with `npm run dist` on each OS: `.exe` (NSIS) on Windows, `.dmg` on macOS, AppImage/`.deb`
+on Linux. Without code signing, Windows SmartScreen and macOS Gatekeeper show a warning the first time
+(on macOS: right-click the app, then **Open**). Signing needs a code-signing certificate on Windows and an Apple
+Developer ID on macOS.
 
 ## Getting started
 

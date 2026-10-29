@@ -22,7 +22,10 @@ function createWindow(): void {
     height: 740,
     minWidth: 940,
     minHeight: 600,
-    frame: false,
+    // macOS keeps its native traffic-light buttons over our custom title bar; elsewhere we draw our own.
+    ...(process.platform === 'darwin'
+      ? { titleBarStyle: 'hiddenInset' as const, trafficLightPosition: { x: 14, y: 13 } }
+      : { frame: false }),
     backgroundColor: '#0b0b14',
     show: false,
     webPreferences: {
