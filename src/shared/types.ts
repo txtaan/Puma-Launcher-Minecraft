@@ -1,4 +1,5 @@
 // Types shared between the main process, preload bridge and renderer.
+import type { LanguagePreference } from './i18n'
 
 export type VersionType = 'release' | 'snapshot' | 'old_beta' | 'old_alpha'
 
@@ -121,6 +122,7 @@ export interface Settings {
   /** Azure application (client) ID used for Microsoft login. */
   msClientId: string
   theme: ThemePreference
+  language: LanguagePreference
   defaultMaxMemoryMb: number
   defaultMinMemoryMb: number
   /** Download the Java version required by Mojang automatically when launching. */

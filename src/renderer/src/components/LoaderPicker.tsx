@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import type { Instance, LoaderType, LoaderVersion } from '@shared/types'
 import { api, errorMessage } from '../api'
+import { useStore } from '../store'
 
 export const LOADERS: { key: LoaderType; label: string }[] = [
   { key: 'vanilla', label: 'Vanilla' },
@@ -28,6 +29,7 @@ export function LoaderPicker({
   value: Instance['loader']
   onChange: (loader: Instance['loader'] | undefined, ready: boolean) => void
 }) {
+  const { t } = useStore()
   const type: LoaderType = value?.type ?? 'vanilla'
   const [versions, setVersions] = useState<LoaderVersion[] | null>(null)
   const [error, setError] = useState('')
@@ -64,7 +66,7 @@ export function LoaderPicker({
 
   return (
     <div className="field">
-      <span>Mod loader</span>
+      <span>{t('loader.title')}</span>
       <div className="segmented">
         {LOADERS.map((l) => (
           <button
@@ -82,29 +84,29 @@ export function LoaderPicker({
           {error && <div className="error-box">{error}</div>}
           {!versions && !error && (
             <span className="muted">
-              <span className="spinner sm" /> Loading {loaderLabel(value)} versions…
+              <span className="spinner sm" /> {t('loader.loading', { loader: loaderLabel(value) })}
             </span>
           )}
           {versions && versions.length === 0 && (
-            <span className="muted">{loaderLabel(value)} is not available for Minecraft {mcVersion} yet.</span>
+            <span className="muted">{t('loader.unavailable', { loader: loaderLabel(value), version: mcVersion })}</span>
           )}
           {versions && versions.length > 0 && (
             <div className="row gap-s">
               <select
                 className="grow"
-                aria-label="Loader version"
+                aria-label={t('loader.version')}
                 value={value?.version}
                 onChange={(e) => onChange({ type: type as Exclude<LoaderType, 'vanilla'>, version: e.target.value }, true)}
               >
                 {shown.map((v) => (
                   <option key={v.version} value={v.version}>
                     {v.version}
-                    {v.recommended ? ' (recommended)' : !v.stable ? ' (beta)' : ''}
+                    {v.recommended ? ` ${t('loader.recommended')}` : !v.stable ? ` ${t('loader.beta')}` : ''}
                   </option>
                 ))}
               </select>
               <label className="check">
-                <input type="checkbox" checked={showUnstable} onChange={(e) => setShowUnstable(e.target.checked)} /> Show betas
+                <input type="checkbox" checked={showUnstable} onChange={(e) => setShowUnstable(e.target.checked)} /> {t('loader.showBetas')}
               </label>
             </div>
           )}

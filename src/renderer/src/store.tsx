@@ -1,4 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
+import { resolveLanguage, translate, type Language, type Translate } from '@shared/i18n'
 import type { GameLogEvent, ProgressEvent, PublicAccount, Settings, VersionList } from '@shared/types'
 import type { InstanceWithState } from '../../preload/index'
 import { api, errorMessage } from './api'
@@ -34,6 +35,11 @@ interface Store {
   toasts: Toast[]
   toast: (text: string, kind?: Toast['kind']) => void
   launch: (instanceId: string) => Promise<void>
+  language: Language
+  /** Translates a message key into the current language. */
+  t: Translate
+  /** Locale for dates and numbers: the system default in English, Italian formatting in Italian. */
+  locale: string | undefined
 }
 
 const Ctx = createContext<Store | null>(null)
@@ -50,6 +56,14 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [logs, setLogs] = useState<GameLogEvent[]>([])
   const [consoleOpen, setConsoleOpen] = useState(false)
   const [toasts, setToasts] = useState<Toast[]>([])
+
+  // Until settings load, follow the system language (in Electron the same locale the main process sees).
+  const language = resolveLanguage(settings?.language, navigator.language)
+  const t = useCallback<Translate>((key, vars) => translate(language, key, vars), [language])
+  const locale = language === 'it' ? 'it-IT' : undefined
+  useEffect(() => {
+    document.documentElement.lang = language
+  }, [language])
 
   const toast = useCallback((text: string, kind: Toast['kind'] = 'info') => {
     const id = Date.now() + Math.random()
@@ -68,10 +82,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       try {
         setVersions(await api.versions.list(force))
       } catch (err) {
-        toast(`Could not load versions: ${errorMessage(err)}`, 'error')
+        toast(t('toast.versionsFailed', { error: errorMessage(err) }), 'error')
       }
     },
-    [toast]
+    [toast, t]
   )
 
   const saveSettings = useCallback(async (patch: Partial<Settings>) => {
@@ -113,17 +127,17 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       api.events.onExit((e) => {
         void refreshInstances()
         if (e.code !== 0 && e.code !== null) {
-          toast(`Game exited with code ${e.code}. Check the console for details.`, 'error')
+          toast(t('toast.gameExited', { code: e.code }), 'error')
           setConsoleOpen(true)
         }
       }),
       api.versions.onNew((latest) => {
-        toast(`New Minecraft version available: ${latest.snapshot !== latest.release ? latest.snapshot : latest.release}`, 'success')
+        toast(t('toast.newVersion', { version: latest.snapshot !== latest.release ? latest.snapshot : latest.release }), 'success')
         void refreshVersions()
       })
     ]
     return () => offs.forEach((off) => off())
-  }, [refreshInstances, refreshVersions, toast])
+  }, [refreshInstances, refreshVersions, toast, t])
 
   const account = useMemo(
     () => accounts.find((a) => a.id === settings?.selectedAccountId) ?? null,
@@ -166,7 +180,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     setConsoleOpen,
     toasts,
     toast,
-    launch
+    launch,
+    language,
+    t,
+    locale
   }
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>
 }

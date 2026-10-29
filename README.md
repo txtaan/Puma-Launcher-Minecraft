@@ -1,15 +1,83 @@
 # Puma Launcher
 
-A modern, open-source Minecraft: Java Edition launcher built with Electron, React and TypeScript.
-It is modelled on the most active open-source launchers, checked in October 2026:
+A modern, open-source Minecraft: Java Edition launcher for Windows, macOS and Linux. It installs any Minecraft
+version, with or without Fabric, Quilt, Forge or NeoForge, downloads the right Java for you and installs mods from
+Modrinth. Available in English and Italian.
+
+![Puma Launcher home screen](docs/screenshots/home.png)
+
+## Download
+
+**[Download the latest version](https://github.com/txtaan/Puma-Launcher-Minecraft/releases/latest)**: open the page,
+scroll down to **Assets** and pick the file for your computer.
+
+| Your computer | File to download |
+| --- | --- |
+| Windows 10 or 11 | `PumaLauncher-<version>-windows-x64-setup.exe` |
+| Mac with an Apple chip (M1 or newer) | `PumaLauncher-<version>-macos-arm64.dmg` |
+| Mac with an Intel chip | `PumaLauncher-<version>-macos-x64.dmg` |
+| Linux | `PumaLauncher-<version>-linux-x86_64.AppImage` (any distribution) or `PumaLauncher-<version>-linux-amd64.deb` (Debian, Ubuntu) |
+
+Not sure which Mac you have? Open the Apple menu → **About This Mac**: "Chip: Apple M…" means an Apple chip,
+"Processor: … Intel" means Intel.
+
+You don't need to install Java or Minecraft separately: the launcher downloads both.
+
+## From download to playing
+
+1. **Install the launcher.**
+   - **Windows:** run the `.exe` and follow the installer. If SmartScreen says "Windows protected your PC", click
+     **More info → Run anyway** (the launcher isn't code-signed yet).
+   - **macOS:** open the `.dmg` and drag **Puma Launcher** into **Applications**. If macOS says it can't verify the
+     app the first time you open it, go to **System Settings → Privacy & Security** and click **Open Anyway**.
+   - **Linux:** make the AppImage executable with `chmod +x PumaLauncher-*.AppImage` and run it, or install the
+     `.deb` with `sudo apt install ./PumaLauncher-*.deb`.
+2. **Sign in.** Click **Play Now** and type a player name (3–16 letters, numbers or underscores) to play offline
+   right away. You can also use a **Microsoft** account (it needs a one-time setup, see
+   [Microsoft login setup](#microsoft-login-setup)) or an **Ely.by** / **LittleSkin** account.
+3. **Create an instance.** An instance is one Minecraft installation with its own worlds and mods. On the home
+   screen click **Create**. The latest Minecraft version is already selected: give it a name, pick a mod loader
+   such as **Fabric** if you want mods, and click **Create**. The right Java version starts downloading by itself.
+4. **Press Play.** The first launch downloads the game (a few minutes; progress shows in the bottom-right corner).
+   After that the game starts in seconds.
+5. **Add mods (optional).** Go to **Instances**, click the puzzle-piece icon on your instance, open
+   **Browse Modrinth** and click **Install**. Required mods are installed with it. Mods need an instance with a mod
+   loader (Fabric, Quilt, Forge or NeoForge).
+
+You can switch between the light and dark theme, and between English and Italian, in **Settings → Appearance**.
+
+## Screenshots
+
+| Welcome | Light theme | In Italian |
+| --- | --- | --- |
+| ![Welcome screen](docs/screenshots/welcome.png) | ![Home screen, light theme](docs/screenshots/home-light.png) | ![Home screen in Italian](docs/screenshots/home-italian.png) |
+
+| New instance | Mods | Java |
+| --- | --- | --- |
+| ![New instance](docs/screenshots/new-instance.png) | ![Mods](docs/screenshots/mods.png) | ![Java](docs/screenshots/java.png) |
+
+## Features
+
+- Login screen: Microsoft, offline, or Ely.by / LittleSkin / custom server, plus saved accounts to switch between
+- Home screen with a jungle-scene hero (moonlit or daylight, following the theme), latest release/snapshot cards and a large **Play** button
+- Instances: create with any version and mod loader; edit version, loader, Java, memory, JVM args and resolution
+- Mods: Modrinth browser with dependency resolution, plus installed-mod list with enable, disable and delete
+- Versions browser: releases, snapshots, beta and alpha, with search and "installed" badges
+- Java manager: one-click Mojang and Temurin runtimes plus the Java installations found on this PC
+- Download manager: parallel downloads with SHA-1/SHA-256 checks, retries and live progress
+- Game console showing the game log (log4j XML converted to readable lines), with errors highlighted
+- Light and dark themes, or follow the system setting (**Settings → Appearance**); dark is the default
+- English and Italian: follows your system language, or pick one in **Settings → Appearance**
+
+## How it works
+
+Puma Launcher is modelled on the most active open-source launchers, checked in October 2026:
 
 | Project | Activity in 2026 | Latest release | What we took from it |
 | --- | --- | --- | --- |
 | **Prism Launcher** (most active) | ~1,550 commits, 52 contributors | 11.1.1 | Instance model, mod loaders through Prism's metadata server, ForgeWrapper for modern Forge/NeoForge, Temurin Java auto-install, mod management |
 | **HMCL** | ~900 commits, 37 contributors | 3.17.0 | One-click Mojang Java runtimes, authlib-injector accounts, Modrinth downloads |
 | ElyPrism / Fjord / Freesm | Prism forks that track upstream | 11.1.1-based | Third-party login servers (Ely.by, custom authlib-injector servers) |
-
-![Home screen](docs/screenshots/home.png)
 
 | Feature | Comes from | How it works here |
 | --- | --- | --- |
@@ -23,22 +91,6 @@ It is modelled on the most active open-source launchers, checked in October 2026
 
 No code was copied from HMCL or Prism Launcher. The launcher uses their public metadata services and the
 ForgeWrapper and authlib-injector jars at runtime. It is licensed GPL-3.0-or-later, the same licence as both projects.
-
-## Features
-
-- Login screen: Microsoft, offline, or Ely.by / LittleSkin / custom server, plus saved accounts to switch between
-- Home screen with an animated gradient hero, latest release/snapshot cards and a large **Play** button
-- Instances: create with any version and mod loader; edit version, loader, Java, memory, JVM args and resolution
-- Mods: Modrinth browser with dependency resolution, plus installed-mod list with enable, disable and delete
-- Versions browser: releases, snapshots, beta and alpha, with search and "installed" badges
-- Java manager: one-click Mojang and Temurin runtimes plus the Java installations found on this PC
-- Download manager: parallel downloads with SHA-1/SHA-256 checks, retries and live progress
-- Game console showing the game log (log4j XML converted to readable lines), with errors highlighted
-- Light and dark themes, or follow the system setting (**Settings → Appearance**); dark is the default
-
-| New instance | Mods | Java |
-| --- | --- | --- |
-| ![New instance](docs/screenshots/new-instance.png) | ![Mods](docs/screenshots/mods.png) | ![Java](docs/screenshots/java.png) |
 
 ### Tested
 
@@ -62,52 +114,7 @@ on a virtual display. The game reached the title screen and loaded into a new si
 | macOS Apple Silicon (M1–M4) | Minecraft 1.19 and newer run natively with Mojang's ARM Java (17, 21, 25). Older versions use LWJGL 2 without ARM builds and are not supported yet. |
 | Linux x64 / ARM64 | Tested on x64. ARM64 gets Java from Eclipse Temurin. |
 
-### Download the installers
-
-GitHub Actions builds every installer automatically (`.github/workflows/build.yml`):
-
-- **Any push:** open the **Actions** tab, pick the latest "Build installers" run, and download the
-  `PumaLauncher-Windows`, `PumaLauncher-macOS` or `PumaLauncher-Linux` artifact at the bottom of the page.
-- **A release:** in the **Actions** tab, open "Build installers", click **Run workflow** and enter a version such as
-  `v0.3.0`; or push a version tag (`git tag v0.3.0 && git push origin v0.3.0`). The installers are attached to a new
-  GitHub Release.
-
-| File | For |
-| --- | --- |
-| `PumaLauncher-<version>-windows-x64-setup.exe` | Windows 10/11 |
-| `PumaLauncher-<version>-macos-arm64.dmg` | Macs with Apple chips (M1–M4) |
-| `PumaLauncher-<version>-macos-x64.dmg` | Macs with Intel chips |
-| `PumaLauncher-<version>-linux-x86_64.AppImage` / `-amd64.deb` | Linux |
-
-You can also build locally with `npm run dist` on each OS: `.exe` (NSIS) on Windows, `.dmg` on macOS, AppImage/`.deb`
-on Linux. Without code signing, Windows SmartScreen and macOS Gatekeeper show a warning the first time
-(on macOS: right-click the app, then **Open**). Signing needs a code-signing certificate on Windows and an Apple
-Developer ID on macOS.
-
-## Getting started
-
-```bash
-npm install
-npm run dev        # start with hot reload
-npm run build      # production build into out/
-npm run dist       # package installers into release/ (electron-builder)
-npm run typecheck
-```
-
-Requires Node.js 20 or newer.
-
-### Where data is stored
-
-| OS | Folder |
-| --- | --- |
-| Windows | `%APPDATA%\puma-launcher` |
-| macOS | `~/Library/Application Support/puma-launcher` |
-| Linux | `~/.config/puma-launcher` |
-
-To use another folder, set the `PUMA_HOME` environment variable. Data from older versions (the `txtaan-launcher` folder, from before the rename) is moved to the new folder automatically on first start. The layout follows `.minecraft`
-(`versions/`, `libraries/`, `assets/`), plus `runtime/` for downloaded Java and `instances/` for instances.
-
-### Microsoft login setup
+## Microsoft login setup
 
 Microsoft requires every launcher to use its own Azure application:
 
@@ -121,6 +128,44 @@ Microsoft requires every launcher to use its own Azure application:
    at the Minecraft step with HTTP 403.
 
 Offline mode works without any of this.
+
+## Where your data is stored
+
+| OS | Folder |
+| --- | --- |
+| Windows | `%APPDATA%\puma-launcher` |
+| macOS | `~/Library/Application Support/puma-launcher` |
+| Linux | `~/.config/puma-launcher` |
+
+To use another folder, set the `PUMA_HOME` environment variable. Data from older versions (the `txtaan-launcher` folder, from before the rename) is moved to the new folder automatically on first start. The layout follows `.minecraft`
+(`versions/`, `libraries/`, `assets/`), plus `runtime/` for downloaded Java and `instances/` for instances.
+
+## Building from source
+
+```bash
+npm install
+npm run dev        # start with hot reload
+npm run build      # production build into out/
+npm run dist       # package installers into release/ (electron-builder)
+npm run typecheck
+```
+
+Requires Node.js 20 or newer.
+
+### Publishing a release
+
+GitHub Actions builds every installer automatically (`.github/workflows/build.yml`):
+
+- **Any push:** open the **Actions** tab, pick the latest "Build installers" run, and download the
+  `PumaLauncher-Windows`, `PumaLauncher-macOS` or `PumaLauncher-Linux` artifact at the bottom of the page.
+- **A release:** bump `version` in `package.json` (it is part of the file names), then in the **Actions** tab open
+  "Build installers", click **Run workflow** and enter the version, such as `v0.3.0`; or push a version tag
+  (`git tag v0.3.0 && git push origin v0.3.0`). The installers are attached to a new GitHub Release, which is what
+  the [Download](#download) link points to.
+
+You can also build installers locally with `npm run dist` on each OS: `.exe` (NSIS) on Windows, `.dmg` on macOS,
+AppImage/`.deb` on Linux. Without code signing, Windows SmartScreen and macOS Gatekeeper show a warning the first
+time. Signing needs a code-signing certificate on Windows and an Apple Developer ID on macOS.
 
 ## Project layout
 
@@ -138,12 +183,14 @@ src/
       auth.ts      Microsoft (device code), offline and authlib-injector accounts
       instances.ts instance storage
       http.ts      downloads with SHA-1 checks, retries and concurrency
+      i18n.ts      language for main-process text (progress, errors, console lines)
   preload/         typed, sandboxed IPC bridge (window.launcher)
   renderer/        React UI
     src/styles/theme.css  all colours, gradients and radii for the dark and light themes (edit this file to re-theme)
     src/styles/app.css    layout and components
     src/pages/            Login, Home, Instances, Versions, Java, Settings
   shared/types.ts  types shared by all three layers
+  shared/i18n/     English (en.ts, the source of every message) and Italian (it.ts) text
 ```
 
 ### Browser preview (for UI work)
@@ -159,9 +206,17 @@ Electron download, which the preview doesn't need).
 
 The UI only talks to the launcher through `window.launcher` (see `src/preload/index.ts`), so the
 renderer can be redesigned or replaced freely. To change the look, start with the tokens in
-`src/renderer/src/styles/theme.css`, for example `--hero-gradient` for the home screen gradient
-and `--brand-gradient` for buttons. `:root` holds the dark theme and `:root[data-theme='light']` overrides
-its colours for the light theme, so a new colour token needs a value in both.
+`src/renderer/src/styles/theme.css`, for example `--accent` and `--brand-gradient` for buttons and highlights, and
+`--cover-gradient` for the instance covers. The jungle scenes on the welcome and home screens are images in
+`src/renderer/src/assets`; the home hero shows the night art in the dark theme and the day art in the light one.
+`:root` holds the dark theme and `:root[data-theme='light']` overrides its colours for the light theme, so a new
+colour token needs a value in both.
+
+### Adding or changing text
+
+All text lives in `src/shared/i18n`. Add the English message to `en.ts`, then the same key to `it.ts`: the
+typecheck fails until every language has it. In the UI use `t('key')` from `useStore()`; in the main process
+use `tr('key')`. `{name}` placeholders are filled from the second argument.
 
 ## License
 

@@ -6,6 +6,7 @@ import type { LoaderType, LoaderVersion } from '@shared/types'
 import { fetchJson } from './http'
 import { readJson, writeJson } from './fsutil'
 import { paths } from './paths'
+import { tr } from './i18n'
 import type { Library } from './install'
 
 // Prism Launcher's metadata server. It normalises every mod loader (Fabric, Quilt, Forge,
@@ -73,10 +74,10 @@ export async function component(uid: string, version: string): Promise<Component
     if (!entry || createHash('sha256').update(raw).digest('hex') === entry.sha256) return JSON.parse(raw.toString()) as Component
   }
   const res = await fetch(`${PRISM_META}/${uid}/${version}.json`)
-  if (!res.ok) throw new Error(`${uid} ${version} is not available (HTTP ${res.status})`)
+  if (!res.ok) throw new Error(tr('error.metaUnavailable', { name: uid, version, status: res.status }))
   const raw = Buffer.from(await res.arrayBuffer())
   if (entry && createHash('sha256').update(raw).digest('hex') !== entry.sha256) {
-    throw new Error(`Checksum mismatch for ${uid} ${version}`)
+    throw new Error(tr('error.checksum', { name: `${uid} ${version}` }))
   }
   await writeJson(file, JSON.parse(raw.toString()))
   return JSON.parse(raw.toString()) as Component

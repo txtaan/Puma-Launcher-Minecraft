@@ -5,6 +5,7 @@ import { join } from 'node:path'
 import type { Instance } from '@shared/types'
 import { readJson, writeJson } from './fsutil'
 import { paths } from './paths'
+import { tr } from './i18n'
 
 // Prism-style instances: every instance is an isolated game directory
 // (saves, mods, resource packs, options) with its own Java/memory settings.
@@ -27,7 +28,7 @@ export async function listInstances(): Promise<Instance[]> {
 
 export async function getInstance(id: string): Promise<Instance> {
   const inst = await readJson<Instance | null>(metaFile(id), null)
-  if (!inst) throw new Error(`Instance ${id} not found`)
+  if (!inst) throw new Error(tr('error.instanceNotFound', { id }))
   return inst
 }
 

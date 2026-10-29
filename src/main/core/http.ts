@@ -4,12 +4,13 @@ import { mkdir, rename, rm, stat } from 'node:fs/promises'
 import { dirname } from 'node:path'
 import { Readable } from 'node:stream'
 import { pipeline } from 'node:stream/promises'
+import { tr } from './i18n'
 
 export const USER_AGENT = 'PumaLauncher/0.2 (+https://github.com/txtaan/Puma-Launcher-Minecraft)'
 
 export async function fetchJson<T>(url: string, init?: RequestInit): Promise<T> {
   const res = await fetch(url, { ...init, headers: { 'User-Agent': USER_AGENT, ...init?.headers } })
-  if (!res.ok) throw new Error(`HTTP ${res.status} for ${url}: ${await res.text().catch(() => '')}`)
+  if (!res.ok) throw new Error(`${tr('error.httpFor', { status: res.status, url })}: ${await res.text().catch(() => '')}`)
   return (await res.json()) as T
 }
 
@@ -47,14 +48,14 @@ export async function download(item: DownloadItem, retries = 3): Promise<void> {
   for (let attempt = 0; attempt <= retries; attempt++) {
     try {
       const res = await fetch(item.url, { headers: { 'User-Agent': USER_AGENT } })
-      if (!res.ok || !res.body) throw new Error(`HTTP ${res.status} for ${item.url}`)
+      if (!res.ok || !res.body) throw new Error(tr('error.httpFor', { status: res.status, url: item.url }))
       const hash = createHash(item.sha256 && !item.sha1 ? 'sha256' : 'sha1')
       const body = Readable.fromWeb(res.body as import('node:stream/web').ReadableStream)
       body.on('data', (chunk: Buffer) => hash.update(chunk))
       await pipeline(body, createWriteStream(tmp))
       const digest = hash.digest('hex')
       if ((item.sha1 && digest !== item.sha1) || (!item.sha1 && item.sha256 && digest !== item.sha256)) {
-        throw new Error(`Checksum mismatch for ${item.url}`)
+        throw new Error(tr('error.checksum', { name: item.url }))
       }
       await rename(tmp, item.dest)
       return
@@ -95,6 +96,6 @@ export async function downloadAll(
   }
   await Promise.all(Array.from({ length: Math.max(1, concurrency) }, worker))
   if (errors.length) {
-    throw new Error(`${errors.length} file(s) failed to download. First error: ${String(errors[0])}`)
+    throw new Error(tr('error.downloadsFailed', { count: errors.length, error: String(errors[0]) }))
   }
 }

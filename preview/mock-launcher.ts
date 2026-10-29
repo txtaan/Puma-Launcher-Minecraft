@@ -18,6 +18,7 @@ import type {
 } from '../src/shared/types'
 import type { InstanceWithState, LauncherApi } from '../src/preload/index'
 import sample from './sample-data.json'
+import { resolveLanguage, translate, type MessageKey } from '../src/shared/i18n'
 
 type Listener<T> = (payload: T) => void
 const listeners = new Map<string, Set<Listener<unknown>>>()
@@ -35,6 +36,7 @@ const uuid = () => crypto.randomUUID()
 let settings: Settings = {
   msClientId: '',
   theme: 'dark',
+  language: 'system',
   defaultMaxMemoryMb: 4096,
   defaultMinMemoryMb: 512,
   autoDownloadJava: true,
@@ -42,6 +44,11 @@ let settings: Settings = {
   concurrentDownloads: 16,
   closeOnLaunch: false
 }
+// Text the real main process would produce comes from the shared dictionary, in the language picked in Settings.
+const tr = (key: MessageKey, vars?: Record<string, string | number>) =>
+  translate(resolveLanguage(settings.language, navigator.language), key, vars)
+const previewOnly = (en: string, it: string) => (resolveLanguage(settings.language, navigator.language) === 'it' ? it : en)
+
 let accounts: PublicAccount[] = []
 const installedVersions = new Set<string>()
 const instances: Instance[] = []
@@ -70,7 +77,7 @@ async function simulate(taskId: string, title: string, stages: [string, number][
       await wait(60)
     }
   }
-  emit<ProgressEvent>('progress', { taskId, title, stage: 'Done', done: 1, total: 1, finished: true })
+  emit<ProgressEvent>('progress', { taskId, title, stage: tr('task.done'), done: 1, total: 1, finished: true })
 }
 
 const javaMajorFor = (versionId: string): number => {
@@ -96,7 +103,7 @@ const componentFor = (major: number) => runtimes.find((r) => r.majorVersion === 
 async function prepareJava(inst: Instance): Promise<void> {
   const component = componentFor(javaMajorFor(inst.versionId))
   if (inst.javaPath || javaInstalled.has(component)) return
-  await simulate(`java-prepare:${inst.id}`, `Java for ${inst.name}`, [[`Downloading Java ${javaMajorFor(inst.versionId)}`, 147]])
+  await simulate(`java-prepare:${inst.id}`, tr('task.javaFor', { name: inst.name }), [[tr('stage.downloadingJava', { version: javaMajorFor(inst.versionId) }), 147]])
   javaInstalled.add(component)
 }
 
@@ -132,7 +139,7 @@ const api: LauncherApi = {
     addOffline: async (name) => {
       const username = name.trim()
       if (!/^[A-Za-z0-9_]{3,16}$/.test(username)) {
-        throw new Error('Username must be 3-16 characters: letters, numbers and underscores only.')
+        throw new Error(tr('error.username'))
       }
       const existing = accounts.find((a) => a.type === 'offline' && a.username === username)
       if (existing) return existing
@@ -141,12 +148,12 @@ const api: LauncherApi = {
       return acc
     },
     loginMicrosoft: async () => {
-      throw new Error('Microsoft login is not available in this browser preview. Use “Play offline”.')
+      throw new Error(previewOnly('Microsoft login is not available in this browser preview. Use “Play Now”.', 'L’accesso Microsoft non è disponibile in questa anteprima nel browser. Usa “Gioca Ora”.'))
     },
     cancelLogin: async () => undefined,
     remove: async (id) => void (accounts = accounts.filter((a) => a.id !== id)),
     addAuthlib: async () => {
-      throw new Error('Third-party login is not available in this browser preview. Use “Play offline”.')
+      throw new Error(previewOnly('Third-party login is not available in this browser preview. Use “Play Now”.', 'L’accesso con server di terze parti non è disponibile in questa anteprima nel browser. Usa “Gioca Ora”.'))
     },
     authPresets: async () => ({
       'Ely.by': 'https://authserver.ely.by/api/authlib-injector',
@@ -164,7 +171,7 @@ const api: LauncherApi = {
     runtimes: async () => runtimes.map((r) => ({ ...r, installed: javaInstalled.has(r.component) })),
     install: async (component) => {
       const r = runtimes.find((x) => x.component === component)!
-      await simulate(`java:${component}`, `Installing ${component}`, [[`Downloading Java ${r.version}`, 147]])
+      await simulate(`java:${component}`, tr('task.installing', { name: component }), [[tr('stage.downloadingJava', { version: r.version }), 147]])
       javaInstalled.add(component)
       return ''
     }
@@ -193,11 +200,11 @@ const api: LauncherApi = {
     launch: async (id) => {
       const inst = instances.find((x) => x.id === id)!
       const first = !installedVersions.has(inst.versionId)
-      await simulate(`launch:${id}`, `Launching ${inst.name}`, [
-        ['Resolving version', 1],
-        ['Downloading game files', first ? 68 : 1],
-        ['Downloading assets', first ? 4200 : 1],
-        ['Preparing natives', 1]
+      await simulate(`launch:${id}`, tr('task.launching', { name: inst.name }), [
+        [tr('stage.resolvingVersion'), 1],
+        [tr('stage.downloadingFiles'), first ? 68 : 1],
+        [tr('stage.downloadingAssets'), first ? 4200 : 1],
+        [tr('stage.preparingNatives'), 1]
       ])
       installedVersions.add(inst.versionId)
       running.add(id)
@@ -205,7 +212,9 @@ const api: LauncherApi = {
       emit('game:started', { instanceId: id })
       const loader = inst.loader ? ` with ${inst.loader.type} ${inst.loader.version}` : ''
       const modCount = mods.get(id)?.filter((m) => m.enabled).length ?? 0
-      emit<GameLogEvent>('game:log', { instanceId: id, stream: 'launcher', line: `Launching ${inst.versionId}${loader} (browser preview: no real game is started)` })
+      const launchLine = tr('log.launching', { version: inst.versionId, loader: inst.loader ? ` + ${inst.loader.type} ${inst.loader.version}` : '', java: 'java' })
+      const note = previewOnly('browser preview: no real game is started', 'anteprima nel browser: nessuna partita viene avviata davvero')
+      emit<GameLogEvent>('game:log', { instanceId: id, stream: 'launcher', line: `${launchLine} (${note})` })
       for (const line of GAME_LOG) {
         await wait(250)
         const text = line
@@ -241,7 +250,7 @@ const api: LauncherApi = {
     search: async (id, query, offset = 0) => {
       await wait(200)
       const inst = instances.find((x) => x.id === id)!
-      if (!inst.loader) throw new Error('Install a mod loader (Fabric, Quilt, Forge or NeoForge) on this instance to use mods.')
+      if (!inst.loader) throw new Error(tr('error.needLoader'))
       const installed = new Set((mods.get(id) ?? []).map((m) => m.projectId))
       const q = query.toLowerCase()
       const hits: ModSearchHit[] = sample.mods

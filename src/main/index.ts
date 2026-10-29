@@ -10,6 +10,7 @@ import { isRunning, killInstance, launchInstance } from './core/launch'
 import { loaderVersions } from './core/meta'
 import * as mods from './core/mods'
 import { paths } from './core/paths'
+import { setLanguage, tr } from './core/i18n'
 import { emit, setProgressTarget, task } from './core/progress'
 import { getSettings, updateSettings } from './core/settings'
 import { getVersions, refreshVersions, startVersionWatcher } from './core/versions'
@@ -17,7 +18,7 @@ import { getVersions, refreshVersions, startVersionWatcher } from './core/versio
 let win: BrowserWindow | undefined
 
 /** Matches --bg in theme.css, so the window doesn't flash the wrong colour while loading or resizing. */
-const windowBackground = () => (nativeTheme.shouldUseDarkColors ? '#0b0b14' : '#f6f6fb')
+const windowBackground = () => (nativeTheme.shouldUseDarkColors ? '#0b0b14' : '#e7e7e7')
 
 /** Native parts (macOS window buttons, form controls, prefers-color-scheme) follow the launcher's theme. */
 function applyTheme(theme: ThemePreference): void {
@@ -80,7 +81,7 @@ async function prepareJava(inst: Instance): Promise<void> {
       autoDownload: true,
       concurrency: settings.concurrentDownloads,
       onProgress: (stage, done, total) => {
-        t ??= task(`java-prepare:${inst.id}`, `Java for ${inst.name}`)
+        t ??= task(`java-prepare:${inst.id}`, tr('task.javaFor', { name: inst.name }))
         t.update(stage, done, total)
       }
     })
@@ -108,6 +109,7 @@ function registerIpc(): void {
     const s = await updateSettings(patch)
     if (patch.versionRefreshMinutes) startVersionWatcher(s.versionRefreshMinutes)
     if (patch.theme) applyTheme(s.theme)
+    if (patch.language) setLanguage(s.language)
     return s
   })
 
@@ -145,7 +147,7 @@ function registerIpc(): void {
   handle('java:runtimes', () => availableRuntimes())
   handle('java:install', async (component: string) => {
     const { concurrentDownloads } = await getSettings()
-    const t = task(`java:${component}`, `Installing ${component}`)
+    const t = task(`java:${component}`, tr('task.installing', { name: component }))
     try {
       const exe = await installRuntime(component, concurrentDownloads, t.update)
       t.finish()
@@ -171,7 +173,7 @@ function registerIpc(): void {
     return inst
   })
   handle('instances:delete', (id: string) => {
-    if (isRunning(id)) throw new Error('Stop the game before deleting this instance.')
+    if (isRunning(id)) throw new Error(tr('error.stopBeforeDelete'))
     return instances.deleteInstance(id)
   })
   handle('instances:openFolder', (id: string) => shell.openPath(instances.gameDir(id)))
@@ -180,7 +182,7 @@ function registerIpc(): void {
     const settings = await getSettings()
     const instance = await instances.getInstance(id)
     const account = await auth.getLaunchAccount(accountId, settings.msClientId)
-    const t = task(`launch:${id}`, `Launching ${instance.name}`)
+    const t = task(`launch:${id}`, tr('task.launching', { name: instance.name }))
     const log = (line: string, stream: 'stdout' | 'stderr' | 'launcher') =>
       emit('game:log', { instanceId: id, line, stream })
     try {
@@ -198,7 +200,7 @@ function registerIpc(): void {
       if (settings.closeOnLaunch) win?.hide()
     } catch (err) {
       t.fail(err)
-      log(`Launch failed: ${err instanceof Error ? err.message : String(err)}`, 'launcher')
+      log(tr('log.launchFailed', { error: err instanceof Error ? err.message : String(err) }), 'launcher')
       throw err
     }
   })
@@ -209,6 +211,7 @@ app.whenReady().then(async () => {
   registerIpc()
   const settings = await getSettings()
   applyTheme(settings.theme)
+  setLanguage(settings.language)
   nativeTheme.on('updated', () => win?.setBackgroundColor(windowBackground()))
   createWindow()
   void refreshVersions()
