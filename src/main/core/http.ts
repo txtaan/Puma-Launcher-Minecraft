@@ -5,7 +5,7 @@ import { dirname } from 'node:path'
 import { Readable } from 'node:stream'
 import { pipeline } from 'node:stream/promises'
 
-export const USER_AGENT = 'TxtaanLauncher/0.2 (+https://github.com/txtaan/Minecraft-Launcher-txtaan-)'
+export const USER_AGENT = 'PumaLauncher/0.2 (+https://github.com/txtaan/Puma-Launcher-Minecraft)'
 
 export async function fetchJson<T>(url: string, init?: RequestInit): Promise<T> {
   const res = await fetch(url, { ...init, headers: { 'User-Agent': USER_AGENT, ...init?.headers } })

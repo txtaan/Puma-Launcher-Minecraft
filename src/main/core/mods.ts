@@ -13,7 +13,16 @@ const MODRINTH = 'https://api.modrinth.com/v2'
 
 const modsDir = (instanceId: string) => join(gameDir(instanceId), 'mods')
 /** Remembers which Modrinth project each downloaded file came from (filename -> project id). */
-const indexFile = (instanceId: string) => join(modsDir(instanceId), '.txtaan-index.json')
+const indexFile = (instanceId: string) => join(modsDir(instanceId), '.puma-index.json')
+/** Index written before the rename to Puma Launcher. */
+const legacyIndexFile = (instanceId: string) => join(modsDir(instanceId), '.txtaan-index.json')
+
+async function readIndex(instanceId: string): Promise<Record<string, string>> {
+  return (
+    (await readJson<Record<string, string> | null>(indexFile(instanceId), null)) ??
+    readJson<Record<string, string>>(legacyIndexFile(instanceId), {})
+  )
+}
 
 /** Modrinth loader names a given instance can use. Quilt runs Fabric mods too. */
 function modLoaders(instance: Instance): string[] {
@@ -70,7 +79,7 @@ async function readModMeta(file: string): Promise<{ name?: string; version?: str
 export async function listMods(instanceId: string): Promise<InstalledMod[]> {
   const dir = modsDir(instanceId)
   if (!existsSync(dir)) return []
-  const index = await readJson<Record<string, string>>(indexFile(instanceId), {})
+  const index = await readIndex(instanceId)
   const files = (await readdir(dir)).filter((f) => /\.jar(\.disabled)?$/i.test(f))
   const mods = await Promise.all(
     files.map(async (fileName) => {
@@ -97,7 +106,7 @@ export async function setModEnabled(instanceId: string, fileName: string, enable
 export async function deleteMod(instanceId: string, fileName: string): Promise<void> {
   if (fileName.includes('/') || fileName.includes('\\')) throw new Error('Invalid file name')
   await rm(join(modsDir(instanceId), fileName), { force: true })
-  const index = await readJson<Record<string, string>>(indexFile(instanceId), {})
+  const index = await readIndex(instanceId)
   delete index[fileName.replace(/\.disabled$/i, '')]
   await writeJson(indexFile(instanceId), index)
 }
@@ -130,7 +139,7 @@ export async function searchMods(
     offset: String(offset)
   })
   const res = await fetchJson<SearchResponse>(`${MODRINTH}/search?${params}`)
-  const installed = new Set(Object.values(await readJson<Record<string, string>>(indexFile(instance.id), {})))
+  const installed = new Set(Object.values(await readIndex(instance.id)))
   return {
     total: res.total_hits,
     hits: res.hits.map((h) => ({
@@ -168,7 +177,7 @@ export async function installMod(instance: Instance, projectId: string): Promise
   requireLoader(instance)
   const dir = modsDir(instance.id)
   await mkdir(dir, { recursive: true })
-  const index = await readJson<Record<string, string>>(indexFile(instance.id), {})
+  const index = await readIndex(instance.id)
   const installedProjects = new Set(Object.values(index))
   const installedNames: string[] = []
 
