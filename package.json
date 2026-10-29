@@ -10,28 +10,67 @@
     "build": "electron-vite build",
     "start": "electron-vite preview",
     "typecheck": "tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json",
-    "dist": "electron-vite build && electron-builder"
+    "dist": "electron-vite build && electron-builder --publish never"
   },
   "build": {
     "appId": "dev.txtaan.launcher",
     "productName": "Txtaan Launcher",
+    "artifactName": "TxtaanLauncher-${version}-${os}-${arch}.${ext}",
     "files": [
       "out/**/*"
     ],
     "directories": {
-      "output": "release"
+      "output": "release",
+      "buildResources": "build"
     },
     "win": {
-      "target": "nsis"
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "artifactName": "TxtaanLauncher-${version}-windows-${arch}-setup.${ext}"
     },
     "mac": {
-      "target": "dmg"
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        }
+      ],
+      "category": "public.app-category.games",
+      "identity": "-",
+      "hardenedRuntime": false,
+      "artifactName": "TxtaanLauncher-${version}-macos-${arch}.${ext}"
     },
     "linux": {
       "target": [
-        "AppImage",
-        "deb"
-      ]
+        {
+          "target": "AppImage",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "deb",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "category": "Game",
+      "maintainer": "txtaan",
+      "artifactName": "TxtaanLauncher-${version}-linux-${arch}.${ext}"
     }
   },
   "dependencies": {
@@ -51,5 +90,7 @@
     "electron-vite": "^6.0.0",
     "typescript": "^7.0.2",
     "vite": "^8.3.5"
-  }
+  },
+  "author": "txtaan",
+  "homepage": "https://github.com/txtaan/Minecraft-Launcher-txtaan-"
 }

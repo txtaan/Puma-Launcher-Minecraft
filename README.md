@@ -61,7 +61,23 @@ on a virtual display. The game reached the title screen and loaded into a new si
 | macOS Apple Silicon (M1–M4) | Minecraft 1.19 and newer run natively with Mojang's ARM Java (17, 21, 25). Older versions use LWJGL 2 without ARM builds and are not supported yet. |
 | Linux x64 / ARM64 | Tested on x64. ARM64 gets Java from Eclipse Temurin. |
 
-Installers are built with `npm run dist` on each OS: `.exe` (NSIS) on Windows, `.dmg` on macOS, AppImage/`.deb`
+### Download the installers
+
+GitHub Actions builds every installer automatically (`.github/workflows/build.yml`):
+
+- **Any push:** open the **Actions** tab, pick the latest "Build installers" run, and download the
+  `TxtaanLauncher-Windows`, `TxtaanLauncher-macOS` or `TxtaanLauncher-Linux` artifact at the bottom of the page.
+- **A release:** push a version tag, e.g. `git tag v0.3.0 && git push origin v0.3.0`. The installers are attached to a
+  new GitHub Release.
+
+| File | For |
+| --- | --- |
+| `TxtaanLauncher-<version>-windows-x64-setup.exe` | Windows 10/11 |
+| `TxtaanLauncher-<version>-macos-arm64.dmg` | Macs with Apple chips (M1–M4) |
+| `TxtaanLauncher-<version>-macos-x64.dmg` | Macs with Intel chips |
+| `TxtaanLauncher-<version>-linux-x86_64.AppImage` / `-amd64.deb` | Linux |
+
+You can also build locally with `npm run dist` on each OS: `.exe` (NSIS) on Windows, `.dmg` on macOS, AppImage/`.deb`
 on Linux. Without code signing, Windows SmartScreen and macOS Gatekeeper show a warning the first time
 (on macOS: right-click the app, then **Open**). Signing needs a code-signing certificate on Windows and an Apple
 Developer ID on macOS.
