@@ -10,6 +10,7 @@ import { extractArchive } from './archive'
 import { PRISM_META } from './meta'
 import { paths } from './paths'
 import { javaRuntimePlatform } from './platform'
+import { tr } from './i18n'
 
 const execFileAsync = promisify(execFile)
 
@@ -272,13 +273,13 @@ async function downloadMojangRuntime(component: string, concurrency: number, onP
   const exe = runtimeExe(component)
   const index = await runtimeIndex()
   const entry = index[javaRuntimePlatform()]?.[component]?.[0]
-  if (!entry) throw new Error(`Mojang does not provide ${component} for ${javaRuntimePlatform()}`)
+  if (!entry) throw new Error(tr('error.noMojangJava', { component, platform: javaRuntimePlatform() }))
 
   if (existsSync(marker) && (await readFile(marker, 'utf8')).trim() === entry.version.name && existsSync(exe)) {
     return exe
   }
 
-  onProgress('Fetching runtime manifest', 0, 1)
+  onProgress(tr('stage.runtimeManifest'), 0, 1)
   const manifest = await fetchJson<RuntimeManifest>(entry.manifest.url)
   const downloads: DownloadItem[] = []
   const executables: string[] = []
@@ -293,7 +294,7 @@ async function downloadMojangRuntime(component: string, concurrency: number, onP
   }
 
   await rm(marker, { force: true })
-  await downloadAll(downloads, concurrency, (d, t) => onProgress(`Downloading Java ${entry.version.name}`, d, t))
+  await downloadAll(downloads, concurrency, (d, t) => onProgress(tr('stage.downloadingJava', { version: entry.version.name }), d, t))
   if (!isWin) {
     for (const f of executables) await chmod(f, 0o755)
     for (const [dest, target] of links) {
@@ -309,22 +310,22 @@ async function downloadMojangRuntime(component: string, concurrency: number, onP
 async function downloadAdoptium(major: number, onProgress: Progress): Promise<string> {
   const component = `${ADOPTIUM_PREFIX}${major}`
   const home = runtimeHome(component)
-  onProgress(`Finding Java ${major}`, 0, 1)
+  onProgress(tr('stage.findingJava', { major }), 0, 1)
   const runtime = await adoptiumRuntime(major)
-  if (!runtime) throw new Error(`No Java ${major} build is available for ${adoptiumPlatform()}`)
+  if (!runtime) throw new Error(tr('error.noTemurin', { major, platform: adoptiumPlatform() }))
   if (isInstalled(component) && (await readFile(join(home, '.installed'), 'utf8')).trim() === runtime.name) {
     return runtimeExe(component)
   }
   const archive = join(paths.cache(), 'java', decodeURIComponent(runtime.url.split('/').pop()!))
   const algo = runtime.checksum.type === 'sha256' ? { sha256: runtime.checksum.hash } : runtime.checksum.type === 'sha1' ? { sha1: runtime.checksum.hash } : {}
   await downloadAll([{ url: runtime.url, dest: archive, ...algo }], 1, () =>
-    onProgress(`Downloading Java ${adoptiumVersion(runtime)} (Temurin)`, 0, 1)
+    onProgress(tr('stage.downloadingTemurin', { version: adoptiumVersion(runtime) }), 0, 1)
   )
-  onProgress(`Extracting Java ${adoptiumVersion(runtime)}`, 0, 1)
+  onProgress(tr('stage.extractingJava', { version: adoptiumVersion(runtime) }), 0, 1)
   await rm(home, { recursive: true, force: true })
   await extractArchive(archive, home, 1)
   const rel = [join('bin', javaExe), join('Contents', 'Home', 'bin', javaExe)].find((r) => existsSync(join(home, r)))
-  if (!rel) throw new Error('Downloaded Java archive has an unexpected layout')
+  if (!rel) throw new Error(tr('error.javaArchive'))
   await writeFile(join(home, '.java-path'), rel)
   await writeFile(join(home, '.installed'), runtime.name)
   await rm(archive, { force: true })
@@ -350,7 +351,7 @@ export async function resolveJava(opts: {
   onProgress: Progress
 }): Promise<string> {
   if (opts.explicitPath) {
-    if (!existsSync(opts.explicitPath)) throw new Error(`Java not found at ${opts.explicitPath}`)
+    if (!existsSync(opts.explicitPath)) throw new Error(tr('error.javaNotFound', { path: opts.explicitPath }))
     return opts.explicitPath
   }
   const component = opts.component ?? (opts.majorVersion <= 8 ? 'jre-legacy' : undefined)
@@ -378,9 +379,7 @@ export async function resolveJava(opts: {
     installs.find((j) => j.majorVersion === opts.majorVersion) ??
     (opts.majorVersion > 8 ? installs.find((j) => j.majorVersion > opts.majorVersion) : undefined)
   if (!match) {
-    throw new Error(
-      `Java ${opts.majorVersion} is required. Enable automatic Java downloads or install it from the Java page.`
-    )
+    throw new Error(tr('error.javaRequired', { major: opts.majorVersion }))
   }
   return match.path
 }

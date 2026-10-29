@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import type { LanguagePreference, MessageKey } from '@shared/i18n'
 import type { Settings, ThemePreference } from '@shared/types'
 import { api, errorMessage } from '../api'
 import { Avatar } from '../components/Avatar'
@@ -6,7 +7,7 @@ import { Icon } from '../components/Icon'
 import { useStore } from '../store'
 
 export function SettingsPage() {
-  const { settings, saveSettings, accounts, account, selectAccount, refreshAccounts, toast } = useStore()
+  const { settings, saveSettings, accounts, account, selectAccount, refreshAccounts, toast, t } = useStore()
   // Only unsaved edits live here, so settings that apply instantly (theme, accounts) don't discard them.
   const [edits, setEdits] = useState<Partial<Settings>>({})
   if (!settings) return null
@@ -17,7 +18,7 @@ export function SettingsPage() {
     try {
       await saveSettings(edits)
       setEdits({})
-      toast('Settings saved', 'success')
+      toast(t('settings.saved'), 'success')
     } catch (err) {
       toast(errorMessage(err), 'error')
     }
@@ -27,27 +28,42 @@ export function SettingsPage() {
     <div className="page">
       <div className="page-head">
         <div>
-          <h1>Settings</h1>
-          <p className="muted">Defaults apply to every instance unless overridden in the instance settings.</p>
+          <h1>{t('nav.settings')}</h1>
+          <p className="muted">{t('settings.subtitle')}</p>
         </div>
         <button className="btn btn-primary" onClick={() => void save()}>
-          Save changes
+          {t('settings.save')}
         </button>
       </div>
 
       <section className="card settings-section">
-        <h2>Appearance</h2>
+        <h2>{t('settings.appearance')}</h2>
         <div className="field">
-          <span>Theme</span>
+          <span>{t('settings.theme')}</span>
           <div className="segmented self-start">
-            {THEMES.map((t) => (
+            {THEMES.map((th) => (
               <button
-                key={t.key}
-                className={settings.theme === t.key ? 'active' : ''}
-                aria-pressed={settings.theme === t.key}
-                onClick={() => void saveSettings({ theme: t.key }).catch((err) => toast(errorMessage(err), 'error'))}
+                key={th.key}
+                className={settings.theme === th.key ? 'active' : ''}
+                aria-pressed={settings.theme === th.key}
+                onClick={() => void saveSettings({ theme: th.key }).catch((err) => toast(errorMessage(err), 'error'))}
               >
-                <Icon name={t.icon} size={15} /> {t.label}
+                <Icon name={th.icon} size={15} /> {t(th.label)}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div className="field">
+          <span>{t('settings.language')}</span>
+          <div className="segmented self-start">
+            {LANGUAGES.map((l) => (
+              <button
+                key={l.key}
+                className={settings.language === l.key ? 'active' : ''}
+                aria-pressed={settings.language === l.key}
+                onClick={() => void saveSettings({ language: l.key }).catch((err) => toast(errorMessage(err), 'error'))}
+              >
+                {l.key === 'system' ? t('settings.system') : l.label}
               </button>
             ))}
           </div>
@@ -55,25 +71,31 @@ export function SettingsPage() {
       </section>
 
       <section className="card settings-section">
-        <h2>Accounts</h2>
+        <h2>{t('settings.accounts')}</h2>
         <div className="stack">
           {accounts.map((a) => (
             <div key={a.id} className="row gap-s account-row">
               <Avatar account={a} size={32} />
               <div className="grow">
                 <strong>{a.username}</strong>
-                <div className="muted">{a.type === 'microsoft' ? 'Microsoft account' : a.type === 'authlib' ? `${a.serverName} account` : 'Offline account'}</div>
+                <div className="muted">
+                  {a.type === 'microsoft'
+                    ? t('account.microsoftAccount')
+                    : a.type === 'authlib'
+                      ? t('account.serverAccount', { server: a.serverName ?? '' })
+                      : t('account.offlineAccount')}
+                </div>
               </div>
               {a.id === account?.id ? (
-                <span className="pill pill-accent">Active</span>
+                <span className="pill pill-accent">{t('settings.active')}</span>
               ) : (
                 <button className="btn btn-ghost btn-sm" onClick={() => void selectAccount(a.id)}>
-                  Use
+                  {t('settings.use')}
                 </button>
               )}
               <button
                 className="icon-btn danger"
-                aria-label={`Remove ${a.username}`}
+                aria-label={t('common.remove', { name: a.username })}
                 onClick={async () => {
                   await api.accounts.remove(a.id)
                   await refreshAccounts()
@@ -85,59 +107,63 @@ export function SettingsPage() {
             </div>
           ))}
           <button className="btn btn-ghost btn-sm self-start" onClick={() => void selectAccount(undefined)}>
-            <Icon name="plus" size={16} /> Add another account
+            <Icon name="plus" size={16} /> {t('settings.addAccount')}
           </button>
         </div>
         <label className="field">
-          <span>Microsoft login — Azure application (client) ID</span>
+          <span>{t('settings.msClientId')}</span>
           <input value={draft.msClientId} placeholder="00000000-0000-0000-0000-000000000000" onChange={(e) => set('msClientId', e.target.value.trim())} />
-          <small className="muted">
-            Register a free app in the Azure portal (personal Microsoft accounts, public client / device code flow enabled), then
-            request Minecraft API access from Mojang. See README for details.
-          </small>
+          <small className="muted">{t('settings.msClientIdHelp')}</small>
         </label>
       </section>
 
       <section className="card settings-section">
-        <h2>Game</h2>
+        <h2>{t('settings.game')}</h2>
         <div className="form-grid">
           <label className="field">
-            <span>Default min memory (MB)</span>
+            <span>{t('settings.minMemory')}</span>
             <input type="number" value={draft.defaultMinMemoryMb} onChange={(e) => set('defaultMinMemoryMb', Number(e.target.value))} />
           </label>
           <label className="field">
-            <span>Default max memory (MB)</span>
+            <span>{t('settings.maxMemory')}</span>
             <input type="number" value={draft.defaultMaxMemoryMb} onChange={(e) => set('defaultMaxMemoryMb', Number(e.target.value))} />
           </label>
         </div>
-        <Toggle label="Let the launcher download Java (recommended). When off, Java installed on this PC is used" checked={draft.autoDownloadJava} onChange={(v) => set('autoDownloadJava', v)} />
-        <Toggle label="Hide launcher while the game is running" checked={draft.closeOnLaunch} onChange={(v) => set('closeOnLaunch', v)} />
+        <Toggle label={t('settings.autoJava')} checked={draft.autoDownloadJava} onChange={(v) => set('autoDownloadJava', v)} />
+        <Toggle label={t('settings.hideOnLaunch')} checked={draft.closeOnLaunch} onChange={(v) => set('closeOnLaunch', v)} />
       </section>
 
       <section className="card settings-section">
-        <h2>Downloads & updates</h2>
+        <h2>{t('settings.downloads')}</h2>
         <div className="form-grid">
           <label className="field">
-            <span>Check Mojang for new versions every (minutes)</span>
+            <span>{t('settings.refreshMinutes')}</span>
             <input type="number" min={1} value={draft.versionRefreshMinutes} onChange={(e) => set('versionRefreshMinutes', Math.max(1, Number(e.target.value)))} />
           </label>
           <label className="field">
-            <span>Parallel downloads</span>
+            <span>{t('settings.parallel')}</span>
             <input type="number" min={1} max={64} value={draft.concurrentDownloads} onChange={(e) => set('concurrentDownloads', Math.min(64, Math.max(1, Number(e.target.value))))} />
           </label>
         </div>
         <button className="btn btn-ghost btn-sm self-start" onClick={() => void api.openDataFolder()}>
-          <Icon name="folder" size={16} /> Open launcher data folder
+          <Icon name="folder" size={16} /> {t('settings.openData')}
         </button>
       </section>
     </div>
   )
 }
 
-const THEMES: { key: ThemePreference; label: string; icon: string }[] = [
-  { key: 'system', label: 'System', icon: 'monitor' },
-  { key: 'light', label: 'Light', icon: 'sun' },
-  { key: 'dark', label: 'Dark', icon: 'moon' }
+const THEMES: { key: ThemePreference; label: MessageKey; icon: string }[] = [
+  { key: 'system', label: 'settings.system', icon: 'monitor' },
+  { key: 'light', label: 'settings.light', icon: 'sun' },
+  { key: 'dark', label: 'settings.dark', icon: 'moon' }
+]
+
+// Language names are shown in their own language, so they read the same whichever language is active.
+const LANGUAGES: { key: LanguagePreference; label: string }[] = [
+  { key: 'system', label: '' },
+  { key: 'en', label: 'English' },
+  { key: 'it', label: 'Italiano' }
 ]
 
 function Toggle({ label, checked, onChange }: { label: string; checked: boolean; onChange: (v: boolean) => void }) {

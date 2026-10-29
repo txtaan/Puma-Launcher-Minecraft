@@ -2,25 +2,25 @@ import { useStore } from '../store'
 
 /** Floating panel listing running downloads/launches with progress bars. */
 export function TaskDock() {
-  const { tasks } = useStore()
+  const { tasks, t } = useStore()
   const list = Object.values(tasks)
   if (!list.length) return null
   return (
     <div className="task-dock">
-      {list.map((t) => {
-        const pct = t.total ? Math.round((t.done / t.total) * 100) : 0
+      {list.map((task) => {
+        const pct = task.total ? Math.round((task.done / task.total) * 100) : 0
         return (
-          <div key={t.taskId} className={`task ${t.error ? 'task-error' : ''}`}>
+          <div key={task.taskId} className={`task ${task.error ? 'task-error' : ''}`}>
             <div className="task-head">
-              <strong>{t.title}</strong>
-              <span>{t.finished ? (t.error ? 'Failed' : 'Done') : t.total > 1 ? `${pct}%` : ''}</span>
+              <strong>{task.title}</strong>
+              <span>{task.finished ? (task.error ? t('task.failed') : t('task.done')) : task.total > 1 ? `${pct}%` : ''}</span>
             </div>
             <div className="task-stage">
-              {t.stage}
-              {t.total > 1 && !t.finished ? ` · ${t.done}/${t.total}` : ''}
+              {task.stage}
+              {task.total > 1 && !task.finished ? ` · ${task.done}/${task.total}` : ''}
             </div>
             <div className="progress">
-              <div className="progress-bar" style={{ width: `${t.finished ? 100 : pct}%` }} />
+              <div className="progress-bar" style={{ width: `${task.finished ? 100 : pct}%` }} />
             </div>
           </div>
         )

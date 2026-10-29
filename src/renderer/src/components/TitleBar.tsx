@@ -1,7 +1,9 @@
 import { api } from '../api'
+import { useStore } from '../store'
 import { Icon } from './Icon'
 
 export function TitleBar() {
+  const { t } = useStore()
   const mac = api.platform === 'darwin'
   return (
     <header className={`titlebar ${mac ? 'titlebar-mac' : ''}`}>
@@ -11,13 +13,13 @@ export function TitleBar() {
       </div>
       {!mac && (
         <div className="titlebar-controls">
-          <button aria-label="Minimize" onClick={api.window.minimize}>
+          <button aria-label={t('window.minimize')} onClick={api.window.minimize}>
             <Icon name="min" size={14} />
           </button>
-          <button aria-label="Maximize" onClick={api.window.maximize}>
+          <button aria-label={t('window.maximize')} onClick={api.window.maximize}>
             <Icon name="max" size={12} />
           </button>
-          <button aria-label="Close" className="close" onClick={api.window.close}>
+          <button aria-label={t('common.close')} className="close" onClick={api.window.close}>
             <Icon name="x" size={14} />
           </button>
         </div>

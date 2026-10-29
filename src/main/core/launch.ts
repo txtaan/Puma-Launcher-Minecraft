@@ -23,6 +23,7 @@ import { loaderComponents } from './meta'
 import { paths } from './paths'
 import { rulesAllow } from './platform'
 import { gameDir } from './instances'
+import { tr } from './i18n'
 
 export const LAUNCHER_NAME = 'puma-launcher'
 export const LAUNCHER_VERSION = '0.2.2'
@@ -70,7 +71,7 @@ const FORGE_WRAPPER_MAIN = 'io.github.zekerzhayard.forgewrapper.installer.Main'
 function forgeWrapperArgs(version: VersionJson): string[] {
   const installer = (version.mavenFiles ?? []).find((l) => l.name.endsWith(':installer'))
   const art = installer && libraryArtifact(installer)
-  if (!art) throw new Error('This Forge version is missing its installer in the metadata')
+  if (!art) throw new Error(tr('error.forgeInstaller'))
   return [
     `-Dforgewrapper.librariesDir=${paths.libraries()}`,
     `-Dforgewrapper.installer=${join(paths.libraries(), art.path)}`,
@@ -90,11 +91,11 @@ export async function launchInstance(
   settings: Settings,
   cb: LaunchCallbacks
 ): Promise<void> {
-  if (running.has(instance.id)) throw new Error(`${instance.name} is already running`)
+  if (running.has(instance.id)) throw new Error(tr('error.alreadyRunning', { name: instance.name }))
   const dir = gameDir(instance.id)
   await mkdir(dir, { recursive: true })
 
-  cb.onProgress('Resolving version', 0, 1)
+  cb.onProgress(tr('stage.resolvingVersion'), 0, 1)
   const components = instance.loader ? await loaderComponents(instance.loader, instance.versionId) : []
   const version = await installVersion(instance.versionId, dir, settings.concurrentDownloads, cb.onProgress, components)
   const agent = account.type === 'authlib' && account.authServer ? await authlibAgentArgs(account.authServer) : []
@@ -107,7 +108,7 @@ export async function launchInstance(
     onProgress: cb.onProgress
   })
 
-  cb.onProgress('Preparing natives', 0, 1)
+  cb.onProgress(tr('stage.preparingNatives'), 0, 1)
   const nativesDir = paths.natives(instance.id)
   await extractNatives(version, nativesDir)
 
@@ -167,9 +168,9 @@ export async function launchInstance(
 
   const args = [...jvm, version.mainClass, ...game]
   const loaderLabel = instance.loader ? ` + ${instance.loader.type} ${instance.loader.version}` : ''
-  cb.onLog(`Launching ${version.id}${loaderLabel} with ${java}`, 'launcher')
+  cb.onLog(tr('log.launching', { version: version.id, loader: loaderLabel, java }), 'launcher')
   cb.onLog(
-    `Arguments: ${args.map((a) => (a === account.accessToken && a !== '0' ? '<access token>' : a)).join(' ')}`,
+    tr('log.arguments', { args: args.map((a) => (a === account.accessToken && a !== '0' ? '<access token>' : a)).join(' ') }),
     'launcher'
   )
 
@@ -192,7 +193,7 @@ export async function launchInstance(
   pipeLines(child.stdout, 'stdout')
   pipeLines(child.stderr, 'stderr')
   child.on('error', (err) => {
-    cb.onLog(`Failed to start Java: ${err.message}`, 'launcher')
+    cb.onLog(tr('log.javaFailed', { error: err.message }), 'launcher')
     running.delete(instance.id)
     cb.onExit(-1)
   })
