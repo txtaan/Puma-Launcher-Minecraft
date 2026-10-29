@@ -13,6 +13,7 @@ import type {
   ProgressEvent,
   PublicAccount,
   Settings,
+  UpdateInfo,
   VersionList
 } from '@shared/types'
 
@@ -89,12 +90,19 @@ const api = {
     install: (id: string, projectId: string) => invoke<string[]>('mods:install', id, projectId),
     openFolder: (id: string) => invoke<string>('mods:openFolder', id)
   },
+  /** The launcher's own updates. */
+  updates: {
+    get: () => invoke<UpdateInfo>('updates:get'),
+    check: () => invoke<UpdateInfo>('updates:check'),
+    install: () => invoke<void>('updates:install')
+  },
   events: {
     onProgress: (cb: (e: ProgressEvent) => void) => on('progress', cb),
     onLog: (cb: (e: GameLogEvent) => void) => on('game:log', cb),
     onExit: (cb: (e: GameExitEvent) => void) => on('game:exit', cb),
     onStarted: (cb: (e: { instanceId: string }) => void) => on('game:started', cb),
-    onWindowOpen: (cb: (e: { instanceId: string }) => void) => on('game:windowOpen', cb)
+    onWindowOpen: (cb: (e: { instanceId: string }) => void) => on('game:windowOpen', cb),
+    onUpdate: (cb: (e: UpdateInfo) => void) => on('update:state', cb)
   }
 }
 

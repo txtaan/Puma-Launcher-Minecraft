@@ -14,10 +14,12 @@ import type {
   ProgressEvent,
   PublicAccount,
   Settings,
-  VersionList
+  VersionList,
+  UpdateInfo
 } from '../src/shared/types'
 import type { InstanceWithState, LauncherApi } from '../src/preload/index'
 import sample from './sample-data.json'
+import pkg from '../package.json'
 import { resolveLanguage, translate, type MessageKey } from '../src/shared/i18n'
 
 type Listener<T> = (payload: T) => void
@@ -119,6 +121,8 @@ const GAME_LOG = [
   'Loaded 1407 recipes',
   'Loaded 1520 advancements'
 ]
+
+let update: UpdateInfo = { current: pkg.version, supported: true, method: 'restart', state: { status: 'idle' } }
 
 const api: LauncherApi = {
   platform: 'win32',
@@ -276,12 +280,26 @@ const api: LauncherApi = {
     },
     openFolder: async () => ''
   },
+  updates: {
+    get: async () => update,
+    check: async () => {
+      // The preview always reports its version as the latest.
+      update = { ...update, state: { status: 'checking' } }
+      emit('update:state', update)
+      await wait(800)
+      update = { ...update, state: { status: 'latest' } }
+      emit('update:state', update)
+      return update
+    },
+    install: async () => undefined
+  },
   events: {
     onProgress: (cb) => on('progress', cb),
     onLog: (cb) => on('game:log', cb),
     onExit: (cb) => on('game:exit', cb),
     onStarted: (cb) => on('game:started', cb),
-    onWindowOpen: (cb) => on('game:windowOpen', cb)
+    onWindowOpen: (cb) => on('game:windowOpen', cb),
+    onUpdate: (cb) => on('update:state', cb)
   }
 }
 

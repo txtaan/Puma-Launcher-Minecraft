@@ -1,6 +1,6 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { resolveLanguage, translate, type Language, type Translate } from '@shared/i18n'
-import type { GameLogEvent, ProgressEvent, PublicAccount, Settings, VersionList } from '@shared/types'
+import type { GameLogEvent, ProgressEvent, PublicAccount, Settings, UpdateInfo, VersionList } from '@shared/types'
 import type { InstanceWithState } from '../../preload/index'
 import { api, errorMessage } from './api'
 import { setThemePreference } from './theme'
@@ -40,6 +40,11 @@ interface Store {
   t: Translate
   /** Locale for dates and numbers: the system default in English, Italian formatting in Italian. */
   locale: string | undefined
+  /** The launcher's own update. */
+  update: UpdateInfo | null
+  checkUpdates: () => Promise<void>
+  /** Restart into the downloaded version, or open the downloaded installer (with a hint on what to do next). */
+  installUpdate: () => Promise<void>
 }
 
 const Ctx = createContext<Store | null>(null)
@@ -56,6 +61,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [logs, setLogs] = useState<GameLogEvent[]>([])
   const [consoleOpen, setConsoleOpen] = useState(false)
   const [toasts, setToasts] = useState<Toast[]>([])
+  const [update, setUpdate] = useState<UpdateInfo | null>(null)
+  const updateStatus = useRef<string | undefined>(undefined)
 
   // Until settings load, follow the system language (in Electron the same locale the main process sees).
   const language = resolveLanguage(settings?.language, navigator.language)
@@ -111,7 +118,40 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       setReady(true)
       await refreshVersions()
     })()
+    void api.updates.get().then((info) => {
+      updateStatus.current = info.state.status
+      setUpdate(info)
+    })
   }, [refreshAccounts, refreshInstances, refreshVersions])
+
+  useEffect(
+    () =>
+      api.events.onUpdate((next) => {
+        if (next.state.status === 'ready' && updateStatus.current !== 'ready') {
+          toast(t('update.ready', { version: next.state.version }), 'success')
+        }
+        updateStatus.current = next.state.status
+        setUpdate(next)
+      }),
+    [toast, t]
+  )
+
+  const checkUpdates = useCallback(async () => {
+    try {
+      setUpdate(await api.updates.check())
+    } catch (err) {
+      toast(errorMessage(err), 'error')
+    }
+  }, [toast])
+
+  const installUpdate = useCallback(async () => {
+    try {
+      await api.updates.install()
+      if (update?.method === 'installer') toast(t(api.platform === 'darwin' ? 'update.macHint' : 'update.debHint'), 'info')
+    } catch (err) {
+      toast(errorMessage(err), 'error')
+    }
+  }, [toast, t, update?.method])
 
   useEffect(() => {
     const offs = [
@@ -184,7 +224,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     launch,
     language,
     t,
-    locale
+    locale,
+    update,
+    checkUpdates,
+    installUpdate
   }
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>
 }

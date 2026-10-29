@@ -1,13 +1,15 @@
 import { useState } from 'react'
-import type { LanguagePreference, MessageKey } from '@shared/i18n'
-import type { Settings, ThemePreference } from '@shared/types'
+import type { LanguagePreference, MessageKey, Translate } from '@shared/i18n'
+import type { Settings, ThemePreference, UpdateInfo } from '@shared/types'
 import { api, errorMessage } from '../api'
 import { Avatar } from '../components/Avatar'
 import { Icon } from '../components/Icon'
 import { useStore } from '../store'
 
 export function SettingsPage() {
-  const { settings, saveSettings, accounts, account, selectAccount, refreshAccounts, toast, t } = useStore()
+  const { settings, saveSettings, accounts, account, selectAccount, refreshAccounts, toast, t, update, checkUpdates, installUpdate, instances } = useStore()
+  const gameRunning = instances.some((i) => i.running)
+  const updateBusy = update?.state.status === 'checking' || update?.state.status === 'downloading'
   // Only unsaved edits live here, so settings that apply instantly (theme, accounts) don't discard them.
   const [edits, setEdits] = useState<Partial<Settings>>({})
   if (!settings) return null
@@ -149,8 +151,52 @@ export function SettingsPage() {
           <Icon name="folder" size={16} /> {t('settings.openData')}
         </button>
       </section>
+
+      <section className="card settings-section">
+        <h2>{t('settings.updates')}</h2>
+        <div className="update-row">
+          <div className="update-meta">
+            <strong>Puma Launcher {update?.current}</strong>
+            <span className="muted">{updateText(update, t)}</span>
+          </div>
+          {update?.state.status === 'ready' ? (
+            <button
+              className="btn btn-primary btn-sm"
+              disabled={gameRunning}
+              title={gameRunning ? t('update.closeGame') : undefined}
+              onClick={() => void installUpdate()}
+            >
+              <Icon name="download" size={16} /> {t(update.method === 'restart' ? 'update.restart' : 'update.open')}
+            </button>
+          ) : (
+            <button className="btn btn-ghost btn-sm" disabled={!update?.supported || updateBusy} onClick={() => void checkUpdates()}>
+              <Icon name="refresh" size={16} /> {t('update.check')}
+            </button>
+          )}
+        </div>
+      </section>
     </div>
   )
+}
+
+function updateText(update: UpdateInfo | null, t: Translate): string {
+  if (!update) return ''
+  if (!update.supported) return t('update.unsupported')
+  const s = update.state
+  switch (s.status) {
+    case 'idle':
+      return t('update.notChecked')
+    case 'checking':
+      return t('update.checking')
+    case 'latest':
+      return t('update.latest')
+    case 'downloading':
+      return t('update.downloading', { version: s.version, percent: s.percent })
+    case 'ready':
+      return t('update.ready', { version: s.version })
+    case 'error':
+      return t('update.error', { error: s.message })
+  }
 }
 
 const THEMES: { key: ThemePreference; label: MessageKey; icon: string }[] = [

@@ -73,6 +73,18 @@ Required mods are installed with it. Mods need an instance with a mod loader (Fa
 
 You can switch between the light and dark theme, and between English and Italian, in **Settings → Appearance**.
 
+### Updating
+
+From version 0.3.3 the launcher updates itself; there's no need to come back here. It checks for a new version when it
+starts and every few hours, downloads it in the background, and shows an **Update to …** button in the sidebar
+when it's ready (also in **Settings → Updates**, with a **Check for updates** button):
+
+- **Windows** and the Linux **AppImage**: the button restarts the launcher into the new version.
+- **macOS** and the Linux **.deb**: the button opens the downloaded installer. On a Mac, drag Puma Launcher into
+  Applications to replace the old version.
+
+Versions before 0.3.3 can't update themselves: download the latest installer once with the button above.
+
 ## Screenshots
 
 | Light theme | In Italian | Java |
@@ -186,6 +198,8 @@ GitHub Actions builds every installer automatically (`.github/workflows/build.ym
   (`git tag v0.3.0 && git push origin v0.3.0`). The installers are attached to a new GitHub Release, which is what
   the [Download](#1-download) link points to. If the macOS build can't start, untick **mac** to release Windows and
   Linux first; running it again for the same version with **mac** ticked adds the macOS installers to that release.
+  The version must be higher than the last release's: installed launchers update to the latest release, using the
+  `latest*.yml` files the workflow uploads next to the installers (`src/main/core/updater.ts`).
 
 You can also build installers locally with `npm run dist` on each OS: `.exe` (NSIS) on Windows, `.dmg` on macOS,
 AppImage/`.deb` on Linux. Without code signing, Windows SmartScreen and macOS Gatekeeper show a warning the first
@@ -208,6 +222,7 @@ src/
       instances.ts instance storage
       http.ts      downloads with SHA-1 checks, retries and concurrency
       i18n.ts      language for main-process text (progress, errors, console lines)
+      updater.ts   the launcher's own updates from GitHub Releases
   preload/         typed, sandboxed IPC bridge (window.launcher)
   renderer/        React UI
     src/styles/theme.css  all colours, gradients and radii for the dark and light themes (edit this file to re-theme)

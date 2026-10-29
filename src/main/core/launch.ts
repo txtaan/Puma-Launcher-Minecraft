@@ -1,3 +1,4 @@
+import { app } from 'electron'
 import { spawn, type ChildProcess } from 'node:child_process'
 import { mkdir, rm } from 'node:fs/promises'
 import { delimiter, join } from 'node:path'
@@ -26,7 +27,6 @@ import { gameDir } from './instances'
 import { seconds, tr } from './i18n'
 
 export const LAUNCHER_NAME = 'puma-launcher'
-export const LAUNCHER_VERSION = '0.2.2'
 
 const running = new Map<string, ChildProcess>()
 /** Running instances whose game window is up. */
@@ -42,6 +42,10 @@ const WINDOW_OPEN_FALLBACK_MS = 60_000
 
 export function isRunning(instanceId: string): boolean {
   return running.has(instanceId)
+}
+
+export function anyRunning(): boolean {
+  return running.size > 0
 }
 
 /** True once a running game has opened its window; until then the launcher shows it as opening. */
@@ -156,7 +160,7 @@ export async function launchInstance(
     assets_index_name: assetIndexId(version),
     natives_directory: nativesDir,
     launcher_name: LAUNCHER_NAME,
-    launcher_version: LAUNCHER_VERSION,
+    launcher_version: app.getVersion(),
     classpath: classpath(version).join(delimiter),
     classpath_separator: delimiter,
     library_directory: paths.libraries(),

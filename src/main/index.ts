@@ -13,6 +13,7 @@ import { paths } from './core/paths'
 import { seconds, setLanguage, tr } from './core/i18n'
 import { emit, setProgressTarget, task } from './core/progress'
 import { getSettings, updateSettings } from './core/settings'
+import { checkForUpdates, installUpdate, startUpdater, updateInfo } from './core/updater'
 import { getVersions, refreshVersions, startVersionWatcher } from './core/versions'
 
 let win: BrowserWindow | undefined
@@ -210,6 +211,11 @@ function registerIpc(): void {
     }
   })
   handle('paths:openRoot', () => shell.openPath(paths.root()))
+
+  // The launcher's own updates
+  handle('updates:get', async () => updateInfo())
+  handle('updates:check', () => checkForUpdates())
+  handle('updates:install', () => installUpdate())
 }
 
 app.whenReady().then(async () => {
@@ -226,6 +232,7 @@ app.whenReady().then(async () => {
       for (const inst of await instances.listInstances()) await prepareJava(inst)
     })
   startVersionWatcher(settings.versionRefreshMinutes)
+  startUpdater()
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow()
   })
