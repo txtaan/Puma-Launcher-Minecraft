@@ -66,11 +66,14 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: PumaLauncher-${{ matrix.name }}
+          # latest*.yml and the .blockmap files are what the launcher's built-in updater reads from a release.
           path: |
             release/*.exe
             release/*.dmg
             release/*.AppImage
             release/*.deb
+            release/latest*.yml
+            release/*.blockmap
           if-no-files-found: error
 
   release:

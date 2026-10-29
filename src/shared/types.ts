@@ -135,6 +135,25 @@ export interface Settings {
   selectedInstanceId?: string
 }
 
+/** Where the launcher's own update stands (see src/main/core/updater.ts). */
+export type UpdateStatus =
+  | { status: 'idle' }
+  | { status: 'checking' }
+  | { status: 'latest' }
+  | { status: 'downloading'; version: string; percent: number }
+  | { status: 'ready'; version: string }
+  | { status: 'error'; message: string }
+
+export interface UpdateInfo {
+  /** The running version. */
+  current: string
+  /** False in development builds and the browser preview, which can't update themselves. */
+  supported: boolean
+  /** `restart`: installs on restart (Windows, Linux AppImage). `installer`: opens the downloaded installer (macOS, .deb). */
+  method: 'restart' | 'installer'
+  state: UpdateStatus
+}
+
 export interface ProgressEvent {
   taskId: string
   title: string

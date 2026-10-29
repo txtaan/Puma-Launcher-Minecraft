@@ -52,7 +52,11 @@ export async function isValid(item: DownloadItem, check: FileCheck = 'hash'): Pr
   }
 }
 
-export async function download(item: DownloadItem, retries = 3): Promise<void> {
+export async function download(
+  item: DownloadItem,
+  retries = 3,
+  onBytes?: (received: number, total: number) => void
+): Promise<void> {
   await mkdir(dirname(item.dest), { recursive: true })
   const tmp = `${item.dest}.part`
   let lastErr: unknown
@@ -62,7 +66,13 @@ export async function download(item: DownloadItem, retries = 3): Promise<void> {
       if (!res.ok || !res.body) throw new Error(tr('error.httpFor', { status: res.status, url: item.url }))
       const hash = createHash(item.sha256 && !item.sha1 ? 'sha256' : 'sha1')
       const body = Readable.fromWeb(res.body as import('node:stream/web').ReadableStream)
-      body.on('data', (chunk: Buffer) => hash.update(chunk))
+      const total = item.size ?? Number(res.headers.get('content-length') ?? 0)
+      let received = 0
+      body.on('data', (chunk: Buffer) => {
+        hash.update(chunk)
+        received += chunk.length
+        onBytes?.(received, total)
+      })
       await pipeline(body, createWriteStream(tmp))
       const digest = hash.digest('hex')
       if ((item.sha1 && digest !== item.sha1) || (!item.sha1 && item.sha256 && digest !== item.sha256)) {

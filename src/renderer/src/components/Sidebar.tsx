@@ -12,7 +12,9 @@ const NAV: { page: Page; label: MessageKey; icon: string }[] = [
 ]
 
 export function Sidebar() {
-  const { page, setPage, account, selectAccount, setConsoleOpen, consoleOpen, t } = useStore()
+  const { page, setPage, account, selectAccount, setConsoleOpen, consoleOpen, t, update, installUpdate, instances } = useStore()
+  const readyVersion = update && update.state.status === 'ready' ? update.state.version : null
+  const gameRunning = instances.some((i) => i.running)
   return (
     <nav className="sidebar">
       <div className="nav">
@@ -27,18 +29,30 @@ export function Sidebar() {
           <span>{t('nav.console')}</span>
         </button>
       </div>
-      {account && (
-        <div className="account-chip">
-          <Avatar account={account} size={34} />
-          <div className="account-meta">
-            <strong>{account.username}</strong>
-            <span>{account.type === 'microsoft' ? t('account.microsoft') : account.type === 'authlib' ? account.serverName : t('account.offline')}</span>
-          </div>
-          <button className="icon-btn" aria-label={t('nav.signOut')} title={t('nav.switchAccount')} onClick={() => void selectAccount(undefined)}>
-            <Icon name="logout" />
+      <div className="sidebar-foot">
+        {readyVersion && (
+          <button
+            className="btn btn-primary w-full"
+            disabled={gameRunning}
+            title={t(gameRunning ? 'update.closeGame' : update?.method === 'restart' ? 'update.restartHint' : 'update.openHint')}
+            onClick={() => void installUpdate()}
+          >
+            <Icon name="download" size={16} /> {t('update.button', { version: readyVersion })}
           </button>
-        </div>
-      )}
+        )}
+        {account && (
+          <div className="account-chip">
+            <Avatar account={account} size={34} />
+            <div className="account-meta">
+              <strong>{account.username}</strong>
+              <span>{account.type === 'microsoft' ? t('account.microsoft') : account.type === 'authlib' ? account.serverName : t('account.offline')}</span>
+            </div>
+            <button className="icon-btn" aria-label={t('nav.signOut')} title={t('nav.switchAccount')} onClick={() => void selectAccount(undefined)}>
+              <Icon name="logout" />
+            </button>
+          </div>
+        )}
+      </div>
     </nav>
   )
 }
