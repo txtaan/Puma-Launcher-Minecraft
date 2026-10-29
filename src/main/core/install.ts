@@ -232,7 +232,8 @@ export async function installVersion(
   const logging = version.logging?.client?.file
   if (logging) files.push({ url: logging.url, dest: logConfigPath(version)!, sha1: logging.sha1, size: logging.size })
 
-  await downloadAll(files, concurrency, (d, t) => onProgress(tr('stage.downloadingFiles'), d, t))
+  // Client jars, libraries and log configs never change once published: a size check is enough for files on disk.
+  await downloadAll(files, concurrency, (d, t) => onProgress(tr('stage.downloadingFiles'), d, t), 'size')
 
   if (version.assetIndex) {
     const indexFile = join(paths.assets(), 'indexes', `${version.assetIndex.id}.json`)
@@ -248,7 +249,8 @@ export async function installVersion(
       sha1: o.hash,
       size: o.size
     }))
-    await downloadAll(objects, concurrency, (d, t) => onProgress(tr('stage.downloadingAssets'), d, t))
+    // Asset objects are named after their hash, so they never change either.
+    await downloadAll(objects, concurrency, (d, t) => onProgress(tr('stage.downloadingAssets'), d, t), 'size')
 
     // Pre-1.7 versions read assets from a flat folder instead of the hashed object store.
     if (index.virtual || index.map_to_resources) {
