@@ -152,6 +152,8 @@ src/
 (`preview/mock-launcher.ts`) and a snapshot of real Mojang/Prism/Modrinth data (`preview/sample-data.json`).
 Downloads and launches are simulated, so you can click through every screen without Electron or Minecraft.
 `npm run build:preview` produces a single shareable file, `out/preview/index.html`.
+The repo also deploys to Vercel as-is: import it and `vercel.json` builds and serves this preview (it skips the
+Electron download, which the preview doesn't need).
 
 ### Changing the UI
 
