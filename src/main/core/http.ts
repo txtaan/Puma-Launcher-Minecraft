@@ -28,11 +28,22 @@ export interface DownloadItem {
   size?: number
 }
 
-/** True when the file exists and matches the expected hash (or size, when no hash is known). */
-export async function isValid(item: DownloadItem): Promise<boolean> {
+/**
+ * How to check a file that is already on disk:
+ * - `hash`: read it and compare its hash. For files whose content can change under the same name.
+ * - `size`: compare its size only (the hash when the size is unknown). For files that never change once
+ *   published: libraries, client jars, asset objects. A download is only moved into place after its hash
+ *   has been verified, so a file of the right size is the one we verified. Hashing thousands of files
+ *   instead would make every launch read the whole game again.
+ */
+export type FileCheck = 'hash' | 'size'
+
+/** True when the file exists and matches the expected size and hash (see {@link FileCheck}). */
+export async function isValid(item: DownloadItem, check: FileCheck = 'hash'): Promise<boolean> {
   try {
     const st = await stat(item.dest)
     if (item.size !== undefined && st.size !== item.size) return false
+    if (check === 'size' && item.size !== undefined) return true
     if (item.sha1) return (await sha1File(item.dest)) === item.sha1
     if (item.sha256) return (await sha1File(item.dest, 'sha256')) === item.sha256
     return true
@@ -69,33 +80,48 @@ export async function download(item: DownloadItem, retries = 3): Promise<void> {
 }
 
 /**
- * Verify and download a batch of files with bounded concurrency.
- * Files that already exist with the right hash are skipped.
+ * Download the files of a batch that are missing or damaged, with bounded concurrency.
+ * Files on disk are checked first, so the progress only counts files that are really downloaded,
+ * and isn't reported at all when everything is already there.
  */
 export async function downloadAll(
   items: DownloadItem[],
   concurrency: number,
-  onProgress: (done: number, total: number) => void
+  onProgress: (done: number, total: number) => void,
+  check: FileCheck = 'hash'
 ): Promise<void> {
   // De-duplicate: several assets can share the same hash/path.
   const unique = [...new Map(items.map((i) => [i.dest, i])).values()]
+  const valid = await mapLimit(unique, concurrency, (item) => isValid(item, check))
+  const missing = unique.filter((_, i) => !valid[i])
+  if (!missing.length) return
+
   let done = 0
-  let next = 0
   const errors: unknown[] = []
-  onProgress(0, unique.length)
-  const worker = async (): Promise<void> => {
-    while (next < unique.length) {
-      const item = unique[next++]
-      try {
-        if (!(await isValid(item))) await download(item)
-      } catch (err) {
-        errors.push(err)
-      }
-      onProgress(++done, unique.length)
+  onProgress(0, missing.length)
+  await mapLimit(missing, concurrency, async (item) => {
+    try {
+      await download(item)
+    } catch (err) {
+      errors.push(err)
     }
-  }
-  await Promise.all(Array.from({ length: Math.max(1, concurrency) }, worker))
+    onProgress(++done, missing.length)
+  })
   if (errors.length) {
     throw new Error(tr('error.downloadsFailed', { count: errors.length, error: String(errors[0]) }))
   }
+}
+
+/** Run `fn` on every item with at most `limit` running at once. Results keep the items' order. */
+async function mapLimit<T, R>(items: T[], limit: number, fn: (item: T) => Promise<R>): Promise<R[]> {
+  const results = new Array<R>(items.length)
+  let next = 0
+  const worker = async (): Promise<void> => {
+    while (next < items.length) {
+      const i = next++
+      results[i] = await fn(items[i])
+    }
+  }
+  await Promise.all(Array.from({ length: Math.max(1, Math.min(limit, items.length)) }, worker))
+  return results
 }
