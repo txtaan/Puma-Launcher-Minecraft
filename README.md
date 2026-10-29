@@ -4,12 +4,21 @@ A modern, open-source Minecraft: Java Edition launcher for Windows, macOS and Li
 version, with or without Fabric, Quilt, Forge or NeoForge, downloads the right Java for you and installs mods from
 Modrinth. Available in English and Italian.
 
+<p align="center">
+  <a href="https://github.com/txtaan/Puma-Launcher-Minecraft/releases/latest"><img src="docs/download-button.png" alt="Download Puma Launcher for Windows, macOS and Linux" width="454"></a>
+</p>
+
 ![Puma Launcher home screen](docs/screenshots/home.png)
 
-## Download
+## Step by step: from download to playing
 
-**[Download the latest version](https://github.com/txtaan/Puma-Launcher-Minecraft/releases/latest)**: open the page,
-scroll down to **Assets** and pick the file for your computer.
+### 1. Download
+
+<p align="center">
+  <a href="https://github.com/txtaan/Puma-Launcher-Minecraft/releases/latest"><img src="docs/download-button.png" alt="Download Puma Launcher for Windows, macOS and Linux" width="454"></a>
+</p>
+
+The button opens the latest release: scroll down to **Assets** and pick the file for your computer.
 
 | Your computer | File to download |
 | --- | --- |
@@ -19,42 +28,54 @@ scroll down to **Assets** and pick the file for your computer.
 | Linux | `PumaLauncher-<version>-linux-x86_64.AppImage` (any distribution) or `PumaLauncher-<version>-linux-amd64.deb` (Debian, Ubuntu) |
 
 Not sure which Mac you have? Open the Apple menu → **About This Mac**: "Chip: Apple M…" means an Apple chip,
-"Processor: … Intel" means Intel.
+"Processor: … Intel" means Intel. You don't need to install Java or Minecraft separately: the launcher downloads both.
 
-You don't need to install Java or Minecraft separately: the launcher downloads both.
+### 2. Install
 
-## From download to playing
+- **Windows:** run the `.exe` and follow the installer. If SmartScreen says "Windows protected your PC", click
+  **More info → Run anyway** (the launcher isn't code-signed yet).
+- **macOS:** open the `.dmg` and drag **Puma Launcher** into **Applications**. If macOS says it can't verify the app
+  the first time you open it, go to **System Settings → Privacy & Security** and click **Open Anyway**.
+- **Linux:** make the AppImage executable with `chmod +x PumaLauncher-*.AppImage` and run it, or install the `.deb`
+  with `sudo apt install ./PumaLauncher-*.deb`.
 
-1. **Install the launcher.**
-   - **Windows:** run the `.exe` and follow the installer. If SmartScreen says "Windows protected your PC", click
-     **More info → Run anyway** (the launcher isn't code-signed yet).
-   - **macOS:** open the `.dmg` and drag **Puma Launcher** into **Applications**. If macOS says it can't verify the
-     app the first time you open it, go to **System Settings → Privacy & Security** and click **Open Anyway**.
-   - **Linux:** make the AppImage executable with `chmod +x PumaLauncher-*.AppImage` and run it, or install the
-     `.deb` with `sudo apt install ./PumaLauncher-*.deb`.
-2. **Sign in.** Click **Play Now** and type a player name (3–16 letters, numbers or underscores) to play offline
-   right away. You can also use a **Microsoft** account (it needs a one-time setup, see
-   [Microsoft login setup](#microsoft-login-setup)) or an **Ely.by** / **LittleSkin** account.
-3. **Create an instance.** An instance is one Minecraft installation with its own worlds and mods. On the home
-   screen click **Create**. The latest Minecraft version is already selected: give it a name, pick a mod loader
-   such as **Fabric** if you want mods, and click **Create**. The right Java version starts downloading by itself.
-4. **Press Play.** The first launch downloads the game (a few minutes; progress shows in the bottom-right corner).
-   After that the game starts in seconds.
-5. **Add mods (optional).** Go to **Instances**, click the puzzle-piece icon on your instance, open
-   **Browse Modrinth** and click **Install**. Required mods are installed with it. Mods need an instance with a mod
-   loader (Fabric, Quilt, Forge or NeoForge).
+### 3. Sign in
+
+Open Puma Launcher, click **Play Now** and type a player name (3–16 letters, numbers or underscores) to play
+offline right away. You can also use a **Microsoft** account (it needs a one-time setup, see
+[Microsoft login setup](#microsoft-login-setup)) or an **Ely.by** / **LittleSkin** account.
+
+<img src="docs/screenshots/welcome.png" alt="Welcome screen with the Play Now button" width="720">
+
+### 4. Create an instance
+
+An instance is one Minecraft installation with its own worlds and mods. On the home screen click **Create**. The
+latest Minecraft version is already selected: give it a name, pick a mod loader such as **Fabric** if you want
+mods, and click **Create**. The right Java version starts downloading by itself.
+
+<img src="docs/screenshots/new-instance.png" alt="New instance dialog" width="720">
+
+### 5. Press Play
+
+Choose your instance on the home screen and press **Play**. The first launch downloads the game, which takes a few
+minutes; the progress shows in the bottom-right corner. After that the game starts in seconds.
+
+<img src="docs/screenshots/first-launch.png" alt="First launch downloading the game" width="720">
+
+### 6. Add mods (optional)
+
+Go to **Instances**, click the puzzle-piece icon on your instance, open **Browse Modrinth** and click **Install**.
+Required mods are installed with it. Mods need an instance with a mod loader (Fabric, Quilt, Forge or NeoForge).
+
+<img src="docs/screenshots/mods.png" alt="Installing mods from Modrinth" width="720">
 
 You can switch between the light and dark theme, and between English and Italian, in **Settings → Appearance**.
 
 ## Screenshots
 
-| Welcome | Light theme | In Italian |
+| Light theme | In Italian | Java |
 | --- | --- | --- |
-| ![Welcome screen](docs/screenshots/welcome.png) | ![Home screen, light theme](docs/screenshots/home-light.png) | ![Home screen in Italian](docs/screenshots/home-italian.png) |
-
-| New instance | Mods | Java |
-| --- | --- | --- |
-| ![New instance](docs/screenshots/new-instance.png) | ![Mods](docs/screenshots/mods.png) | ![Java](docs/screenshots/java.png) |
+| ![Home screen, light theme](docs/screenshots/home-light.png) | ![Home screen in Italian](docs/screenshots/home-italian.png) | ![Java](docs/screenshots/java.png) |
 
 ## Features
 
@@ -161,7 +182,7 @@ GitHub Actions builds every installer automatically (`.github/workflows/build.ym
 - **A release:** bump `version` in `package.json` (it is part of the file names), then in the **Actions** tab open
   "Build installers", click **Run workflow** and enter the version, such as `v0.3.0`; or push a version tag
   (`git tag v0.3.0 && git push origin v0.3.0`). The installers are attached to a new GitHub Release, which is what
-  the [Download](#download) link points to.
+  the [Download](#1-download) link points to.
 
 You can also build installers locally with `npm run dist` on each OS: `.exe` (NSIS) on Windows, `.dmg` on macOS,
 AppImage/`.deb` on Linux. Without code signing, Windows SmartScreen and macOS Gatekeeper show a warning the first
@@ -199,8 +220,6 @@ src/
 (`preview/mock-launcher.ts`) and a snapshot of real Mojang/Prism/Modrinth data (`preview/sample-data.json`).
 Downloads and launches are simulated, so you can click through every screen without Electron or Minecraft.
 `npm run build:preview` produces a single shareable file, `out/preview/index.html`.
-The repo also deploys to Vercel as-is: import it and `vercel.json` builds and serves this preview (it skips the
-Electron download, which the preview doesn't need).
 
 ### Changing the UI
 
