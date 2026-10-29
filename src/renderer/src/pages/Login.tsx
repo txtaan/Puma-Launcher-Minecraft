@@ -80,9 +80,7 @@ export function Login() {
   return (
     <div className="login">
       <div className="login-bg" aria-hidden>
-        <span className="blob b1" />
-        <span className="blob b2" />
-        <span className="blob b3" />
+        <div className="login-art" />
       </div>
       <div className="login-card glass">
         <div className="login-logo">

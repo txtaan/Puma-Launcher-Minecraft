@@ -48,7 +48,6 @@
   --glass-bg: rgba(18, 18, 30, 0.55);
   --glass-border: rgba(255, 255, 255, 0.14);
   --login-glow: #1a1033;
-  --blob-opacity: 0.55;
   --console-bg: rgba(8, 8, 14, 0.96);
   --log-text: #c9c9d9;
 
@@ -60,6 +59,9 @@
 
   /* Primary button / brand gradient */
   --brand-gradient: linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%);
+  /* Welcome screen: primary button and hint text over the jungle scene */
+  --welcome-gradient: linear-gradient(135deg, #5780b0 0%, #9fc369 100%);
+  --welcome-hint: #b7b7b7;
 
   --radius-s: 8px;
   --radius: 12px;
@@ -109,7 +111,7 @@
   --glass-bg: rgba(255, 255, 255, 0.72);
   --glass-border: rgba(24, 20, 56, 0.1);
   --login-glow: #ebe4ff;
-  --blob-opacity: 0.3;
+  --welcome-hint: var(--text-muted);
   --console-bg: rgba(255, 255, 255, 0.97);
   --log-text: #3b3852;
 

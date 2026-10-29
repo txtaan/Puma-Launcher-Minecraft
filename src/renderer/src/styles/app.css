@@ -48,12 +48,8 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
   flex-shrink: 0;
 }
 .titlebar-brand { display: flex; align-items: center; gap: 10px; font-weight: var(--font-weight); font-size: 13px; color: var(--text-muted); }
-.brand-mark {
-  width: 16px; height: 16px; border-radius: 5px;
-  background: var(--hero-gradient);
-  box-shadow: 0 0 12px var(--hero-glow-1);
-}
-.brand-mark.big { width: 56px; height: 56px; border-radius: 16px; display: inline-block; }
+.brand-mark { width: 19px; height: 19px; border-radius: 4px; background: url('../assets/logo.webp') center / cover; flex-shrink: 0; }
+.brand-mark.big { width: 105px; height: 105px; border-radius: 20px; display: inline-block; }
 .titlebar-controls { display: flex; height: 100%; -webkit-app-region: no-drag; }
 .titlebar-controls button { width: 46px; height: 100%; display: grid; place-items: center; color: var(--text-muted); }
 .titlebar-controls button:hover { background: var(--surface-hover); color: var(--text); }
@@ -151,21 +147,21 @@ select option { background: var(--bg-elev); color: var(--text); }
 @keyframes spin { to { transform: rotate(360deg); } }
 
 /* ---------- Login ---------- */
-.login { flex: 1; position: relative; display: grid; place-items: center; overflow: hidden; }
+/* The card sits a little below centre, as in the design: 54.5% of the spare height above it, 45.5% below. */
+.login { flex: 1; position: relative; display: grid; grid-template-rows: 545fr auto 455fr; justify-items: center; overflow: hidden; }
 .login-bg { position: absolute; inset: 0; background: radial-gradient(ellipse at top, var(--login-glow), var(--bg) 70%); }
-.blob { position: absolute; border-radius: 50%; filter: blur(80px); opacity: var(--blob-opacity); animation: float 18s ease-in-out infinite; }
-.b1 { width: 460px; height: 460px; background: var(--accent); top: -120px; left: -80px; }
-.b2 { width: 380px; height: 380px; background: var(--accent-2); bottom: -120px; right: -60px; animation-delay: -6s; }
-.b3 { width: 300px; height: 300px; background: var(--accent-4); top: 40%; left: 55%; animation-delay: -12s; opacity: 0.35; }
-@keyframes float {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  33% { transform: translate(40px, -30px) scale(1.08); }
-  66% { transform: translate(-30px, 30px) scale(0.95); }
+/* Jungle scene, zoomed so the panther leaps out beside the card. Sized and offset relative to the page so the
+   framing matches the design (art 2406×1354 at -618,-22 in a 1728×956 page) at any window size. */
+.login-art {
+  position: absolute; left: -35.76%; top: -2.3%; width: 139.24%; height: 141.63%;
+  background: url('../assets/welcome-day.webp') center / cover no-repeat;
 }
-.login-card { position: relative; width: 400px; max-width: calc(100% - 32px); padding: 36px 32px; border-radius: var(--radius-l); display: flex; flex-direction: column; gap: 12px; box-shadow: var(--shadow); }
+.login-card { grid-row: 2; position: relative; width: 400px; max-width: calc(100% - 32px); padding: 28px 32px 36px; border-radius: var(--radius-l); display: flex; flex-direction: column; gap: 12px; box-shadow: var(--shadow); }
 .login-card h1 { text-align: center; font-size: 30px; }
 .login-card > p.muted { text-align: center; margin-bottom: 12px; }
-.login-logo { display: grid; place-items: center; margin-bottom: 4px; }
+.login-logo { display: grid; place-items: center; margin-bottom: 6px; }
+.login-card .btn-primary { background: var(--welcome-gradient); }
+.login-card .hint { color: var(--welcome-hint); }
 .saved-accounts { display: flex; flex-direction: column; gap: 8px; }
 .saved-account { display: flex; align-items: center; gap: 4px; border-radius: var(--radius); background: var(--surface); border: 1px solid var(--border); padding-right: 6px; }
 .saved-account:hover { border-color: var(--border-strong); }
