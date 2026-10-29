@@ -23,24 +23,23 @@
   --text-muted: #9a9ab3;
   --text-on-accent: #ffffff;
 
-  --accent: #8b5cf6;
-  --accent-2: #ec4899;
-  --accent-3: #f59e0b;
-  --accent-4: #06b6d4;
+  /* Accent: the night blues of the home screen (navigation #5693b7 / #5485a7, card glows #6285b2 / #355888) */
+  --accent: #5485a7;
+  --accent-2: #355888;
   --success: #22c55e;
   --danger: #ef4444;
   --warning: #f59e0b;
 
   /* Tinted backgrounds and readable text for badges, selections, errors and log lines */
-  --accent-soft: rgba(139, 92, 246, 0.2);
-  --accent-text: #c4b5fd;
+  --accent-soft: rgba(84, 133, 167, 0.22);
+  --accent-text: #8ab6d6;
   --success-soft: rgba(34, 197, 94, 0.15);
   --success-text: #86efac;
   --danger-soft: rgba(239, 68, 68, 0.12);
   --danger-border: rgba(239, 68, 68, 0.35);
   --danger-text: #fca5a5;
   --warning-text: #fcd34d;
-  --focus-ring: rgba(139, 92, 246, 0.25);
+  --focus-ring: rgba(84, 133, 167, 0.3);
 
   --titlebar-bg: rgba(11, 11, 20, 0.85);
   --input-bg: rgba(0, 0, 0, 0.25);
@@ -52,8 +51,8 @@
   --console-bg: rgba(8, 8, 14, 0.96);
   --log-text: #c9c9d9;
 
-  /* Instance cover gradient */
-  --hero-gradient: linear-gradient(125deg, #312e81 0%, #6d28d9 25%, #c026d3 50%, #ec4899 72%, #fb923c 100%);
+  /* Instance cover tiles */
+  --cover-gradient: linear-gradient(125deg, #20314c 0%, #355888 45%, #6285b2 75%, #6a639c 100%);
 
   /* Primary button / brand gradient */
   --brand-gradient: linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%);
@@ -80,7 +79,7 @@
   --radius: 12px;
   --radius-l: 20px;
   --shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
-  --shadow-glow: 0 10px 40px rgba(139, 92, 246, 0.35);
+  --shadow-glow: 0 10px 40px rgba(84, 133, 167, 0.3);
 
   --sidebar-w: 220px;
   --titlebar-h: 40px;
@@ -100,22 +99,21 @@
   --text: #17142b;
   --text-muted: #5f5c78;
 
-  /* Slightly deeper accents keep white button text readable on a light background */
-  --accent: #7c3aed;
-  --accent-2: #db2777;
-  --accent-4: #0891b2;
+  /* Accent: the daylight ambers of the home screen (navigation #9d712f / #e5a43d, icons #be803b) */
+  --accent: #be803b;
+  --accent-2: #9d712f;
   --success: #16a34a;
   --danger: #dc2626;
 
-  --accent-soft: rgba(124, 58, 237, 0.12);
-  --accent-text: #6d28d9;
+  --accent-soft: rgba(229, 164, 61, 0.2);
+  --accent-text: #8a5f1c;
   --success-soft: rgba(22, 163, 74, 0.12);
   --success-text: #15803d;
   --danger-soft: rgba(220, 38, 38, 0.08);
   --danger-border: rgba(220, 38, 38, 0.3);
   --danger-text: #b91c1c;
   --warning-text: #a16207;
-  --focus-ring: rgba(124, 58, 237, 0.2);
+  --focus-ring: rgba(229, 164, 61, 0.35);
 
   --titlebar-bg: rgba(255, 255, 255, 0.85);
   --input-bg: #ffffff;
@@ -140,7 +138,8 @@
   --log-text: #3b3852;
 
   --shadow: 0 10px 30px rgba(24, 20, 56, 0.12);
-  --shadow-glow: 0 8px 24px rgba(124, 58, 237, 0.25);
+  --shadow-glow: 0 8px 24px rgba(190, 128, 59, 0.3);
+  --cover-gradient: linear-gradient(125deg, #9d712f 0%, #be803b 45%, #dead5f 80%, #e5a43d 100%);
 }
 
 /* The home screen hero sits on its own vivid gradient, so it keeps light text and dark glass in every theme. */

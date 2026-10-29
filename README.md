@@ -206,8 +206,8 @@ Electron download, which the preview doesn't need).
 
 The UI only talks to the launcher through `window.launcher` (see `src/preload/index.ts`), so the
 renderer can be redesigned or replaced freely. To change the look, start with the tokens in
-`src/renderer/src/styles/theme.css`, for example `--hero-gradient` for the instance covers
-and `--brand-gradient` for buttons. The jungle scenes on the welcome and home screens are images in
+`src/renderer/src/styles/theme.css`, for example `--accent` and `--brand-gradient` for buttons and highlights, and
+`--cover-gradient` for the instance covers. The jungle scenes on the welcome and home screens are images in
 `src/renderer/src/assets`; the home hero shows the night art in the dark theme and the day art in the light one.
 `:root` holds the dark theme and `:root[data-theme='light']` overrides its colours for the light theme, so a new
 colour token needs a value in both.

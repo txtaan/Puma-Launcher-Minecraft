@@ -142,7 +142,7 @@ select option { background: var(--bg-elev); color: var(--text); }
 
 .spinner { width: 22px; height: 22px; border-radius: 50%; border: 2.5px solid var(--surface-strong); border-top-color: var(--accent); animation: spin 0.8s linear infinite; display: inline-block; }
 .spinner.sm { width: 14px; height: 14px; border-width: 2px; vertical-align: -2px; }
-.spinner.dark { border-color: rgba(0, 0, 0, 0.15); border-top-color: #4c1d95; }
+.spinner.dark { border-color: rgba(0, 0, 0, 0.15); border-top-color: #1e1036; }
 .spin { animation: spin 0.8s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
@@ -237,7 +237,7 @@ select option { background: var(--bg-elev); color: var(--text); }
 .instance-card { overflow: hidden; display: flex; flex-direction: column; transition: border-color 0.15s, transform 0.15s; }
 .instance-card:hover { border-color: var(--border-strong); transform: translateY(-2px); }
 .instance-card.selected { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
-.instance-cover { height: 96px; background: var(--hero-gradient); display: grid; place-items: center; font-size: 40px; font-weight: var(--font-weight); color: rgba(255, 255, 255, 0.9); }
+.instance-cover { height: 96px; background: var(--cover-gradient); display: grid; place-items: center; font-size: 40px; font-weight: var(--font-weight); color: rgba(255, 255, 255, 0.9); }
 .instance-info { padding: 12px 14px 4px; display: flex; flex-direction: column; gap: 2px; }
 .instance-info strong { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .instance-info .muted { font-size: 12px; }
