@@ -184,7 +184,8 @@ GitHub Actions builds every installer automatically (`.github/workflows/build.ym
 - **A release:** bump `version` in `package.json` (it is part of the file names), then in the **Actions** tab open
   "Build installers", click **Run workflow** and enter the version, such as `v0.3.0`; or push a version tag
   (`git tag v0.3.0 && git push origin v0.3.0`). The installers are attached to a new GitHub Release, which is what
-  the [Download](#1-download) link points to.
+  the [Download](#1-download) link points to. If the macOS build can't start, untick **mac** to release Windows and
+  Linux first; running it again for the same version with **mac** ticked adds the macOS installers to that release.
 
 You can also build installers locally with `npm run dist` on each OS: `.exe` (NSIS) on Windows, `.dmg` on macOS,
 AppImage/`.deb` on Linux. Without code signing, Windows SmartScreen and macOS Gatekeeper show a warning the first
