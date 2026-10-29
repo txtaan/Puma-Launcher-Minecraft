@@ -7,7 +7,7 @@ export function TitleBar() {
     <header className={`titlebar ${mac ? 'titlebar-mac' : ''}`}>
       <div className="titlebar-brand">
         <span className="brand-mark" />
-        Txtaan Launcher
+        Puma Launcher
       </div>
       {!mac && (
         <div className="titlebar-controls">

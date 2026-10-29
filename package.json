@@ -1,6 +1,6 @@
 {
-  "name": "txtaan-launcher",
-  "productName": "Txtaan Launcher",
+  "name": "puma-launcher",
+  "productName": "Puma Launcher",
   "version": "0.2.2",
   "description": "A modern open-source Minecraft launcher inspired by HMCL and Prism Launcher",
   "license": "GPL-3.0-or-later",
@@ -15,9 +15,9 @@
     "build:preview": "vite build --config preview/vite.config.ts"
   },
   "build": {
-    "appId": "dev.txtaan.launcher",
-    "productName": "Txtaan Launcher",
-    "artifactName": "TxtaanLauncher-${version}-${os}-${arch}.${ext}",
+    "appId": "dev.txtaan.pumalauncher",
+    "productName": "Puma Launcher",
+    "artifactName": "PumaLauncher-${version}-${os}-${arch}.${ext}",
     "files": [
       "out/**/*"
     ],
@@ -38,7 +38,7 @@
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
-      "artifactName": "TxtaanLauncher-${version}-windows-${arch}-setup.${ext}"
+      "artifactName": "PumaLauncher-${version}-windows-${arch}-setup.${ext}"
     },
     "mac": {
       "target": [
@@ -53,7 +53,7 @@
       "category": "public.app-category.games",
       "identity": "-",
       "hardenedRuntime": false,
-      "artifactName": "TxtaanLauncher-${version}-macos-${arch}.${ext}"
+      "artifactName": "PumaLauncher-${version}-macos-${arch}.${ext}"
     },
     "linux": {
       "target": [
@@ -72,7 +72,7 @@
       ],
       "category": "Game",
       "maintainer": "txtaan",
-      "artifactName": "TxtaanLauncher-${version}-linux-${arch}.${ext}"
+      "artifactName": "PumaLauncher-${version}-linux-${arch}.${ext}"
     }
   },
   "dependencies": {
@@ -95,5 +95,5 @@
     "vite": "^8.3.5"
   },
   "author": "txtaan",
-  "homepage": "https://github.com/txtaan/Minecraft-Launcher-txtaan-"
+  "homepage": "https://github.com/txtaan/Puma-Launcher-Minecraft"
 }
