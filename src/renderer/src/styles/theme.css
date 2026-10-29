@@ -3,8 +3,10 @@
  * so re-theming the launcher only means editing this file.
  */
 :root {
+  /* Every text in the launcher uses Inter Regular (bundled with the app, so it also works offline). */
   --font: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-  --mono: ui-monospace, 'JetBrains Mono', 'Cascadia Code', Menlo, Consolas, monospace;
+  --mono: var(--font);
+  --font-weight: 400;
 
   --bg: #0b0b14;
   --bg-elev: #12121e;
