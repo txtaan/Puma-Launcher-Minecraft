@@ -10,7 +10,9 @@
     "build": "electron-vite build",
     "start": "electron-vite preview",
     "typecheck": "tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json",
-    "dist": "electron-vite build && electron-builder --publish never"
+    "dist": "electron-vite build && electron-builder --publish never",
+    "preview:web": "vite --config preview/vite.config.ts",
+    "build:preview": "vite build --config preview/vite.config.ts"
   },
   "build": {
     "appId": "dev.txtaan.launcher",

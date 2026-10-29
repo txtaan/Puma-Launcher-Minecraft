@@ -6,9 +6,23 @@
     "jsx": "react-jsx",
     "strict": true,
     "skipLibCheck": true,
-    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "lib": [
+      "ES2022",
+      "DOM",
+      "DOM.Iterable"
+    ],
     "types": [],
-    "paths": { "@shared/*": ["./src/shared/*"] }
+    "paths": {
+      "@shared/*": [
+        "./src/shared/*"
+      ]
+    },
+    "resolveJsonModule": true
   },
-  "include": ["src/renderer/**/*", "src/preload/index.d.ts", "src/shared/**/*"]
+  "include": [
+    "src/renderer/**/*",
+    "src/preload/index.d.ts",
+    "src/shared/**/*",
+    "preview/*.ts"
+  ]
 }

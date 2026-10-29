@@ -5,7 +5,10 @@ import { Icon } from './Icon'
 export function Console() {
   const { logs, consoleOpen, setConsoleOpen, clearLogs } = useStore()
   const end = useRef<HTMLDivElement>(null)
-  useEffect(() => end.current?.scrollIntoView({ block: 'end' }), [logs.length, consoleOpen])
+  useEffect(() => {
+    // Braces matter: scrollIntoView() returns a Promise in recent Chromium, which React would treat as a cleanup function.
+    void end.current?.scrollIntoView({ block: 'end' })
+  }, [logs.length, consoleOpen])
   if (!consoleOpen) return null
   return (
     <section className="console">
