@@ -25,7 +25,7 @@ import { rulesAllow } from './platform'
 import { gameDir } from './instances'
 
 export const LAUNCHER_NAME = 'txtaan-launcher'
-export const LAUNCHER_VERSION = '0.2.1'
+export const LAUNCHER_VERSION = '0.2.2'
 
 const running = new Map<string, ChildProcess>()
 
