@@ -145,6 +145,13 @@ src/
   shared/types.ts  types shared by all three layers
 ```
 
+### Browser preview (for UI work)
+
+`npm run preview:web` runs the real React UI in a normal browser, with live reload, against a stand-in backend
+(`preview/mock-launcher.ts`) and a snapshot of real Mojang/Prism/Modrinth data (`preview/sample-data.json`).
+Downloads and launches are simulated, so you can click through every screen without Electron or Minecraft.
+`npm run build:preview` produces a single shareable file, `out/preview/index.html`.
+
 ### Changing the UI
 
 The UI only talks to the launcher through `window.launcher` (see `src/preload/index.ts`), so the
