@@ -20,6 +20,8 @@ export function Home() {
   const [creating, setCreating] = useState<string | null>(null)
   const selected = instances.find((i) => i.id === settings?.selectedInstanceId) ?? instances[0]
   const launching = selected && tasks[`launch:${selected.id}`] && !tasks[`launch:${selected.id}`].finished
+  // Java has started but Minecraft hasn't opened its window yet: no Stop button until it has.
+  const opening = selected?.running && !selected.windowOpen
   const latest = versions?.latest
   const snapshotDate = versions?.versions.find((v) => v.id === latest?.snapshot)?.releaseTime
   const releaseDate = versions?.versions.find((v) => v.id === latest?.release)?.releaseTime
@@ -58,14 +60,14 @@ export function Home() {
                     ))}
                   </select>
                 </div>
-                {selected.running ? (
+                {selected.running && !opening ? (
                   <button className="play-btn running" onClick={() => void api.instances.kill(selected.id)}>
                     <Icon name="stop" size={20} /> {t('common.stop')}
                   </button>
                 ) : (
-                  <button className="play-btn" disabled={!!launching} onClick={() => void launch(selected.id)}>
-                    {launching ? <span className="spinner sm dark" /> : <Icon name="play" size={22} />}
-                    {launching ? t('common.starting') : t('common.play')}
+                  <button className="play-btn" disabled={!!launching || opening} onClick={() => void launch(selected.id)}>
+                    {launching || opening ? <span className="spinner sm dark" /> : <Icon name="play" size={22} />}
+                    {opening ? t('common.opening') : launching ? t('common.starting') : t('common.play')}
                   </button>
                 )}
               </>

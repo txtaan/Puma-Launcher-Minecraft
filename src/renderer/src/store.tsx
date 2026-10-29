@@ -124,6 +124,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       }),
       api.events.onLog((e) => setLogs((l) => (l.length >= MAX_LOG_LINES ? [...l.slice(-MAX_LOG_LINES / 2), e] : [...l, e]))),
       api.events.onStarted(() => void refreshInstances()),
+      api.events.onWindowOpen(() => void refreshInstances()),
       api.events.onExit((e) => {
         void refreshInstances()
         if (e.code !== 0 && e.code !== null) {

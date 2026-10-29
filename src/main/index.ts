@@ -6,11 +6,11 @@ import * as auth from './core/auth'
 import * as instances from './core/instances'
 import { resolveVersion } from './core/install'
 import { availableRuntimes, detectJava, installRuntime, resolveJava } from './core/java'
-import { isRunning, killInstance, launchInstance } from './core/launch'
+import { isRunning, isWindowOpen, killInstance, launchInstance } from './core/launch'
 import { loaderVersions } from './core/meta'
 import * as mods from './core/mods'
 import { paths } from './core/paths'
-import { setLanguage, tr } from './core/i18n'
+import { seconds, setLanguage, tr } from './core/i18n'
 import { emit, setProgressTarget, task } from './core/progress'
 import { getSettings, updateSettings } from './core/settings'
 import { getVersions, refreshVersions, startVersionWatcher } from './core/versions'
@@ -159,7 +159,7 @@ function registerIpc(): void {
   })
 
   handle('instances:list', async () =>
-    (await instances.listInstances()).map((i) => ({ ...i, running: isRunning(i.id) }))
+    (await instances.listInstances()).map((i) => ({ ...i, running: isRunning(i.id), windowOpen: isWindowOpen(i.id) }))
   )
   handle('instances:create', async (name: string, versionId: string, loader?: Instance['loader']) => {
     const inst = await instances.createInstance(name, versionId, loader)
@@ -181,14 +181,19 @@ function registerIpc(): void {
   handle('instances:launch', async (id: string, accountId: string) => {
     const settings = await getSettings()
     const instance = await instances.getInstance(id)
+    const signInStartedAt = performance.now()
     const account = await auth.getLaunchAccount(accountId, settings.msClientId)
+    const signInMs = performance.now() - signInStartedAt
     const t = task(`launch:${id}`, tr('task.launching', { name: instance.name }))
     const log = (line: string, stream: 'stdout' | 'stderr' | 'launcher') =>
       emit('game:log', { instanceId: id, line, stream })
+    // Only worth a line when the account had to be renewed online (Microsoft about once a day).
+    if (signInMs >= 100) log(tr('log.signedIn', { seconds: seconds(signInMs) }), 'launcher')
     try {
       await launchInstance(instance, account, settings, {
         onProgress: t.update,
         onLog: log,
+        onWindowOpen: () => emit('game:windowOpen', { instanceId: id }),
         onExit: (code) => {
           emit('game:exit', { instanceId: id, code })
           if (settings.closeOnLaunch) win?.show()

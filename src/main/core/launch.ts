@@ -23,15 +23,30 @@ import { loaderComponents } from './meta'
 import { paths } from './paths'
 import { rulesAllow } from './platform'
 import { gameDir } from './instances'
-import { tr } from './i18n'
+import { seconds, tr } from './i18n'
 
 export const LAUNCHER_NAME = 'puma-launcher'
 export const LAUNCHER_VERSION = '0.2.2'
 
 const running = new Map<string, ChildProcess>()
+/** Running instances whose game window is up. */
+const windowOpen = new Set<string>()
+
+/**
+ * Log lines that only appear once Minecraft's window exists: "Backend library: LWJGL …" right after the
+ * window is created (1.13+) and "Reloading ResourceManager" when the loading screen starts (1.6+).
+ */
+const WINDOW_OPEN_LOG = /Backend library:|Reloading ResourceManager/
+/** When neither line shows up (very old versions, unusual mods), the game counts as open after this long. */
+const WINDOW_OPEN_FALLBACK_MS = 60_000
 
 export function isRunning(instanceId: string): boolean {
   return running.has(instanceId)
+}
+
+/** True once a running game has opened its window; until then the launcher shows it as opening. */
+export function isWindowOpen(instanceId: string): boolean {
+  return windowOpen.has(instanceId)
 }
 
 export function killInstance(instanceId: string): void {
@@ -82,6 +97,8 @@ function forgeWrapperArgs(version: VersionJson): string[] {
 export interface LaunchCallbacks {
   onProgress: (stage: string, done: number, total: number) => void
   onLog: (line: string, stream: 'stdout' | 'stderr' | 'launcher') => void
+  /** The game's window has opened (see {@link isWindowOpen}). */
+  onWindowOpen: () => void
   onExit: (code: number | null) => void
 }
 
@@ -93,12 +110,17 @@ export async function launchInstance(
 ): Promise<void> {
   if (running.has(instance.id)) throw new Error(tr('error.alreadyRunning', { name: instance.name }))
   const dir = gameDir(instance.id)
+  // Timings for the Console, so it's clear where the wait between Play and the game goes.
+  const startedAt = performance.now()
+  const since = (from: number) => performance.now() - from
   await mkdir(dir, { recursive: true })
 
   cb.onProgress(tr('stage.resolvingVersion'), 0, 1)
   const components = instance.loader ? await loaderComponents(instance.loader, instance.versionId) : []
   const version = await installVersion(instance.versionId, dir, settings.concurrentDownloads, cb.onProgress, components)
   const agent = account.type === 'authlib' && account.authServer ? await authlibAgentArgs(account.authServer) : []
+  const filesMs = since(startedAt)
+  const javaStartedAt = performance.now()
   const java = await resolveJava({
     explicitPath: instance.javaPath,
     component: version.javaVersion?.component,
@@ -107,10 +129,13 @@ export async function launchInstance(
     concurrency: settings.concurrentDownloads,
     onProgress: cb.onProgress
   })
+  const javaMs = since(javaStartedAt)
 
   cb.onProgress(tr('stage.preparingNatives'), 0, 1)
+  const nativesStartedAt = performance.now()
   const nativesDir = paths.natives(instance.id)
   await extractNatives(version, nativesDir)
+  const nativesMs = since(nativesStartedAt)
 
   const assetIndex = await readAssetIndex(version)
   const hasResolution = !!(instance.width && instance.height)
@@ -168,14 +193,34 @@ export async function launchInstance(
 
   const args = [...jvm, version.mainClass, ...game]
   const loaderLabel = instance.loader ? ` + ${instance.loader.type} ${instance.loader.version}` : ''
+  cb.onLog(
+    tr('log.prepared', { total: seconds(since(startedAt)), files: seconds(filesMs), java: seconds(javaMs), natives: seconds(nativesMs) }),
+    'launcher'
+  )
   cb.onLog(tr('log.launching', { version: version.id, loader: loaderLabel, java }), 'launcher')
   cb.onLog(
     tr('log.arguments', { args: args.map((a) => (a === account.accessToken && a !== '0' ? '<access token>' : a)).join(' ') }),
     'launcher'
   )
 
+  const spawnedAt = performance.now()
   const child = spawn(java, args, { cwd: dir, windowsHide: true, detached: false })
   running.set(instance.id, child)
+  windowOpen.delete(instance.id)
+  const markWindowOpen = (seen: boolean) => {
+    if (windowOpen.has(instance.id) || running.get(instance.id) !== child) return
+    clearTimeout(windowFallback)
+    windowOpen.add(instance.id)
+    cb.onLog(tr(seen ? 'log.windowOpened' : 'log.windowAssumed', { seconds: seconds(since(spawnedAt)) }), 'launcher')
+    cb.onWindowOpen()
+  }
+  const windowFallback = setTimeout(() => markWindowOpen(false), WINDOW_OPEN_FALLBACK_MS)
+  const stopped = () => {
+    clearTimeout(windowFallback)
+    running.delete(instance.id)
+    windowOpen.delete(instance.id)
+  }
+
   const pipeLines = (stream: NodeJS.ReadableStream | null, name: 'stdout' | 'stderr') => {
     let buf = ''
     stream?.setEncoding('utf8')
@@ -185,7 +230,10 @@ export async function launchInstance(
       buf = lines.pop() ?? ''
       for (const l of lines) {
         const out = name === 'stdout' ? log4j.push(l) : [l]
-        for (const o of out) cb.onLog(o, name)
+        for (const o of out) {
+          cb.onLog(o, name)
+          if (WINDOW_OPEN_LOG.test(o)) markWindowOpen(true)
+        }
       }
     })
   }
@@ -194,11 +242,11 @@ export async function launchInstance(
   pipeLines(child.stderr, 'stderr')
   child.on('error', (err) => {
     cb.onLog(tr('log.javaFailed', { error: err.message }), 'launcher')
-    running.delete(instance.id)
+    stopped()
     cb.onExit(-1)
   })
   child.on('exit', (code) => {
-    running.delete(instance.id)
+    stopped()
     cb.onExit(code)
   })
 }

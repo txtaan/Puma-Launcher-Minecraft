@@ -39,6 +39,7 @@ export function Instances() {
       <div className="instance-grid">
         {instances.map((i) => {
           const launching = tasks[`launch:${i.id}`] && !tasks[`launch:${i.id}`].finished
+          const opening = i.running && !i.windowOpen
           return (
             <article key={i.id} className={`card instance-card ${settings?.selectedInstanceId === i.id ? 'selected' : ''}`}>
               <button className="instance-cover" onClick={() => void saveSettings({ selectedInstanceId: i.id })}>
@@ -52,13 +53,13 @@ export function Instances() {
                 </span>
               </div>
               <div className="instance-actions">
-                {i.running ? (
+                {i.running && !opening ? (
                   <button className="btn btn-danger btn-sm" onClick={() => void api.instances.kill(i.id)}>
                     <Icon name="stop" size={14} /> {t('common.stop')}
                   </button>
                 ) : (
-                  <button className="btn btn-primary btn-sm" disabled={!!launching} onClick={() => void launch(i.id)}>
-                    <Icon name="play" size={14} /> {launching ? t('common.starting') : t('common.play')}
+                  <button className="btn btn-primary btn-sm" disabled={!!launching || opening} onClick={() => void launch(i.id)}>
+                    <Icon name="play" size={14} /> {opening ? t('common.opening') : launching ? t('common.starting') : t('common.play')}
                   </button>
                 )}
                 <button className="icon-btn" title={t('instances.mods')} aria-label={t('instances.mods')} onClick={() => setModding(i)}>
