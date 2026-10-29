@@ -24,7 +24,12 @@ function on<T>(channel: string, cb: (payload: T) => void): () => void {
   return () => ipcRenderer.removeListener(channel, listener)
 }
 
-export type InstanceWithState = Instance & { running: boolean }
+export type InstanceWithState = Instance & {
+  /** The game is running (from the moment Java starts). */
+  running: boolean
+  /** The game's window is open; while `running` without it, the game is still opening. */
+  windowOpen: boolean
+}
 
 const api = {
   platform: process.platform,
@@ -88,7 +93,8 @@ const api = {
     onProgress: (cb: (e: ProgressEvent) => void) => on('progress', cb),
     onLog: (cb: (e: GameLogEvent) => void) => on('game:log', cb),
     onExit: (cb: (e: GameExitEvent) => void) => on('game:exit', cb),
-    onStarted: (cb: (e: { instanceId: string }) => void) => on('game:started', cb)
+    onStarted: (cb: (e: { instanceId: string }) => void) => on('game:started', cb),
+    onWindowOpen: (cb: (e: { instanceId: string }) => void) => on('game:windowOpen', cb)
   }
 }
 

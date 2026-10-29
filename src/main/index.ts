@@ -6,7 +6,7 @@ import * as auth from './core/auth'
 import * as instances from './core/instances'
 import { resolveVersion } from './core/install'
 import { availableRuntimes, detectJava, installRuntime, resolveJava } from './core/java'
-import { isRunning, killInstance, launchInstance } from './core/launch'
+import { isRunning, isWindowOpen, killInstance, launchInstance } from './core/launch'
 import { loaderVersions } from './core/meta'
 import * as mods from './core/mods'
 import { paths } from './core/paths'
@@ -159,7 +159,7 @@ function registerIpc(): void {
   })
 
   handle('instances:list', async () =>
-    (await instances.listInstances()).map((i) => ({ ...i, running: isRunning(i.id) }))
+    (await instances.listInstances()).map((i) => ({ ...i, running: isRunning(i.id), windowOpen: isWindowOpen(i.id) }))
   )
   handle('instances:create', async (name: string, versionId: string, loader?: Instance['loader']) => {
     const inst = await instances.createInstance(name, versionId, loader)
@@ -189,6 +189,7 @@ function registerIpc(): void {
       await launchInstance(instance, account, settings, {
         onProgress: t.update,
         onLog: log,
+        onWindowOpen: () => emit('game:windowOpen', { instanceId: id }),
         onExit: (code) => {
           emit('game:exit', { instanceId: id, code })
           if (settings.closeOnLaunch) win?.show()

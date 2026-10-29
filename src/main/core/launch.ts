@@ -29,9 +29,24 @@ export const LAUNCHER_NAME = 'puma-launcher'
 export const LAUNCHER_VERSION = '0.2.2'
 
 const running = new Map<string, ChildProcess>()
+/** Running instances whose game window is up. */
+const windowOpen = new Set<string>()
+
+/**
+ * Log lines that only appear once Minecraft's window exists: "Backend library: LWJGL …" right after the
+ * window is created (1.13+) and "Reloading ResourceManager" when the loading screen starts (1.6+).
+ */
+const WINDOW_OPEN_LOG = /Backend library:|Reloading ResourceManager/
+/** When neither line shows up (very old versions, unusual mods), the game counts as open after this long. */
+const WINDOW_OPEN_FALLBACK_MS = 60_000
 
 export function isRunning(instanceId: string): boolean {
   return running.has(instanceId)
+}
+
+/** True once a running game has opened its window; until then the launcher shows it as opening. */
+export function isWindowOpen(instanceId: string): boolean {
+  return windowOpen.has(instanceId)
 }
 
 export function killInstance(instanceId: string): void {
@@ -82,6 +97,8 @@ function forgeWrapperArgs(version: VersionJson): string[] {
 export interface LaunchCallbacks {
   onProgress: (stage: string, done: number, total: number) => void
   onLog: (line: string, stream: 'stdout' | 'stderr' | 'launcher') => void
+  /** The game's window has opened (see {@link isWindowOpen}). */
+  onWindowOpen: () => void
   onExit: (code: number | null) => void
 }
 
@@ -176,6 +193,20 @@ export async function launchInstance(
 
   const child = spawn(java, args, { cwd: dir, windowsHide: true, detached: false })
   running.set(instance.id, child)
+  windowOpen.delete(instance.id)
+  const markWindowOpen = () => {
+    if (windowOpen.has(instance.id) || running.get(instance.id) !== child) return
+    clearTimeout(windowFallback)
+    windowOpen.add(instance.id)
+    cb.onWindowOpen()
+  }
+  const windowFallback = setTimeout(markWindowOpen, WINDOW_OPEN_FALLBACK_MS)
+  const stopped = () => {
+    clearTimeout(windowFallback)
+    running.delete(instance.id)
+    windowOpen.delete(instance.id)
+  }
+
   const pipeLines = (stream: NodeJS.ReadableStream | null, name: 'stdout' | 'stderr') => {
     let buf = ''
     stream?.setEncoding('utf8')
@@ -185,7 +216,10 @@ export async function launchInstance(
       buf = lines.pop() ?? ''
       for (const l of lines) {
         const out = name === 'stdout' ? log4j.push(l) : [l]
-        for (const o of out) cb.onLog(o, name)
+        for (const o of out) {
+          cb.onLog(o, name)
+          if (WINDOW_OPEN_LOG.test(o)) markWindowOpen()
+        }
       }
     })
   }
@@ -194,11 +228,11 @@ export async function launchInstance(
   pipeLines(child.stderr, 'stderr')
   child.on('error', (err) => {
     cb.onLog(tr('log.javaFailed', { error: err.message }), 'launcher')
-    running.delete(instance.id)
+    stopped()
     cb.onExit(-1)
   })
   child.on('exit', (code) => {
-    running.delete(instance.id)
+    stopped()
     cb.onExit(code)
   })
 }

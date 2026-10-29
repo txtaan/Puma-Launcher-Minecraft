@@ -53,6 +53,7 @@ let accounts: PublicAccount[] = []
 const installedVersions = new Set<string>()
 const instances: Instance[] = []
 const running = new Set<string>()
+const windowOpen = new Set<string>()
 const mods = new Map<string, (InstalledMod & { projectId: string })[]>()
 const javaInstalled = new Set<string>()
 
@@ -180,7 +181,7 @@ const api: LauncherApi = {
     list: async (): Promise<InstanceWithState[]> =>
       [...instances]
         .sort((a, b) => (b.lastPlayed ?? b.createdAt) - (a.lastPlayed ?? a.createdAt))
-        .map((i) => ({ ...i, running: running.has(i.id) })),
+        .map((i) => ({ ...i, running: running.has(i.id), windowOpen: windowOpen.has(i.id) })),
     create: async (name, versionId, loader) => {
       const inst: Instance = { id: uuid(), name: name.trim() || versionId, versionId, loader, createdAt: Date.now() }
       instances.push(inst)
@@ -216,17 +217,23 @@ const api: LauncherApi = {
       const note = previewOnly('browser preview: no real game is started', 'anteprima nel browser: nessuna partita viene avviata davvero')
       emit<GameLogEvent>('game:log', { instanceId: id, stream: 'launcher', line: `${launchLine} (${note})` })
       for (const line of GAME_LOG) {
-        await wait(250)
+        // The real game takes a few seconds to open its window, which the launcher shows as "Opening…".
+        await wait(line.startsWith('Backend library') ? 2500 : 250)
         const text = line
           .replace('{v}', inst.versionId)
           .replace('{loader}', loader)
           .replace('{user}', settings.selectedAccountId ? accounts.find((a) => a.id === settings.selectedAccountId)?.username ?? '' : '')
           .replace('{mods}', modCount ? `, ${modCount} mod(s)` : '')
         emit<GameLogEvent>('game:log', { instanceId: id, stream: 'stdout', line: `[${new Date().toTimeString().slice(0, 8)}] [Render thread/INFO]: ${text}` })
+        if (line.startsWith('Backend library') && running.has(id)) {
+          windowOpen.add(id)
+          emit('game:windowOpen', { instanceId: id })
+        }
       }
     },
     kill: async (id) => {
       running.delete(id)
+      windowOpen.delete(id)
       emit<GameExitEvent>('game:exit', { instanceId: id, code: 0 })
     }
   },
@@ -273,7 +280,8 @@ const api: LauncherApi = {
     onProgress: (cb) => on('progress', cb),
     onLog: (cb) => on('game:log', cb),
     onExit: (cb) => on('game:exit', cb),
-    onStarted: (cb) => on('game:started', cb)
+    onStarted: (cb) => on('game:started', cb),
+    onWindowOpen: (cb) => on('game:windowOpen', cb)
   }
 }
 

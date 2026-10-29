@@ -10,6 +10,7 @@ export const en = {
   'common.play': 'Play',
   'common.stop': 'Stop',
   'common.starting': 'Starting…',
+  'common.opening': 'Opening…',
   'common.name': 'Name',
   'common.refresh': 'Refresh',
   'common.remove': 'Remove {name}',

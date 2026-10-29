@@ -11,6 +11,7 @@ export const it: Messages = {
   'common.play': 'Gioca',
   'common.stop': 'Ferma',
   'common.starting': 'Avvio…',
+  'common.opening': 'Caricando…',
   'common.name': 'Nome',
   'common.refresh': 'Aggiorna',
   'common.remove': 'Rimuovi {name}',
