@@ -157,7 +157,7 @@ const api: LauncherApi = {
     detect: async (): Promise<JavaInstall[]> => [
       ...runtimes
         .filter((r) => javaInstalled.has(r.component))
-        .map<JavaInstall>((r) => ({ path: `C:\\Users\\you\\AppData\\Roaming\\txtaan-launcher\\runtime\\${r.component}\\bin\\java.exe`, version: r.version, majorVersion: r.majorVersion, arch: 'amd64', source: 'managed' })),
+        .map<JavaInstall>((r) => ({ path: `C:\\Users\\you\\AppData\\Roaming\\puma-launcher\\runtime\\${r.component}\\bin\\java.exe`, version: r.version, majorVersion: r.majorVersion, arch: 'amd64', source: 'managed' })),
       { path: 'C:\\Program Files\\Eclipse Adoptium\\jdk-21.0.5+11\\bin\\java.exe', version: '21.0.5', majorVersion: 21, arch: 'amd64', source: 'system' }
     ],
     runtimes: async () => runtimes.map((r) => ({ ...r, installed: javaInstalled.has(r.component) })),

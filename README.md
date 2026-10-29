@@ -1,4 +1,4 @@
-# Txtaan Launcher
+# Puma Launcher
 
 A modern, open-source Minecraft: Java Edition launcher built with Electron, React and TypeScript.
 It is modelled on the most active open-source launchers, checked in October 2026:
@@ -66,17 +66,17 @@ on a virtual display. The game reached the title screen and loaded into a new si
 GitHub Actions builds every installer automatically (`.github/workflows/build.yml`):
 
 - **Any push:** open the **Actions** tab, pick the latest "Build installers" run, and download the
-  `TxtaanLauncher-Windows`, `TxtaanLauncher-macOS` or `TxtaanLauncher-Linux` artifact at the bottom of the page.
+  `PumaLauncher-Windows`, `PumaLauncher-macOS` or `PumaLauncher-Linux` artifact at the bottom of the page.
 - **A release:** in the **Actions** tab, open "Build installers", click **Run workflow** and enter a version such as
   `v0.3.0`; or push a version tag (`git tag v0.3.0 && git push origin v0.3.0`). The installers are attached to a new
   GitHub Release.
 
 | File | For |
 | --- | --- |
-| `TxtaanLauncher-<version>-windows-x64-setup.exe` | Windows 10/11 |
-| `TxtaanLauncher-<version>-macos-arm64.dmg` | Macs with Apple chips (M1–M4) |
-| `TxtaanLauncher-<version>-macos-x64.dmg` | Macs with Intel chips |
-| `TxtaanLauncher-<version>-linux-x86_64.AppImage` / `-amd64.deb` | Linux |
+| `PumaLauncher-<version>-windows-x64-setup.exe` | Windows 10/11 |
+| `PumaLauncher-<version>-macos-arm64.dmg` | Macs with Apple chips (M1–M4) |
+| `PumaLauncher-<version>-macos-x64.dmg` | Macs with Intel chips |
+| `PumaLauncher-<version>-linux-x86_64.AppImage` / `-amd64.deb` | Linux |
 
 You can also build locally with `npm run dist` on each OS: `.exe` (NSIS) on Windows, `.dmg` on macOS, AppImage/`.deb`
 on Linux. Without code signing, Windows SmartScreen and macOS Gatekeeper show a warning the first time
@@ -99,11 +99,11 @@ Requires Node.js 20 or newer.
 
 | OS | Folder |
 | --- | --- |
-| Windows | `%APPDATA%\txtaan-launcher` |
-| macOS | `~/Library/Application Support/txtaan-launcher` |
-| Linux | `~/.config/txtaan-launcher` |
+| Windows | `%APPDATA%\puma-launcher` |
+| macOS | `~/Library/Application Support/puma-launcher` |
+| Linux | `~/.config/puma-launcher` |
 
-To use another folder, set the `TXTAAN_HOME` environment variable. The layout follows `.minecraft`
+To use another folder, set the `PUMA_HOME` environment variable. Data from older versions (the `txtaan-launcher` folder, from before the rename) is moved to the new folder automatically on first start. The layout follows `.minecraft`
 (`versions/`, `libraries/`, `assets/`), plus `runtime/` for downloaded Java and `instances/` for instances.
 
 ### Microsoft login setup
@@ -114,7 +114,7 @@ Microsoft requires every launcher to use its own Azure application:
    Choose **Personal Microsoft accounts only**.
 2. Under **Authentication**, turn on **Allow public client flows**. This enables the device-code flow.
 3. Copy the **Application (client) ID** into **Settings → Accounts** in the launcher, or set the
-   `TXTAAN_MS_CLIENT_ID` environment variable.
+   `PUMA_MS_CLIENT_ID` environment variable.
 4. New Azure apps also need Mojang's approval before they can use the Minecraft API. Submit the
    [Minecraft API access form](https://aka.ms/mce-reviewappid). Until it is approved, sign-in stops
    at the Minecraft step with HTTP 403.

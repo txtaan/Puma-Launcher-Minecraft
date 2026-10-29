@@ -3,7 +3,7 @@ import { readJson, writeJson } from './fsutil'
 import { paths } from './paths'
 
 export const DEFAULT_SETTINGS: Settings = {
-  msClientId: process.env.TXTAAN_MS_CLIENT_ID ?? '',
+  msClientId: process.env.PUMA_MS_CLIENT_ID ?? process.env.TXTAAN_MS_CLIENT_ID ?? '',
   defaultMaxMemoryMb: 4096,
   defaultMinMemoryMb: 512,
   autoDownloadJava: true,
