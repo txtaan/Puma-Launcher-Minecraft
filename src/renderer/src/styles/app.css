@@ -47,7 +47,7 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
   position: relative; z-index: 20;
   flex-shrink: 0;
 }
-.titlebar-brand { display: flex; align-items: center; gap: 10px; font-weight: var(--font-weight); font-size: 13px; color: var(--text-muted); }
+.titlebar-brand { display: flex; align-items: center; gap: 10px; font-weight: var(--font-weight); font-size: 13px; color: var(--titlebar-text); }
 .brand-mark { width: 19px; height: 19px; border-radius: 4px; background: url('../assets/logo.webp') center / cover; flex-shrink: 0; }
 .brand-mark.big { width: 105px; height: 105px; border-radius: 20px; display: inline-block; }
 .titlebar-controls { display: flex; height: 100%; -webkit-app-region: no-drag; }
@@ -64,18 +64,18 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
   width: var(--sidebar-w); flex-shrink: 0;
   display: flex; flex-direction: column; justify-content: space-between;
   padding: 16px 12px;
-  background: var(--bg-elev);
+  background: var(--sidebar-bg);
   border-right: 1px solid var(--border);
 }
 .nav { display: flex; flex-direction: column; gap: 4px; }
 .nav-item {
   display: flex; align-items: center; gap: 12px;
   padding: 10px 12px; border-radius: var(--radius-s);
-  color: var(--text-muted); font-weight: var(--font-weight); text-align: left;
+  color: var(--nav-text); font-weight: var(--font-weight); text-align: left;
   transition: background 0.15s, color 0.15s;
 }
 .nav-item:hover { background: var(--surface-hover); color: var(--text); }
-.nav-item.active { background: var(--surface-strong); color: var(--text); box-shadow: inset 3px 0 0 var(--accent); }
+.nav-item.active { background: var(--surface-strong); color: var(--text); box-shadow: inset 3px 0 0 var(--nav-indicator); }
 .account-chip {
   display: flex; align-items: center; gap: 10px;
   padding: 10px; border-radius: var(--radius);
@@ -85,7 +85,7 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
 .account-meta strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .account-meta span { font-size: 12px; color: var(--text-muted); }
 .avatar { border-radius: 8px; image-rendering: pixelated; flex-shrink: 0; }
-.avatar-fallback { display: grid; place-items: center; font-weight: var(--font-weight); background: var(--brand-gradient); color: var(--text-on-accent); }
+.avatar-fallback { display: grid; place-items: center; font-weight: var(--font-weight); background: var(--avatar-bg); color: var(--text-on-accent); }
 
 /* ---------- Buttons & inputs ---------- */
 .btn {
@@ -154,7 +154,7 @@ select option { background: var(--bg-elev); color: var(--text); }
    framing matches the design (art 2406×1354 at -618,-22 in a 1728×956 page) at any window size. */
 .login-art {
   position: absolute; left: -35.76%; top: -2.3%; width: 139.24%; height: 141.63%;
-  background: url('../assets/welcome-day.webp') center / cover no-repeat;
+  background: url('../assets/jungle-day.webp') center / cover no-repeat;
 }
 .login-card { grid-row: 2; position: relative; width: 400px; max-width: calc(100% - 32px); padding: 28px 32px 36px; border-radius: var(--radius-l); display: flex; flex-direction: column; gap: 12px; box-shadow: var(--shadow); }
 .login-card h1 { text-align: center; font-size: 30px; }
@@ -175,50 +175,45 @@ select option { background: var(--bg-elev); color: var(--text); }
 
 /* ---------- Home ---------- */
 .home { padding: 20px; display: flex; flex-direction: column; gap: 20px; }
-.hero { color: var(--text); position: relative; min-height: 340px; border-radius: var(--radius-l); overflow: hidden; display: flex; align-items: flex-end; isolation: isolate; box-shadow: 0 20px 60px rgba(124, 58, 237, 0.25); }
-.hero-gradient {
-  position: absolute; inset: -20%; z-index: -2;
-  background:
-    radial-gradient(circle at 20% 30%, var(--hero-glow-1), transparent 45%),
-    radial-gradient(circle at 80% 20%, var(--hero-glow-2), transparent 40%),
-    radial-gradient(circle at 60% 90%, var(--hero-glow-3), transparent 50%),
-    var(--hero-gradient);
-  background-size: 200% 200%;
-  animation: hero-shift 16s ease-in-out infinite alternate;
+.hero { color: var(--text); position: relative; min-height: 340px; border-radius: var(--radius-l); overflow: hidden; display: flex; align-items: flex-end; isolation: isolate; box-shadow: var(--hero-shadow); }
+/* Jungle scene: moonlit in the dark theme, daylight in the light theme. Sized and offset relative to the hero so the
+   framing matches the design (in a 1468×340 hero: night art 2084×1173 at -141,-240; day art 2018×1136 at -181,-228). */
+.hero-art {
+  position: absolute; z-index: -1; left: -9.6%; top: -70.59%; width: 141.96%; height: 345%;
+  background: url('../assets/jungle-night.webp') center / cover no-repeat;
 }
-@keyframes hero-shift {
-  0% { background-position: 0% 50%; transform: rotate(0deg) scale(1); }
-  50% { background-position: 100% 50%; transform: rotate(2deg) scale(1.05); }
-  100% { background-position: 50% 100%; transform: rotate(-1deg) scale(1.02); }
-}
-.hero-noise {
-  position: absolute; inset: 0; z-index: -1;
-  background: linear-gradient(180deg, transparent 30%, rgba(11, 11, 20, 0.55) 100%);
+:root[data-theme='light'] .hero-art {
+  left: -12.33%; top: -67.06%; width: 137.5%; height: 334.12%;
+  background-image: url('../assets/jungle-day.webp');
 }
 .hero-content { padding: 32px; width: 100%; }
 .hero-kicker { font-size: 16px; font-weight: var(--font-weight); opacity: 0.85; }
 .hero-title { font-size: 48px; font-weight: var(--font-weight); line-height: 1.05; margin: 2px 0 10px; text-shadow: 0 4px 30px rgba(0, 0, 0, 0.25); }
-.hero-sub { font-size: 15px; opacity: 0.9; margin-bottom: 24px; }
-.play-bar { display: flex; align-items: center; gap: 16px; padding: 12px 12px 12px 20px; border-radius: 16px; max-width: 620px; }
+.hero-sub { font-size: 15px; color: var(--hero-sub); opacity: 0.9; margin-bottom: 24px; }
+.play-bar { display: flex; align-items: center; gap: 16px; padding: 12px 12px 12px 20px; border-radius: 16px; max-width: 620px; margin: 0 auto; }
 .play-instance { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
 .play-label { font-size: 11px; font-weight: var(--font-weight); text-transform: uppercase; letter-spacing: 0.08em; opacity: 0.7; }
-.play-instance select { background: rgba(0, 0, 0, 0.25); border-color: rgba(255, 255, 255, 0.2); font-weight: var(--font-weight); }
+.play-instance select {
+  appearance: none; padding: 0 36px 0 16px; border-color: rgba(255, 255, 255, 0.2); font-weight: var(--font-weight);
+  background: rgba(0, 0, 0, 0.25) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='white' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat right 23px center / 10px 6px;
+}
 .play-btn {
   display: inline-flex; align-items: center; gap: 10px;
   height: 56px; padding: 0 34px; border-radius: 14px;
-  background: #fff; color: #1e1036; font-size: 18px; font-weight: var(--font-weight); letter-spacing: 0.02em;
+  background: var(--play-gradient); color: #1e1036; font-size: 18px; font-weight: var(--font-weight-medium); letter-spacing: 0.02em;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
   transition: transform 0.15s, box-shadow 0.15s;
 }
 .play-btn:hover:not(:disabled) { transform: translateY(-2px) scale(1.02); box-shadow: 0 14px 40px rgba(0, 0, 0, 0.35); }
+.play-btn.create { gap: 2px; padding: 0 40px 0 26px; }
 .play-btn.running { background: rgba(239, 68, 68, 0.9); color: #fff; }
 .home-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
 .news-card { padding: 18px; display: flex; flex-direction: column; gap: 6px; align-items: flex-start; position: relative; overflow: hidden; }
 .news-card h3 { font-size: 22px; font-weight: var(--font-weight); }
 .news-card .btn { margin-top: 8px; }
 .news-card.release::after, .news-card.snapshot::after { content: ''; position: absolute; right: -40px; top: -40px; width: 120px; height: 120px; border-radius: 50%; filter: blur(40px); opacity: 0.4; }
-.news-card.release::after { background: var(--accent-2); }
-.news-card.snapshot::after { background: var(--accent-4); }
+.news-card.release::after { background: var(--release-glow); }
+.news-card.snapshot::after { background: var(--snapshot-glow); }
 .badge { font-size: 11px; font-weight: var(--font-weight); text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); }
 .quick-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
 .quick-actions .btn { margin-top: 0; }
@@ -228,7 +223,7 @@ select option { background: var(--bg-elev); color: var(--text); }
 .recent:hover { background: var(--surface-hover); }
 .recent div { display: flex; flex-direction: column; min-width: 0; }
 .recent strong { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.recent-icon { width: 40px; height: 40px; border-radius: 10px; display: grid; place-items: center; font-weight: var(--font-weight); background: var(--brand-gradient); color: var(--text-on-accent); flex-shrink: 0; }
+.recent-icon { width: 40px; height: 40px; border-radius: 10px; display: grid; place-items: center; font-weight: var(--font-weight); background: var(--recent-icon-bg); color: var(--text-on-accent); flex-shrink: 0; }
 .dot-running { position: absolute; top: 10px; right: 10px; width: 8px; height: 8px; border-radius: 50%; background: var(--success); box-shadow: 0 0 8px var(--success); }
 
 /* ---------- Pages ---------- */

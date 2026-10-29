@@ -17,7 +17,7 @@ import { getVersions, refreshVersions, startVersionWatcher } from './core/versio
 let win: BrowserWindow | undefined
 
 /** Matches --bg in theme.css, so the window doesn't flash the wrong colour while loading or resizing. */
-const windowBackground = () => (nativeTheme.shouldUseDarkColors ? '#0b0b14' : '#f6f6fb')
+const windowBackground = () => (nativeTheme.shouldUseDarkColors ? '#0b0b14' : '#e7e7e7')
 
 /** Native parts (macOS window buttons, form controls, prefers-color-scheme) follow the launcher's theme. */
 function applyTheme(theme: ThemePreference): void {

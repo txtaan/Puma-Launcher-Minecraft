@@ -5,10 +5,11 @@
  */
 :root {
   color-scheme: dark;
-  /* Every text in the launcher uses Inter Regular (bundled with the app, so it also works offline). */
+  /* Text uses Inter Regular; only the big Play/Create button uses Medium. Both are bundled, so they work offline. */
   --font: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   --mono: var(--font);
   --font-weight: 400;
+  --font-weight-medium: 500;
 
   --bg: #0b0b14;
   --bg-elev: #12121e;
@@ -51,17 +52,29 @@
   --console-bg: rgba(8, 8, 14, 0.96);
   --log-text: #c9c9d9;
 
-  /* Home screen hero gradient (animated) */
+  /* Instance cover gradient */
   --hero-gradient: linear-gradient(125deg, #312e81 0%, #6d28d9 25%, #c026d3 50%, #ec4899 72%, #fb923c 100%);
-  --hero-glow-1: rgba(236, 72, 153, 0.6);
-  --hero-glow-2: rgba(34, 211, 238, 0.45);
-  --hero-glow-3: rgba(99, 102, 241, 0.65);
 
   /* Primary button / brand gradient */
   --brand-gradient: linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%);
   /* Welcome screen: primary button and hint text over the jungle scene */
   --welcome-gradient: linear-gradient(135deg, #5780b0 0%, #9fc369 100%);
   --welcome-hint: #b7b7b7;
+
+  /* App frame: title bar, sidebar navigation and account avatar */
+  --titlebar-text: #9a9ab3;
+  --sidebar-bg: #12121e;
+  --nav-text: #5693b7;
+  --nav-indicator: #5485a7;
+  --avatar-bg: linear-gradient(135deg, #20314c 0%, #6a639c 100%);
+
+  /* Home screen: hero glow, subtitle, Play button, version-card glows and recent-instance icons */
+  --hero-shadow: 0 20px 60px rgba(216, 216, 216, 0.25);
+  --hero-sub: #c2c2c2;
+  --play-gradient: linear-gradient(90deg, #ffffff 0%, #999999 100%);
+  --release-glow: #6285b2;
+  --snapshot-glow: #355888;
+  --recent-icon-bg: var(--avatar-bg);
 
   --radius-s: 8px;
   --radius: 12px;
@@ -76,7 +89,7 @@
 :root[data-theme='light'] {
   color-scheme: light;
 
-  --bg: #f6f6fb;
+  --bg: #e7e7e7;
   --bg-elev: #ffffff;
   --surface: rgba(24, 20, 56, 0.035);
   --surface-hover: rgba(24, 20, 56, 0.06);
@@ -112,6 +125,17 @@
   --glass-border: rgba(24, 20, 56, 0.1);
   --login-glow: #ebe4ff;
   --welcome-hint: var(--text-muted);
+
+  --sidebar-bg: #e2e2e2;
+  --nav-text: #9d712f;
+  --nav-indicator: #e5a43d;
+  --avatar-bg: linear-gradient(135deg, #c08d4b 0%, #dead5f 100%);
+
+  --hero-shadow: 0 20px 60px rgba(237, 213, 58, 0.25);
+  --hero-sub: #ffffff;
+  --release-glow: transparent;
+  --snapshot-glow: #b97c0c;
+  --recent-icon-bg: #be803b;
   --console-bg: rgba(255, 255, 255, 0.97);
   --log-text: #3b3852;
 

@@ -27,7 +27,7 @@ ForgeWrapper and authlib-injector jars at runtime. It is licensed GPL-3.0-or-lat
 ## Features
 
 - Login screen: Microsoft, offline, or Ely.by / LittleSkin / custom server, plus saved accounts to switch between
-- Home screen with an animated gradient hero, latest release/snapshot cards and a large **Play** button
+- Home screen with a jungle-scene hero (moonlit or daylight, following the theme), latest release/snapshot cards and a large **Play** button
 - Instances: create with any version and mod loader; edit version, loader, Java, memory, JVM args and resolution
 - Mods: Modrinth browser with dependency resolution, plus installed-mod list with enable, disable and delete
 - Versions browser: releases, snapshots, beta and alpha, with search and "installed" badges
@@ -159,9 +159,11 @@ Electron download, which the preview doesn't need).
 
 The UI only talks to the launcher through `window.launcher` (see `src/preload/index.ts`), so the
 renderer can be redesigned or replaced freely. To change the look, start with the tokens in
-`src/renderer/src/styles/theme.css`, for example `--hero-gradient` for the home screen gradient
-and `--brand-gradient` for buttons. `:root` holds the dark theme and `:root[data-theme='light']` overrides
-its colours for the light theme, so a new colour token needs a value in both.
+`src/renderer/src/styles/theme.css`, for example `--hero-gradient` for the instance covers
+and `--brand-gradient` for buttons. The jungle scenes on the welcome and home screens are images in
+`src/renderer/src/assets`; the home hero shows the night art in the dark theme and the day art in the light one.
+`:root` holds the dark theme and `:root[data-theme='light']` overrides its colours for the light theme, so a new
+colour token needs a value in both.
 
 ## License
 

@@ -25,8 +25,7 @@ export function Home() {
   return (
     <div className="home">
       <section className="hero">
-        <div className="hero-gradient" aria-hidden />
-        <div className="hero-noise" aria-hidden />
+        <div className="hero-art" aria-hidden />
         <div className="hero-content">
           <p className="hero-kicker">{greeting()},</p>
           <h1 className="hero-title">{account?.username}</h1>
@@ -80,8 +79,8 @@ export function Home() {
                   <span className="play-label">No instances yet</span>
                   <strong>Create one to start playing</strong>
                 </div>
-                <button className="play-btn" disabled={!latest} onClick={() => setCreating(latest?.release ?? '')}>
-                  <Icon name="plus" size={20} /> Create
+                <button className="play-btn create" disabled={!latest} onClick={() => setCreating(latest?.release ?? '')}>
+                  <Icon name="plus" size={22} /> Create
                 </button>
               </>
             )}
