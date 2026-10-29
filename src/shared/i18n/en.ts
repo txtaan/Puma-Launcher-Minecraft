@@ -42,7 +42,7 @@ export const en = {
   'login.subtitle': 'Sign in to start playing Minecraft',
   'login.orAdd': 'or add an account',
   'login.microsoft': 'Sign in with Microsoft',
-  'login.offline': 'Play offline',
+  'login.offline': 'Play Now',
   'login.server': 'Ely.by, LittleSkin or other server',
   'login.msHint': 'Microsoft login needs an Azure client ID. You can add it later in Settings; offline mode works right away.',
   'login.username': 'Username',

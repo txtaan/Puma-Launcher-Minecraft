@@ -43,7 +43,7 @@ export const it: Messages = {
   'login.subtitle': 'Accedi per iniziare a giocare a Minecraft',
   'login.orAdd': 'oppure aggiungi un account',
   'login.microsoft': 'Accedi con Microsoft',
-  'login.offline': 'Gioca offline',
+  'login.offline': 'Gioca Ora',
   'login.server': 'Ely.by, LittleSkin o altro server',
   'login.msHint':
     'L’accesso Microsoft richiede un client ID di Azure. Puoi aggiungerlo più tardi nelle Impostazioni; la modalità offline funziona subito.',

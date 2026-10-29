@@ -148,12 +148,12 @@ const api: LauncherApi = {
       return acc
     },
     loginMicrosoft: async () => {
-      throw new Error(previewOnly('Microsoft login is not available in this browser preview. Use “Play offline”.', 'L’accesso Microsoft non è disponibile in questa anteprima nel browser. Usa “Gioca offline”.'))
+      throw new Error(previewOnly('Microsoft login is not available in this browser preview. Use “Play Now”.', 'L’accesso Microsoft non è disponibile in questa anteprima nel browser. Usa “Gioca Ora”.'))
     },
     cancelLogin: async () => undefined,
     remove: async (id) => void (accounts = accounts.filter((a) => a.id !== id)),
     addAuthlib: async () => {
-      throw new Error(previewOnly('Third-party login is not available in this browser preview. Use “Play offline”.', 'L’accesso con server di terze parti non è disponibile in questa anteprima nel browser. Usa “Gioca offline”.'))
+      throw new Error(previewOnly('Third-party login is not available in this browser preview. Use “Play Now”.', 'L’accesso con server di terze parti non è disponibile in questa anteprima nel browser. Usa “Gioca Ora”.'))
     },
     authPresets: async () => ({
       'Ely.by': 'https://authserver.ely.by/api/authlib-injector',

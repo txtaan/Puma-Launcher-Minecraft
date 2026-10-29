@@ -32,8 +32,8 @@ You don't need to install Java or Minecraft separately: the launcher downloads b
      app the first time you open it, go to **System Settings → Privacy & Security** and click **Open Anyway**.
    - **Linux:** make the AppImage executable with `chmod +x PumaLauncher-*.AppImage` and run it, or install the
      `.deb` with `sudo apt install ./PumaLauncher-*.deb`.
-2. **Sign in.** Click **Play offline** and type a player name (3–16 letters, numbers or underscores) to start right
-   away. You can also use a **Microsoft** account (it needs a one-time setup, see
+2. **Sign in.** Click **Play Now** and type a player name (3–16 letters, numbers or underscores) to play offline
+   right away. You can also use a **Microsoft** account (it needs a one-time setup, see
    [Microsoft login setup](#microsoft-login-setup)) or an **Ely.by** / **LittleSkin** account.
 3. **Create an instance.** An instance is one Minecraft installation with its own worlds and mods. On the home
    screen click **Create**. The latest Minecraft version is already selected: give it a name, pick a mod loader
