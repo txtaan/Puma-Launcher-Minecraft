@@ -2,6 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState, t
 import type { GameLogEvent, ProgressEvent, PublicAccount, Settings, VersionList } from '@shared/types'
 import type { InstanceWithState } from '../../preload/index'
 import { api, errorMessage } from './api'
+import { setThemePreference } from './theme'
 
 export type Page = 'home' | 'instances' | 'versions' | 'java' | 'settings'
 
@@ -76,6 +77,11 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const saveSettings = useCallback(async (patch: Partial<Settings>) => {
     setSettings(await api.settings.update(patch))
   }, [])
+
+  const theme = settings?.theme
+  useEffect(() => {
+    if (theme) setThemePreference(theme)
+  }, [theme])
 
   const selectAccount = useCallback(
     async (id: string | undefined) => {

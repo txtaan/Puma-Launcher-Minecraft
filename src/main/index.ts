@@ -1,7 +1,7 @@
-import { app, BrowserWindow, clipboard, ipcMain, shell } from 'electron'
+import { app, BrowserWindow, clipboard, ipcMain, nativeTheme, shell } from 'electron'
 import { mkdir } from 'node:fs/promises'
 import { join } from 'node:path'
-import type { Instance, LoaderType, Settings } from '@shared/types'
+import type { Instance, LoaderType, Settings, ThemePreference } from '@shared/types'
 import * as auth from './core/auth'
 import * as instances from './core/instances'
 import { resolveVersion } from './core/install'
@@ -16,6 +16,15 @@ import { getVersions, refreshVersions, startVersionWatcher } from './core/versio
 
 let win: BrowserWindow | undefined
 
+/** Matches --bg in theme.css, so the window doesn't flash the wrong colour while loading or resizing. */
+const windowBackground = () => (nativeTheme.shouldUseDarkColors ? '#0b0b14' : '#f6f6fb')
+
+/** Native parts (macOS window buttons, form controls, prefers-color-scheme) follow the launcher's theme. */
+function applyTheme(theme: ThemePreference): void {
+  nativeTheme.themeSource = theme
+  win?.setBackgroundColor(windowBackground())
+}
+
 function createWindow(): void {
   win = new BrowserWindow({
     width: 1180,
@@ -26,7 +35,7 @@ function createWindow(): void {
     ...(process.platform === 'darwin'
       ? { titleBarStyle: 'hiddenInset' as const, trafficLightPosition: { x: 14, y: 13 } }
       : { frame: false }),
-    backgroundColor: '#0b0b14',
+    backgroundColor: windowBackground(),
     show: false,
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
@@ -98,6 +107,7 @@ function registerIpc(): void {
   handle('settings:update', async (patch: Partial<Settings>) => {
     const s = await updateSettings(patch)
     if (patch.versionRefreshMinutes) startVersionWatcher(s.versionRefreshMinutes)
+    if (patch.theme) applyTheme(s.theme)
     return s
   })
 
@@ -197,8 +207,10 @@ function registerIpc(): void {
 
 app.whenReady().then(async () => {
   registerIpc()
-  createWindow()
   const settings = await getSettings()
+  applyTheme(settings.theme)
+  nativeTheme.on('updated', () => win?.setBackgroundColor(windowBackground()))
+  createWindow()
   void refreshVersions()
     .catch(() => undefined)
     .then(async () => {

@@ -4,6 +4,7 @@ import { paths } from './paths'
 
 export const DEFAULT_SETTINGS: Settings = {
   msClientId: process.env.TXTAAN_MS_CLIENT_ID ?? '',
+  theme: 'dark',
   defaultMaxMemoryMb: 4096,
   defaultMinMemoryMb: 512,
   autoDownloadJava: true,
