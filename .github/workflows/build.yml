@@ -2,13 +2,19 @@ name: Build installers
 
 # Builds the launcher for Windows, macOS (Intel + Apple Silicon) and Linux.
 # - Every push / pull request: installers are attached to the run as downloadable artifacts.
-# - Pushing a tag like v0.3.0: the installers are also published as a GitHub Release.
+# - Pushing a tag like v0.3.0, or running it manually from the Actions tab with a "release" version:
+#   the installers are also published as a GitHub Release (the tag is created if it doesn't exist).
 on:
   push:
     branches: ['**']
     tags: ['v*']
   pull_request:
   workflow_dispatch:
+    inputs:
+      release:
+        description: 'Publish a GitHub Release with this version tag (e.g. v0.3.0). Leave empty to only build.'
+        required: false
+        type: string
 
 permissions:
   contents: read
@@ -69,7 +75,7 @@ jobs:
 
   release:
     name: Publish release
-    if: startsWith(github.ref, 'refs/tags/v')
+    if: startsWith(github.ref, 'refs/tags/v') || (github.event_name == 'workflow_dispatch' && inputs.release != '')
     needs: build
     runs-on: ubuntu-latest
     permissions:
@@ -82,5 +88,8 @@ jobs:
 
       - uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ inputs.release || github.ref_name }}
+          target_commitish: ${{ github.sha }}
+          name: Txtaan Launcher ${{ inputs.release || github.ref_name }}
           files: dist/*
           generate_release_notes: true

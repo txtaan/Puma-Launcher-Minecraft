@@ -67,8 +67,9 @@ GitHub Actions builds every installer automatically (`.github/workflows/build.ym
 
 - **Any push:** open the **Actions** tab, pick the latest "Build installers" run, and download the
   `TxtaanLauncher-Windows`, `TxtaanLauncher-macOS` or `TxtaanLauncher-Linux` artifact at the bottom of the page.
-- **A release:** push a version tag, e.g. `git tag v0.3.0 && git push origin v0.3.0`. The installers are attached to a
-  new GitHub Release.
+- **A release:** in the **Actions** tab, open "Build installers", click **Run workflow** and enter a version such as
+  `v0.3.0`; or push a version tag (`git tag v0.3.0 && git push origin v0.3.0`). The installers are attached to a new
+  GitHub Release.
 
 | File | For |
 | --- | --- |
