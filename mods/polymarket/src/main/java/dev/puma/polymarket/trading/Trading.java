@@ -377,7 +377,7 @@ public final class Trading {
 
     /** Into the inventory, onto the gold already there or into free slots; then into the chest behind the billboard. */
     private static List<ItemStack> give(ServerPlayer player, List<ItemStack> stacks, ServerLevel level, BlockPos board, Direction facing) {
-        for (ItemStack s : stacks) player.getInventory().add(s);
+        for (ItemStack s : stacks) addToInventory(player.getInventory(), s);
         List<ItemStack> left = new ArrayList<>(stacks);
         left.removeIf(ItemStack::isEmpty);
         if (left.isEmpty() || level == null || board == null || facing == null) return left;
@@ -386,6 +386,28 @@ public final class Trading {
             player.sendSystemMessage(Component.literal("Your inventory is full: the gold is in the chest behind the billboard").withStyle(ChatFormatting.YELLOW));
         }
         return left;
+    }
+
+    /**
+     * Like {@link Inventory#add}: onto matching stacks first, then into empty slots. Unlike it, what doesn't fit stays in
+     * {@code stack} even in creative mode, where {@code Inventory.add} would throw it away.
+     */
+    private static void addToInventory(Inventory inv, ItemStack stack) {
+        while (!stack.isEmpty()) {
+            int slot = inv.getSlotWithRemainingSpace(stack);
+            if (slot < 0) slot = inv.getFreeSlot();
+            if (slot < 0) break;
+            ItemStack there = inv.getItem(slot);
+            if (there.isEmpty()) {
+                inv.setItem(slot, stack.split(inv.getMaxStackSize(stack)));
+            } else {
+                int n = Math.min(stack.getCount(), inv.getMaxStackSize(there) - there.getCount());
+                if (n <= 0) break;
+                there.grow(n);
+                stack.shrink(n);
+            }
+        }
+        inv.setChanged();
     }
 
     private static int count(List<ItemStack> stacks) {
