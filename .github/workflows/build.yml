@@ -4,8 +4,8 @@ name: Build installers
 # - Every push / pull request: installers are attached to the run as downloadable artifacts.
 # - Pushing a tag like v0.3.0, or running it manually from the Actions tab with a "release" version:
 #   the installers are also published as a GitHub Release (the tag is created if it doesn't exist), together with
-#   the Polymarket Prediction Market mod's .jar, which the launcher installs from there. If the MODRINTH_TOKEN secret and the
-#   MODRINTH_PROJECT_ID variable are set, the mod is also published on Modrinth.
+#   the Polymarket Prediction Market mod's .jar, which the launcher installs from there. If the MODRINTH_TOKEN secret is
+#   set, the mod is also published on Modrinth (modrinth.yml).
 #   A manual run with "mac" unticked builds only Windows and Linux; a later manual run for the same version
 #   with "mac" ticked adds the macOS installers to that release.
 on:
@@ -150,46 +150,12 @@ jobs:
           GH_TOKEN: ${{ github.token }}
 
   modrinth:
-    name: Publish the mod on Modrinth
+    name: Modrinth
     if: startsWith(github.ref, 'refs/tags/v') || (github.event_name == 'workflow_dispatch' && inputs.release != '')
-    needs: [mod, release]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/download-artifact@v4
-        with:
-          name: polymarket-prediction-market
-          path: mod
-
-      # Skipped until the project exists on Modrinth: add a MODRINTH_TOKEN secret (a personal access token with the
-      # "Create versions" scope) and a MODRINTH_PROJECT_ID repository variable. A mod version already on Modrinth
-      # isn't uploaded again. game_versions must match the Minecraft range in the mod's mods.toml.
-      - name: Upload the jar
-        env:
-          MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
-          MODRINTH_PROJECT_ID: ${{ vars.MODRINTH_PROJECT_ID }}
-          TAG: ${{ inputs.release || github.ref_name }}
-        run: |
-          if [ -z "$MODRINTH_TOKEN" ] || [ -z "$MODRINTH_PROJECT_ID" ]; then
-            echo "Modrinth isn't set up (MODRINTH_TOKEN secret, MODRINTH_PROJECT_ID variable): skipping."
-            exit 0
-          fi
-          ua="txtaan/Puma-Launcher-Minecraft (release workflow)"
-          jar="$(ls mod/polymarket-prediction-market-*.jar | head -n 1)"
-          version="$(basename "$jar" .jar)"
-          version="${version#polymarket-prediction-market-}"
-          existing="$(curl -fsS -H "User-Agent: $ua" "https://api.modrinth.com/v2/project/$MODRINTH_PROJECT_ID/version" \
-            | jq --arg v "$version" '[.[] | select(.version_number == $v)] | length')"
-          if [ "$existing" != "0" ]; then
-            echo "Polymarket Prediction Market $version is already on Modrinth."
-            exit 0
-          fi
-          data="$(jq -n --arg v "$version" --arg p "$MODRINTH_PROJECT_ID" --arg tag "$TAG" '{
-            name: "Polymarket Prediction Market \($v)", version_number: $v, changelog: "Released with Puma Launcher \($tag).",
-            dependencies: [], game_versions: ["26.3"], loaders: ["forge"], version_type: "release",
-            featured: true, status: "listed", project_id: $p, file_parts: ["file"], primary_file: "file"
-          }')"
-          curl -fsS -X POST https://api.modrinth.com/v2/version \
-            -H "Authorization: $MODRINTH_TOKEN" -H "User-Agent: $ua" \
-            --form-string "data=$data" -F "file=@$jar;type=application/java-archive"
-          echo
-          echo "Published Polymarket Prediction Market $version on Modrinth."
+    needs: release
+    uses: ./.github/workflows/modrinth.yml
+    with:
+      release: ${{ inputs.release || github.ref_name }}
+      optional: true
+    secrets:
+      MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}

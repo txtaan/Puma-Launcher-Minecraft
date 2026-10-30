@@ -52,10 +52,25 @@ public API.
 
 - **A server where you can upload files** (your own, or hosts such as exaroton): put the jar in the server's `mods`
   folder. In Puma Launcher, **Browse mods** → **Server .jar** saves it for you.
-- **Aternos** only installs mods from CurseForge and Modrinth, so it needs the mod to be published there first. The
-  release workflow can publish each new version on Modrinth: create the project on Modrinth, then add a
-  `MODRINTH_TOKEN` secret and a `MODRINTH_PROJECT_ID` variable to the repository (see `.github/workflows/build.yml`).
-  Aternos also has to offer Forge for Minecraft 26.3.
+- **Aternos** only installs mods from CurseForge and Modrinth. Once the mod is
+  [on Modrinth](https://modrinth.com/mod/polymarket-prediction-market): set the server to Forge for Minecraft 26.3,
+  then **Mods** → search **Polymarket Prediction Market** → **Install**.
+
+#### Publishing on Modrinth
+
+The [Publish the mod on Modrinth](../../.github/workflows/modrinth.yml) workflow does it, and runs after every
+release. The first time, it creates the Modrinth project (with [modrinth.md](modrinth.md) as its description, the
+icon and the screenshots) and submits it for Modrinth's review: Aternos lists the mod once Modrinth approves it.
+It needs one setting:
+
+1. On Modrinth, signed in: [modrinth.com/settings/pats](https://modrinth.com/settings/pats) → **Create a PAT**. Give it
+   a name and an expiry date far ahead, and tick the **Create projects**, **Read projects**, **Write projects**,
+   **Create versions** and **Read versions** scopes. Copy the token it shows.
+2. On GitHub: the repository's **Settings** → **Secrets and variables** → **Actions** → **New repository secret**,
+   named `MODRINTH_TOKEN`, with the token as its value.
+3. To publish a release that's already out: **Actions** → **Publish the mod on Modrinth** → **Run workflow**.
+
+To change the Modrinth page, edit [modrinth.md](modrinth.md): the workflow copies it to Modrinth on every run.
 
 ## Use
 
