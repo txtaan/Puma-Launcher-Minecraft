@@ -96,6 +96,8 @@ export interface ModSearchHit {
   downloads: number
   iconUrl?: string
   installed: boolean
+  /** One of Puma Launcher's own mods (installed from its GitHub releases, not Modrinth). */
+  featured?: boolean
 }
 
 /** A mod suggested in the "new instance" dialog, already checked against the chosen version and loader. */
@@ -107,6 +109,8 @@ export interface RecommendedMod {
   iconUrl?: string
   /** Ticked by default (essentials and performance mods). */
   preselected: boolean
+  /** One of Puma Launcher's own mods. */
+  featured?: boolean
 }
 
 export interface Instance {

@@ -26,6 +26,7 @@ rows="$(
   row '**Linux**' 'linux-x86_64\.AppImage$'
   row '**Linux** (Ubuntu / Debian)' 'linux-amd64\.deb$'
 )"
+mod="$(grep -E '^polymarket-billboard-.*\.jar$' <<<"$assets" | head -n 1 || true)"
 if [ -z "$rows" ]; then
   echo "No installers attached to $tag yet; nothing to do."
   exit 0
@@ -52,6 +53,15 @@ rest="$(awk '/<!-- download-guide:start -->/{skip=1} !skip{print} /<!-- download
   echo '> [!IMPORTANT]'
   echo '> **Don'"'"'t download** the `.blockmap` and `.yml` files or "Source code": the launcher uses them to update itself.  '
   echo '> **Non scaricare** i file `.blockmap` e `.yml` né "Source code": servono al launcher per aggiornarsi da solo.'
+  if [ -n "$mod" ]; then
+    echo
+    echo '### 🧩 Polymarket Billboard mod (Forge 26.3)'
+    echo
+    echo 'In Puma Launcher: a Forge 26.3 instance → mods (puzzle icon) → **Browse mods** → **Polymarket Billboard** → **Install**.  '
+    echo 'In Puma Launcher: un'"'"'istanza Forge 26.3 → mod (icona del puzzle) → **Sfoglia mod** → **Polymarket Billboard** → **Installa**.'
+    echo
+    printf 'For a server or to install it by hand · Per un server o per installarla a mano: [`%s`](%s/%s)\n' "$mod" "$base" "$mod"
+  fi
   echo '<!-- download-guide:end -->'
   if [ -n "$(tr -d '[:space:]' <<<"$rest")" ]; then
     echo

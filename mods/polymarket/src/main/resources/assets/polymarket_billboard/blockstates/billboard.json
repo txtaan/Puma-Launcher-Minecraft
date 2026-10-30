@@ -1,0 +1,20 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "polymarket_billboard:block/billboard",
+      "y": 0
+    },
+    "facing=east": {
+      "model": "polymarket_billboard:block/billboard",
+      "y": 90
+    },
+    "facing=south": {
+      "model": "polymarket_billboard:block/billboard",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "polymarket_billboard:block/billboard",
+      "y": 270
+    }
+  }
+}

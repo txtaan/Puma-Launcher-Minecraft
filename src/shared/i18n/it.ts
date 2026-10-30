@@ -145,7 +145,7 @@ export const it: Messages = {
   // Mods
   'mods.title': 'Mod · {name}',
   'mods.installedTab': 'Installate',
-  'mods.browse': 'Sfoglia Modrinth',
+  'mods.browse': 'Sfoglia mod',
   'mods.folder': 'Cartella mod',
   'mods.vanilla':
     'Questa è un’istanza vanilla. Scegli Fabric, Quilt, Forge o NeoForge nelle impostazioni dell’istanza per usare le mod.',
@@ -165,6 +165,13 @@ export const it: Messages = {
   'mods.update': 'Aggiorna',
   'mods.install': 'Installa',
   'mods.loadMore': 'Carica altre',
+  'mods.polymarketDescription': "Un maxischermo con il mercato live Bitcoin Up or Down di Polymarket. Fai trading con i lingotti d'oro e scala la classifica.",
+  'mods.byPuma': 'Creata da Puma Launcher',
+  'mods.saveJar': '.jar per server',
+  'mods.saveJarTitle': 'Salva il file della mod da mettere su un server',
+  'mods.savedJar': 'Salvato {file}',
+  'mods.jarFilter': 'File della mod',
+  'mods.serverHint': 'Su un server il .jar va anche nella sua cartella mods. Aternos installa solo mod da CurseForge o Modrinth.',
   'mods.hint': 'Le mod e le loro dipendenze vengono scaricate da Modrinth e verificate con SHA-1.',
 
   // Versions
@@ -432,6 +439,8 @@ export const it: Messages = {
 
   // Main process: errors
   'error.stopBeforeDelete': 'Chiudi il gioco prima di eliminare questa istanza.',
+  'error.pumaModMissing': 'Impossibile trovare {title} nelle release di Puma Launcher su GitHub.',
+  'error.pumaModUnverified': 'GitHub non ha pubblicato un checksum per {title}: il download non può essere verificato.',
   'error.needLoader': 'Installa un mod loader (Fabric, Quilt, Forge o NeoForge) su questa istanza per usare le mod.',
   'error.invalidFileName': 'Nome file non valido',
   'error.noModVersion': 'Nessuna versione di questa mod supporta {version} con {loader}.',
