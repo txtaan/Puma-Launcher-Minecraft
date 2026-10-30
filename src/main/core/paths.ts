@@ -38,6 +38,7 @@ export const paths = {
   instanceDir: (id: string) => join(dataRoot(), 'instances', id),
   natives: (instanceId: string) => join(dataRoot(), 'instances', instanceId, 'natives'),
   cache: () => join(dataRoot(), 'cache'),
+  skins: () => join(dataRoot(), 'skins'),
   settings: () => join(dataRoot(), 'settings.json'),
   accounts: () => join(dataRoot(), 'accounts.json')
 }

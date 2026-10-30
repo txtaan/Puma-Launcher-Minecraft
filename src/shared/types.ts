@@ -135,6 +135,47 @@ export interface Settings {
   selectedInstanceId?: string
 }
 
+/** Arm width: 4 px (classic, "Steve") or 3 px (slim, "Alex"). */
+export type SkinModel = 'classic' | 'slim'
+
+export interface SkinEntry {
+  id: string
+  name: string
+  model: SkinModel
+  /** The skin as a 64×64 PNG data URL. */
+  png: string
+  /** The same skin converted to the other model, used where the game picks the arm width itself (offline play). */
+  alternate: string
+  source: 'created' | 'imported' | 'username'
+  favorite: boolean
+  createdAt: number
+  updatedAt: number
+}
+
+export interface SkinLibrary {
+  skins: SkinEntry[]
+  /** The skin each account wears: account id → skin id. */
+  equipped: Record<string, string>
+}
+
+/** What the renderer sends to create (no id) or update a skin. */
+export interface SkinSaveInput {
+  id?: string
+  name: string
+  model: SkinModel
+  png: string
+  alternate: string
+  source?: SkinEntry['source']
+  favorite?: boolean
+}
+
+/** A skin downloaded or picked from disk, before it's prepared (normalised to 64×64) and saved. */
+export interface RawSkin {
+  name: string
+  png: string
+  model?: SkinModel
+}
+
 /** Where the launcher's own update stands (see src/main/core/updater.ts). */
 export type UpdateStatus =
   | { status: 'idle' }

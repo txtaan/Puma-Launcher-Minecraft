@@ -30,8 +30,33 @@ const PATHS: Record<string, string> = {
   user: 'M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4 21a8 8 0 0 1 16 0',
   sun: 'M12 16a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4',
   moon: 'M20 14.5A8 8 0 0 1 9.5 4 8 8 0 1 0 20 14.5z',
-  monitor: 'M3 4h18v12H3zM8 20h8M12 16v4'
+  monitor: 'M3 4h18v12H3zM8 20h8M12 16v4',
+  shirt: 'M8.5 3 4 5.5l1.8 4.2L8 8.8V21h8V8.8l2.2.9L20 5.5 15.5 3a3.5 3.5 0 0 1-7 0z',
+  pencil: 'M4 20h4L19 9l-4-4L4 16zM13.5 6.5l4 4',
+  eraser: 'M8 20h12M4.6 15.4l9.9-9.9a2 2 0 0 1 2.8 0l2.2 2.2a2 2 0 0 1 0 2.8L12 18H7.2zM9.5 10.5l5 5',
+  bucket: 'M4.5 11.5 11 5l7 7-6.5 6.5a1.4 1.4 0 0 1-2 0l-5-5a1.4 1.4 0 0 1 0-2zM4.5 12.5h13M9 3l2 2M20.5 15.5s1.5 1.9 1.5 3a1.5 1.5 0 0 1-3 0c0-1.1 1.5-3 1.5-3z',
+  pipette: 'M13 7l4 4M4 20l1-3 9-9 2 2-9 9zM14 6l2.5-2.5a2.1 2.1 0 0 1 3 3L17 9',
+  undo: 'M9 14 4 9l5-5M4 9h10.5a5.5 5.5 0 0 1 0 11H11',
+  redo: 'M15 14l5-5-5-5M20 9H9.5a5.5 5.5 0 0 0 0 11H13',
+  eye: 'M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12zM12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z',
+  eyeOff: 'M3 3l18 18M10.6 5.1Q11.3 5 12 5c6.4 0 10 7 10 7a17 17 0 0 1-3 3.8M6.6 6.6A17 17 0 0 0 2 12s3.6 7 10 7a9.7 9.7 0 0 0 5.4-1.6M9.9 9.9a3 3 0 0 0 4.2 4.2',
+  bookmark: 'M6 3.5h12V21l-6-4.2L6 21z',
+  bookmarkFilled: 'M6 3.5h12V21l-6-4.2L6 21z',
+  minus: 'M5 12h14',
+  camera: 'M4 7.5h3l2-3h6l2 3h3a1 1 0 0 1 1 1V19a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V8.5a1 1 0 0 1 1-1zM12 17a3.8 3.8 0 1 0 0-7.6 3.8 3.8 0 0 0 0 7.6z',
+  pause: 'M6.5 5h3.5v14H6.5zM14 5h3.5v14H14z',
+  mirror: 'M12 3v18M9 7l-6 5 6 5zM15 7l6 5-6 5z',
+  upload: 'M12 20V8M7 13l5-5 5 5M4 4h16',
+  arrowLeft: 'M19 12H5M11 6l-6 6 6 6',
+  chevron: 'M9 6l6 6-6 6',
+  image: 'M4 4h16v16H4zM4 16l5-5 4 4 2-2 5 5M15.5 9h.01',
+  save: 'M5 3.5h11l3 3V20.5H5zM8 3.5V8h7V3.5M8 20.5V14h8v6.5',
+  dots: 'M5 12h.01M12 12h.01M19 12h.01',
+  rename: 'M5 7V5h14v2M12 5v14M9 19h6'
 }
+
+/** Icons drawn as solid shapes rather than outlines. */
+const FILLED = new Set(['play', 'stop', 'pause', 'bookmarkFilled'])
 
 export function Icon({ name, size = 18, className }: { name: keyof typeof PATHS | string; size?: number; className?: string }) {
   return (
@@ -40,9 +65,9 @@ export function Icon({ name, size = 18, className }: { name: keyof typeof PATHS 
       width={size}
       height={size}
       viewBox="0 0 24 24"
-      fill={name === 'play' || name === 'stop' ? 'currentColor' : 'none'}
+      fill={FILLED.has(name) ? 'currentColor' : 'none'}
       stroke="currentColor"
-      strokeWidth={1.8}
+      strokeWidth={name === 'dots' ? 3 : 1.8}
       strokeLinecap="round"
       strokeLinejoin="round"
       aria-hidden

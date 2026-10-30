@@ -12,7 +12,11 @@ import type {
   JavaRuntimeOption,
   ProgressEvent,
   PublicAccount,
+  RawSkin,
   Settings,
+  SkinEntry,
+  SkinLibrary,
+  SkinSaveInput,
   UpdateInfo,
   VersionList
 } from '@shared/types'
@@ -89,6 +93,18 @@ const api = {
       invoke<{ hits: ModSearchHit[]; total: number }>('mods:search', id, query, offset),
     install: (id: string, projectId: string) => invoke<string[]>('mods:install', id, projectId),
     openFolder: (id: string) => invoke<string>('mods:openFolder', id)
+  },
+  skins: {
+    list: () => invoke<SkinLibrary>('skins:list'),
+    save: (input: SkinSaveInput) => invoke<SkinEntry>('skins:save', input),
+    setFavorite: (id: string, favorite: boolean) => invoke<void>('skins:favorite', id, favorite),
+    remove: (id: string) => invoke<void>('skins:delete', id),
+    /** Wear a skin with an account (null takes it off). Returns the updated library. */
+    equip: (accountId: string, skinId: string | null) => invoke<SkinLibrary>('skins:equip', accountId, skinId),
+    fromUsername: (username: string) => invoke<RawSkin>('skins:fromUsername', username),
+    openFiles: () => invoke<RawSkin[]>('skins:openFiles'),
+    /** Save a PNG where the user picks; returns the path, or null if cancelled. */
+    exportPng: (name: string, png: string) => invoke<string | null>('skins:export', name, png)
   },
   /** The launcher's own updates. */
   updates: {

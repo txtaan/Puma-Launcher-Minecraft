@@ -1,11 +1,14 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { resolveLanguage, translate, type Language, type Translate } from '@shared/i18n'
-import type { GameLogEvent, ProgressEvent, PublicAccount, Settings, UpdateInfo, VersionList } from '@shared/types'
+import type { GameLogEvent, ProgressEvent, PublicAccount, Settings, SkinLibrary, UpdateInfo, VersionList } from '@shared/types'
 import type { InstanceWithState } from '../../preload/index'
 import { api, errorMessage } from './api'
 import { setThemePreference } from './theme'
 
-export type Page = 'home' | 'instances' | 'versions' | 'java' | 'settings'
+export type Page = 'home' | 'instances' | 'versions' | 'java' | 'skins' | 'settings'
+
+/** Asked before leaving a page with unsaved work: call `proceed` to leave. */
+export type LeaveGuard = (proceed: () => void) => void
 
 export interface Toast {
   id: number
@@ -16,7 +19,9 @@ export interface Toast {
 interface Store {
   ready: boolean
   page: Page
+  /** Go to a page (through the current page's leave guard, if it set one). */
   setPage: (p: Page) => void
+  setLeaveGuard: (guard: LeaveGuard | null) => void
   settings: Settings | null
   saveSettings: (patch: Partial<Settings>) => Promise<void>
   accounts: PublicAccount[]
@@ -45,6 +50,10 @@ interface Store {
   checkUpdates: () => Promise<void>
   /** Restart into the downloaded version, or open the downloaded installer (with a hint on what to do next). */
   installUpdate: () => Promise<void>
+  /** The skin library: every skin, and which one each account wears. */
+  skins: SkinLibrary | null
+  setSkins: (library: SkinLibrary) => void
+  refreshSkins: () => Promise<void>
 }
 
 const Ctx = createContext<Store | null>(null)
@@ -52,7 +61,17 @@ const MAX_LOG_LINES = 5000
 
 export function StoreProvider({ children }: { children: ReactNode }) {
   const [ready, setReady] = useState(false)
-  const [page, setPage] = useState<Page>('home')
+  const [page, setPageNow] = useState<Page>('home')
+  const leaveGuard = useRef<LeaveGuard | null>(null)
+  const setPage = useCallback((p: Page) => {
+    if (leaveGuard.current) leaveGuard.current(() => setPageNow(p))
+    else setPageNow(p)
+  }, [])
+  const setLeaveGuard = useCallback((guard: LeaveGuard | null) => {
+    leaveGuard.current = guard
+  }, [])
+  const [skins, setSkins] = useState<SkinLibrary | null>(null)
+  const refreshSkins = useCallback(async () => setSkins(await api.skins.list()), [])
   const [settings, setSettings] = useState<Settings | null>(null)
   const [accounts, setAccounts] = useState<PublicAccount[]>([])
   const [instances, setInstances] = useState<InstanceWithState[]>([])
@@ -113,7 +132,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     void (async () => {
-      const [s] = await Promise.all([api.settings.get(), refreshAccounts(), refreshInstances()])
+      const [s] = await Promise.all([api.settings.get(), refreshAccounts(), refreshInstances(), refreshSkins().catch(() => undefined)])
       setSettings(s)
       setReady(true)
       await refreshVersions()
@@ -122,7 +141,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       updateStatus.current = info.state.status
       setUpdate(info)
     })
-  }, [refreshAccounts, refreshInstances, refreshVersions])
+  }, [refreshAccounts, refreshInstances, refreshVersions, refreshSkins])
 
   useEffect(
     () =>
@@ -204,6 +223,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     ready,
     page,
     setPage,
+    setLeaveGuard,
     settings,
     saveSettings,
     accounts,
@@ -227,7 +247,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     locale,
     update,
     checkUpdates,
-    installUpdate
+    installUpdate,
+    skins,
+    setSkins,
+    refreshSkins
   }
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>
 }

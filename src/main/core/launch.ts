@@ -25,6 +25,8 @@ import { paths } from './paths'
 import { rulesAllow } from './platform'
 import { gameDir } from './instances'
 import { seconds, tr } from './i18n'
+import { applyOfflineSkin } from './skins'
+import { findVersion } from './versions'
 
 export const LAUNCHER_NAME = 'puma-launcher'
 
@@ -39,6 +41,8 @@ const windowOpen = new Set<string>()
 const WINDOW_OPEN_LOG = /Backend library:|Reloading ResourceManager/
 /** When neither line shows up (very old versions, unusual mods), the game counts as open after this long. */
 const WINDOW_OPEN_FALLBACK_MS = 60_000
+/** Release date of Minecraft 1.8, the first version with 64×64 skins. */
+const SKINS_SINCE = '2014-09-02'
 
 export function isRunning(instanceId: string): boolean {
   return running.has(instanceId)
@@ -140,6 +144,17 @@ export async function launchInstance(
   const nativesDir = paths.natives(instance.id)
   await extractNatives(version, nativesDir)
   const nativesMs = since(nativesStartedAt)
+
+  // An offline account's equipped skin goes in as a resource pack. 64×64 skins (and the pack's paths) exist since 1.8.
+  const released = (await findVersion(instance.versionId).catch(() => undefined))?.releaseTime
+  if (!released || released >= SKINS_SINCE) {
+    try {
+      const skin = await applyOfflineSkin(account, dir, !!version.arguments)
+      if (skin) cb.onLog(tr('log.skinApplied', { name: skin }), 'launcher')
+    } catch (err) {
+      cb.onLog(tr('log.skinFailed', { error: err instanceof Error ? err.message : String(err) }), 'launcher')
+    }
+  }
 
   const assetIndex = await readAssetIndex(version)
   const hasResolution = !!(instance.width && instance.height)
