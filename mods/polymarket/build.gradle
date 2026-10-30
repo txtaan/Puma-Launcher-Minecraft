@@ -3,9 +3,9 @@ plugins {
     id 'net.minecraftforge.gradle' version '[7.0.17,8)'
 }
 
-version = '1.0.1'
+version = '1.1.0'
 group = 'dev.puma.polymarket'
-base.archivesName = 'polymarket-billboard'
+base.archivesName = 'polymarket-prediction-market'
 
 // Minecraft 26.x runs on Java 25.
 java.toolchain.languageVersion = JavaLanguageVersion.of(25)
@@ -42,7 +42,7 @@ tasks.withType(JavaCompile).configureEach {
 tasks.named('jar') {
     manifest {
         attributes(
-            'Implementation-Title': 'Polymarket Billboard',
+            'Implementation-Title': 'Polymarket Prediction Market',
             'Implementation-Version': project.version,
             'Implementation-Vendor': 'Puma Launcher'
         )

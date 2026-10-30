@@ -4,7 +4,7 @@ name: Build installers
 # - Every push / pull request: installers are attached to the run as downloadable artifacts.
 # - Pushing a tag like v0.3.0, or running it manually from the Actions tab with a "release" version:
 #   the installers are also published as a GitHub Release (the tag is created if it doesn't exist), together with
-#   the Polymarket Billboard mod's .jar, which the launcher installs from there. If the MODRINTH_TOKEN secret and the
+#   the Polymarket Prediction Market mod's .jar, which the launcher installs from there. If the MODRINTH_TOKEN secret and the
 #   MODRINTH_PROJECT_ID variable are set, the mod is also published on Modrinth.
 #   A manual run with "mac" unticked builds only Windows and Linux; a later manual run for the same version
 #   with "mac" ticked adds the macOS installers to that release.
@@ -104,16 +104,16 @@ jobs:
       - name: Write puma-mods.json
         working-directory: mods/polymarket/build/libs
         run: |
-          jar="$(ls polymarket-billboard-*.jar)"
+          jar="$(ls polymarket-prediction-market-*.jar)"
           jq -n --arg file "$jar" --arg sha256 "$(sha256sum "$jar" | cut -d ' ' -f 1)" --argjson size "$(stat -c %s "$jar")" \
-            '{mods: [{id: "puma:polymarket-billboard", file: $file, sha256: $sha256, size: $size}]}' > puma-mods.json
+            '{mods: [{id: "puma:polymarket-prediction-market", file: $file, sha256: $sha256, size: $size}]}' > puma-mods.json
           cat puma-mods.json
 
       - uses: actions/upload-artifact@v4
         with:
-          name: polymarket-billboard
+          name: polymarket-prediction-market
           path: |
-            mods/polymarket/build/libs/polymarket-billboard-*.jar
+            mods/polymarket/build/libs/polymarket-prediction-market-*.jar
             mods/polymarket/build/libs/puma-mods.json
           if-no-files-found: error
 
@@ -157,7 +157,7 @@ jobs:
     steps:
       - uses: actions/download-artifact@v4
         with:
-          name: polymarket-billboard
+          name: polymarket-prediction-market
           path: mod
 
       # Skipped until the project exists on Modrinth: add a MODRINTH_TOKEN secret (a personal access token with the
@@ -174,17 +174,17 @@ jobs:
             exit 0
           fi
           ua="txtaan/Puma-Launcher-Minecraft (release workflow)"
-          jar="$(ls mod/polymarket-billboard-*.jar | head -n 1)"
+          jar="$(ls mod/polymarket-prediction-market-*.jar | head -n 1)"
           version="$(basename "$jar" .jar)"
-          version="${version#polymarket-billboard-}"
+          version="${version#polymarket-prediction-market-}"
           existing="$(curl -fsS -H "User-Agent: $ua" "https://api.modrinth.com/v2/project/$MODRINTH_PROJECT_ID/version" \
             | jq --arg v "$version" '[.[] | select(.version_number == $v)] | length')"
           if [ "$existing" != "0" ]; then
-            echo "Polymarket Billboard $version is already on Modrinth."
+            echo "Polymarket Prediction Market $version is already on Modrinth."
             exit 0
           fi
           data="$(jq -n --arg v "$version" --arg p "$MODRINTH_PROJECT_ID" --arg tag "$TAG" '{
-            name: "Polymarket Billboard \($v)", version_number: $v, changelog: "Released with Puma Launcher \($tag).",
+            name: "Polymarket Prediction Market \($v)", version_number: $v, changelog: "Released with Puma Launcher \($tag).",
             dependencies: [], game_versions: ["26.3"], loaders: ["forge"], version_type: "release",
             featured: true, status: "listed", project_id: $p, file_parts: ["file"], primary_file: "file"
           }')"
@@ -192,4 +192,4 @@ jobs:
             -H "Authorization: $MODRINTH_TOKEN" -H "User-Agent: $ua" \
             --form-string "data=$data" -F "file=@$jar;type=application/java-archive"
           echo
-          echo "Published Polymarket Billboard $version on Modrinth."
+          echo "Published Polymarket Prediction Market $version on Modrinth."

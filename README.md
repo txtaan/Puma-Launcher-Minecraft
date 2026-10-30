@@ -131,7 +131,7 @@ Versions before 0.3.3 can't update themselves: download the latest installer onc
 - Light and dark themes, or follow the system setting (**Settings → Appearance**); dark is the default
 - English and Italian: follows your system language, or pick one in **Settings → Appearance**
 
-## Polymarket Billboard mod
+## Polymarket Prediction Market mod
 
 [`mods/polymarket`](mods/polymarket) is a Forge mod for Minecraft 26.3. It adds a billboard: a big screen showing
 Polymarket's live **Bitcoin Up or Down – 5 minute** market, with the Up and Down probabilities, a chart that moves with
@@ -139,7 +139,7 @@ them, and a countdown to the end of each window. Players register a trader name 
 at the real order-book prices; winners are paid in gold and ranked on a leaderboard beside the screen. See
 [its README](mods/polymarket/README.md) for how to play it and build it.
 
-Puma Launcher installs it for you. Create an instance with Minecraft 26.3 and Forge and tick **Polymarket Billboard**
+Puma Launcher installs it for you. Create an instance with Minecraft 26.3 and Forge and tick **Polymarket Prediction Market**
 among the recommended mods, or open an instance's mods (puzzle icon) → **Browse mods** → **Install**. Every
 [release](https://github.com/txtaan/Puma-Launcher-Minecraft/releases/latest) also has the `.jar`, for a server.
 

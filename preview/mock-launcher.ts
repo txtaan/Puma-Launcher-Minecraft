@@ -63,9 +63,9 @@ const windowOpen = new Set<string>()
 const mods = new Map<string, (InstalledMod & { projectId: string })[]>()
 /** Puma Launcher's own mod, offered for Forge 26.3 like in the real launcher. */
 const polymarket = {
-  projectId: 'puma:polymarket-billboard',
-  slug: 'polymarket-billboard',
-  title: 'Polymarket Billboard',
+  projectId: 'puma:polymarket-prediction-market',
+  slug: 'polymarket-prediction-market',
+  title: 'Polymarket Prediction Market',
   author: 'Puma Launcher',
   downloads: 0,
   featured: true
@@ -241,7 +241,7 @@ const api: LauncherApi = {
             inst.id,
             modIds.map((projectId) => {
               if (projectId === polymarket.projectId) {
-                return { fileName: 'polymarket-billboard-1.0.0.jar', enabled: true, name: polymarket.title, version: '1.0.0', projectId }
+                return { fileName: 'polymarket-prediction-market-1.1.0.jar', enabled: true, name: polymarket.title, version: '1.1.0', projectId }
               }
               const m = sample.mods.find((x) => x.projectId === projectId)!
               return { fileName: `${m.slug}-latest.jar`, enabled: true, name: m.title, version: 'latest', projectId }
@@ -349,7 +349,7 @@ const api: LauncherApi = {
       if (!inst.loader) throw new Error(tr('error.needLoader'))
       const installed = new Set((mods.get(id) ?? []).map((m) => m.projectId))
       const q = query.toLowerCase()
-      const own: ModSearchHit[] = offersPolymarket(inst.loader.type, inst.versionId) && (!q || 'polymarket billboard puma'.includes(q))
+      const own: ModSearchHit[] = offersPolymarket(inst.loader.type, inst.versionId) && (!q || 'polymarket prediction market puma'.includes(q))
         ? [{ ...polymarket, description: tr('mods.polymarketDescription'), installed: installed.has(polymarket.projectId) }]
         : []
       const hits: ModSearchHit[] = [
@@ -364,8 +364,8 @@ const api: LauncherApi = {
       await wait(700)
       if (projectId === polymarket.projectId) {
         const list = mods.get(id) ?? []
-        const fileName = 'polymarket-billboard-1.0.0.jar'
-        if (!list.some((x) => x.projectId === projectId)) list.push({ fileName, enabled: true, name: polymarket.title, version: '1.0.0', projectId })
+        const fileName = 'polymarket-prediction-market-1.1.0.jar'
+        if (!list.some((x) => x.projectId === projectId)) list.push({ fileName, enabled: true, name: polymarket.title, version: '1.1.0', projectId })
         mods.set(id, list)
         return [fileName]
       }

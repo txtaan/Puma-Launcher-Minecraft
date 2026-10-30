@@ -7,7 +7,7 @@ import { readJson, writeJson } from './fsutil'
 import { downloadAll, fetchJson } from './http'
 import { gameDir } from './instances'
 import { tr } from './i18n'
-import { fetchPumaJar, pumaMod, pumaModsFor, type PumaMod } from './pumaMods'
+import { fetchPumaJar, pumaIds, pumaMod, pumaModsFor, type PumaMod } from './pumaMods'
 
 // Mod management in the spirit of Prism's and HMCL's mod pages, using Modrinth's public API.
 
@@ -158,7 +158,7 @@ export async function searchMods(
   return {
     total: res.total_hits + own.length,
     hits: [
-      ...(offset ? [] : own.map((m) => ownHit(m, installed.has(m.id)))),
+      ...(offset ? [] : own.map((m) => ownHit(m, pumaIds(m).some((id) => installed.has(id))))),
       ...res.hits.map((h) => ({
       projectId: h.project_id,
       slug: h.slug,
@@ -333,11 +333,14 @@ async function installPumaMod(instance: Instance, mod: PumaMod): Promise<string[
   const dir = modsDir(instance.id)
   await mkdir(dir, { recursive: true })
   const index = await readIndex(instance.id)
-  for (const [old, pid] of Object.entries(index)) {
-    if (pid === mod.id) {
+  // Replace any copy of it, also under an earlier name or put there by hand: two would stop Forge from starting.
+  const ids = pumaIds(mod)
+  const names = [mod.asset, ...(mod.formerly ?? []).map((f) => f.asset)]
+  for (const old of await readdir(dir)) {
+    const base = old.replace(/\.disabled$/, '')
+    if (ids.includes(index[base]) || names.some((n) => n.test(base))) {
       await rm(join(dir, old), { force: true })
-      await rm(join(dir, `${old}.disabled`), { force: true })
-      delete index[old]
+      delete index[base]
     }
   }
   await copyFile(file, join(dir, name))

@@ -1,4 +1,4 @@
-# Polymarket Billboard (Forge mod for Minecraft 26.3)
+# Polymarket Prediction Market (Forge mod for Minecraft 26.3)
 
 A big screen in your world that shows Polymarket's live **Bitcoin Up or Down – 5 minute** market. Players trade it
 with gold ingots and compete on a leaderboard beside the screen.
@@ -33,14 +33,14 @@ with gold ingots and compete on a leaderboard beside the screen.
 **With Puma Launcher:**
 
 1. Create an instance with **Minecraft 26.3** and **Forge** (66.1 or newer). Among the recommended mods, tick
-   **Polymarket Billboard**.
-2. Or, for an instance you already have: **Instances** → the puzzle icon → **Browse mods** → **Polymarket Billboard** →
+   **Polymarket Prediction Market**.
+2. Or, for an instance you already have: **Instances** → the puzzle icon → **Browse mods** → **Polymarket Prediction Market** →
    **Install**.
 3. Start the game.
 
 The launcher downloads the jar from its GitHub release and checks it against the SHA-256 checksum GitHub publishes.
 
-**By hand:** download `polymarket-billboard-<version>.jar` from the
+**By hand:** download `polymarket-prediction-market-<version>.jar` from the
 [latest release](https://github.com/txtaan/Puma-Launcher-Minecraft/releases/latest) and put it in the `mods` folder of a
 Forge 26.3 instance.
 
