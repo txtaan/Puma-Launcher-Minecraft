@@ -3,7 +3,7 @@ plugins {
     id 'net.minecraftforge.gradle' version '[7.0.17,8)'
 }
 
-version = '1.0.0'
+version = '1.0.1'
 group = 'dev.puma.polymarket'
 base.archivesName = 'polymarket-billboard'
 
@@ -36,4 +36,15 @@ dependencies {
 
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
+}
+
+// Forge fills in the mods.toml's ${file.jarVersion} from this.
+tasks.named('jar') {
+    manifest {
+        attributes(
+            'Implementation-Title': 'Polymarket Billboard',
+            'Implementation-Version': project.version,
+            'Implementation-Vendor': 'Puma Launcher'
+        )
+    }
 }
