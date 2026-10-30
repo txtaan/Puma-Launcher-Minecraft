@@ -6,7 +6,7 @@ issueTrackerURL="https://github.com/txtaan/Puma-Launcher-Minecraft/issues"
 [[mods]]
 modId="polymarket_billboard"
 version="${file.jarVersion}"
-displayName="Polymarket Billboard"
+displayName="Polymarket Prediction Market"
 logoFile="polymarket_billboard.png"
 displayURL="https://github.com/txtaan/Puma-Launcher-Minecraft/tree/main/mods/polymarket"
 authors="Puma Launcher"

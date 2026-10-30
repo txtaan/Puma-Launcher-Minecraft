@@ -23,21 +23,29 @@ export interface PumaMod {
   mcVersions: string[]
   /** The jar's name among the release assets. */
   asset: RegExp
+  /** Earlier ids and jar names of the same mod: installing it replaces them. */
+  formerly?: { id: string; asset: RegExp }[]
 }
 
 export const PUMA_MODS: PumaMod[] = [
   {
-    id: 'puma:polymarket-billboard',
-    slug: 'polymarket-billboard',
-    title: 'Polymarket Billboard',
+    id: 'puma:polymarket-prediction-market',
+    slug: 'polymarket-prediction-market',
+    title: 'Polymarket Prediction Market',
     description: 'mods.polymarketDescription',
     loader: 'forge',
     mcVersions: ['26.3'],
-    asset: /^polymarket-billboard-[\w.+-]+\.jar$/
+    asset: /^polymarket-prediction-market-[\w.+-]+\.jar$/,
+    // Released as "Polymarket Billboard" with Puma Launcher 0.4.0-0.4.2.
+    formerly: [{ id: 'puma:polymarket-billboard', asset: /^polymarket-billboard-[\w.+-]+\.jar$/ }]
   }
 ]
 
-export const pumaMod = (id: string): PumaMod | undefined => PUMA_MODS.find((m) => m.id === id)
+export const pumaMod = (id: string): PumaMod | undefined =>
+  PUMA_MODS.find((m) => m.id === id || m.formerly?.some((f) => f.id === id))
+
+/** Every id the mod has had, current first. */
+export const pumaIds = (mod: PumaMod): string[] => [mod.id, ...(mod.formerly ?? []).map((f) => f.id)]
 
 /** Puma mods that run on this loader and Minecraft version. */
 export function pumaModsFor(loader: LoaderType | undefined, mcVersion: string): PumaMod[] {

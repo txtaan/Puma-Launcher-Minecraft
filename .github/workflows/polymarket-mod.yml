@@ -1,6 +1,6 @@
 name: Build Polymarket mod
 
-# Builds the Polymarket Billboard mod (mods/polymarket, Forge for Minecraft 26.3) and attaches the .jar to the run.
+# Builds the Polymarket Prediction Market mod (mods/polymarket, Forge for Minecraft 26.3) and attaches the .jar to the run.
 on:
   push:
     branches: ['**']
@@ -38,6 +38,6 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: polymarket-billboard
+          name: polymarket-prediction-market
           path: mods/polymarket/build/libs/*.jar
           if-no-files-found: error
