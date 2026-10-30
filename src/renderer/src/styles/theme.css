@@ -75,14 +75,7 @@
   --snapshot-glow: #355888;
   --recent-icon-bg: var(--avatar-bg);
 
-  /* Skins: the wardrobe shelf (dark cards, white highlights) and the 3D stages */
-  --ds-bg: #0d0d16;
-  --ds-card: #161621;
-  --ds-card-hover: #1c1c29;
-  --ds-frame: rgba(255, 255, 255, 0.07);
-  --ds-frame-worn: #f4f4fb;
-  --ds-pill: #f4f4fb;
-  --ds-pill-text: #0b0b14;
+  /* Skins: behind the 3D models and skin pictures */
   --stage-bg: radial-gradient(ellipse at 50% 30%, #25304a 0%, #151522 58%, #0e0e17 100%);
 
   --radius-s: 8px;
@@ -147,13 +140,6 @@
   --console-bg: rgba(255, 255, 255, 0.97);
   --log-text: #3b3852;
 
-  --ds-bg: #e9e9e9;
-  --ds-card: #f7f7f7;
-  --ds-card-hover: #ffffff;
-  --ds-frame: rgba(24, 20, 56, 0.1);
-  --ds-frame-worn: #17142b;
-  --ds-pill: #17142b;
-  --ds-pill-text: #ffffff;
   --stage-bg: radial-gradient(ellipse at 50% 30%, #fff7e8 0%, #f0e8dc 55%, #e3ded6 100%);
 
   --shadow: 0 10px 30px rgba(24, 20, 56, 0.12);

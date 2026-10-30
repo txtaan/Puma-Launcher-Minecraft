@@ -65,60 +65,43 @@
 .bento-ingame-icon { color: var(--accent-text); }
 .bento-ingame p { line-height: 1.55; max-width: 520px; }
 
-/* Wardrobe: a store shelf with filters on the left */
-.wardrobe { flex: 1; display: grid; grid-template-columns: 250px minmax(0, 1fr); background: var(--ds-bg); }
+/* Wardrobe: filters on the left, rounded skin cards on the right (like the instance cards) */
+.wardrobe { flex: 1; display: grid; grid-template-columns: 240px minmax(0, 1fr); }
 .wardrobe-side {
   position: sticky; top: 0; align-self: start; height: calc(100vh - var(--titlebar-h));
-  display: flex; flex-direction: column; gap: 14px; padding: 20px 18px 18px; border-right: 1px solid var(--border);
+  display: flex; flex-direction: column; gap: 12px; padding: 22px 14px 14px; border-right: 1px solid var(--border);
 }
-.ds-search { display: flex; align-items: center; gap: 8px; padding: 0 2px 8px; border-bottom: 1px solid var(--border-strong); color: var(--text-muted); }
-.ds-search input { flex: 1; min-width: 0; background: none; border: 0; outline: none; font-size: 22px; letter-spacing: -0.01em; color: var(--text); }
-.ds-search input::placeholder { color: var(--text); opacity: 0.9; }
-.ds-heading { margin-top: 8px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); }
-.ds-cats { display: flex; flex-direction: column; gap: 2px; }
-.ds-cats button { display: flex; align-items: center; justify-content: space-between; padding: 8px 14px; border-radius: 999px; text-align: left; color: var(--text-muted); transition: background 0.15s, color 0.15s; }
-.ds-cats button:hover { background: var(--surface-hover); color: var(--text); }
-.ds-cats button.active { background: var(--ds-pill); color: var(--ds-pill-text); }
-.ds-count { font-size: 12px; opacity: 0.7; }
-.ds-promo {
-  --notch: 16px;
-  position: relative; margin-top: auto; padding: 16px; overflow: hidden;
-  display: flex; flex-direction: column; align-items: flex-start; gap: 6px;
-  background: var(--ds-card); clip-path: polygon(var(--notch) 0, 100% 0, 100% 100%, 0 100%, 0 var(--notch));
-}
-.ds-promo-art { position: absolute; top: -10px; right: -6px; width: 80px; height: 120px; }
-.ds-promo strong { max-width: 62%; font-size: 16px; }
-.ds-promo p { max-width: 62%; font-size: 12px; line-height: 1.45; color: var(--text-muted); }
-.ds-promo .btn { margin-top: 6px; }
-.wardrobe-main { min-width: 0; padding: 22px 26px 32px; }
-.ds-title { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; font-size: 18px; }
-.ds-marker { width: 0; height: 0; border-left: 7px solid var(--text); border-top: 5px solid transparent; border-bottom: 5px solid transparent; }
-.ds-title-count { font-size: 13px; color: var(--text-muted); }
-.ds-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(178px, 1fr)); gap: 14px; }
-/* Cards with a cut top-left corner; the frame is a second clipped layer, since a clip path also cuts borders. */
-.ds-card-frame { --notch: 20px; padding: 1px; background: var(--ds-frame); clip-path: polygon(var(--notch) 0, 100% 0, 100% 100%, 0 100%, 0 var(--notch)); transition: background 0.15s, transform 0.15s; }
-.ds-card-frame:hover { background: var(--border-strong); transform: translateY(-2px); }
-.ds-card-frame.worn { padding: 2px; background: var(--ds-frame-worn); }
-.ds-card {
-  position: relative; height: 292px; display: flex; flex-direction: column; cursor: pointer; outline: none;
-  background: var(--ds-card); clip-path: polygon(calc(var(--notch) - 1px) 0, 100% 0, 100% 100%, 0 100%, 0 calc(var(--notch) - 1px));
-  transition: background 0.15s;
-}
-.ds-card:hover, .ds-card:focus-visible { background: var(--ds-card-hover); }
-.ds-art { flex: 1; min-height: 0; width: 100%; object-fit: contain; padding: 22px 12px 2px; }
-.ds-art.placeholder { display: block; }
-.ds-worn { position: absolute; top: 14px; left: 22px; font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; }
-.ds-bookmark { position: absolute; top: 8px; right: 8px; z-index: 1; width: 32px; height: 32px; display: grid; place-items: center; border-radius: 8px; color: var(--text-muted); }
-.ds-bookmark:hover, .ds-bookmark.on { color: var(--text); }
-.ds-foot { display: flex; align-items: flex-end; gap: 8px; padding: 0 12px 12px 14px; }
-.ds-meta { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
-.ds-meta strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.ds-meta > span:not(.ds-dots) { font-size: 12px; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.ds-dots { display: flex; gap: 4px; height: 7px; margin-top: 5px; }
-.ds-dots i { width: 7px; height: 7px; border-radius: 50%; box-shadow: 0 0 0 1px var(--border-strong); }
-.ds-equip { flex-shrink: 0; width: 34px; height: 34px; display: grid; place-items: center; border-radius: 50%; border: 1px solid var(--border-strong); color: var(--text); transition: background 0.15s, color 0.15s; }
-.ds-equip:hover:not(:disabled), .worn .ds-equip { background: var(--ds-pill); color: var(--ds-pill-text); border-color: var(--ds-pill); }
-.ds-empty { padding: 60px 20px; display: flex; flex-direction: column; align-items: center; gap: 10px; color: var(--text-muted); }
+.wardrobe-side .back-link { margin-left: 4px; }
+.wardrobe-search input { flex: 1; width: auto; min-width: 0; }
+.wardrobe-side .section-title { margin: 8px 0 0 4px; }
+.wardrobe-cats { display: flex; flex-direction: column; gap: 4px; }
+.wardrobe-cats .nav-item { justify-content: space-between; padding: 8px 12px; }
+.wardrobe-cats .nav-item .pill { min-width: 24px; justify-content: center; }
+.wardrobe-promo { margin-top: auto; padding: 16px; gap: 6px; }
+.wardrobe-promo strong { max-width: 64%; font-size: 16px; }
+.wardrobe-promo p { max-width: 64%; font-size: 12px; line-height: 1.45; }
+.wardrobe-promo .btn { margin-top: 6px; }
+.wardrobe-promo-art { position: absolute; top: 10px; right: 6px; width: 64px; height: 96px; filter: drop-shadow(0 8px 12px rgba(0, 0, 0, 0.3)); }
+.wardrobe-main { min-width: 0; padding: 28px; display: flex; flex-direction: column; gap: 16px; }
+.wardrobe-main .page-head { margin-bottom: 0; }
+.skin-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; }
+.skin-card { position: relative; overflow: hidden; display: flex; flex-direction: column; transition: border-color 0.15s, transform 0.15s, box-shadow 0.15s; }
+.skin-card:hover { border-color: var(--border-strong); transform: translateY(-2px); }
+.skin-card.worn { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent), var(--shadow-glow); }
+.skin-cover { position: relative; width: 100%; height: 210px; display: grid; place-items: center; background: var(--stage-bg); }
+.skin-cover img { height: 186px; width: auto; filter: drop-shadow(0 10px 14px rgba(0, 0, 0, 0.35)); transition: transform 0.2s; }
+.skin-card:hover .skin-cover img { transform: scale(1.04); }
+.skin-cover-placeholder { width: 60px; height: 150px; border-radius: var(--radius); background: var(--surface); }
+.skin-worn { position: absolute; top: 10px; left: 10px; }
+.skin-bookmark { position: absolute; top: 8px; right: 8px; background: var(--glass-bg); border: 1px solid var(--glass-border); backdrop-filter: blur(10px); }
+.skin-bookmark.on { color: var(--accent-text); }
+.skin-info { display: flex; flex-direction: column; gap: 2px; padding: 12px 14px 4px; }
+.skin-info strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.skin-info .muted { font-size: 12px; }
+.skin-dots { display: flex; gap: 4px; height: 8px; margin-top: 6px; }
+.skin-dots i { width: 8px; height: 8px; border-radius: 50%; box-shadow: 0 0 0 1px var(--border-strong); }
+.skin-actions { display: flex; align-items: center; gap: 4px; padding: 10px 10px 12px 14px; }
+.skin-actions .btn { margin-right: auto; }
 
 /* Inspect: a list on the left; the model, its numbers and its colours on the right */
 .inspect { flex: 1; display: grid; grid-template-columns: 270px minmax(0, 1fr); }
@@ -243,7 +226,7 @@
   .bento-hero { grid-column: 1 / span 2; grid-row: auto; }
   .bento-wardrobe, .bento-create, .bento-ingame { grid-column: auto; grid-row: auto; }
   .bento-import, .bento-favs { grid-column: 1 / span 2; grid-row: auto; }
-  .wardrobe { grid-template-columns: 220px minmax(0, 1fr); }
+  .wardrobe { grid-template-columns: 210px minmax(0, 1fr); }
   .inspect { grid-template-columns: 230px minmax(0, 1fr); }
   .inspect-facts { grid-template-columns: 1fr; gap: 6px; }
   .itable-row.palette { grid-template-columns: 18px 120px 110px minmax(0, 1fr); }

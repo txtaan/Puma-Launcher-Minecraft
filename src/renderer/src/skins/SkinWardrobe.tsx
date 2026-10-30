@@ -18,7 +18,7 @@ const CATEGORIES: { id: Category; label: MessageKey; test: (s: SkinEntry) => boo
   { id: 'imported', label: 'skins.cat.imported', test: (s) => s.source !== 'created' }
 ]
 
-/** Every skin, as a store shelf: filters on the left, cards on the right. */
+/** Every skin: filters on the left, cards on the right. */
 export function SkinWardrobe({ go, actions }: { go: (v: SkinView) => void; actions: SkinActions }) {
   const { skins, t } = useStore()
   const [category, setCategory] = useState<Category>('all')
@@ -37,23 +37,24 @@ export function SkinWardrobe({ go, actions }: { go: (v: SkinView) => void; actio
         <button className="back-link" onClick={() => go({ kind: 'home' })}>
           <Icon name="arrowLeft" size={16} /> {t('skins.title')}
         </button>
-        <label className="ds-search">
-          <input value={query} placeholder={`${t('skins.search')}_`} aria-label={t('skins.search')} onChange={(e) => setQuery(e.target.value)} />
+        <label className="search wardrobe-search">
           <Icon name="search" size={16} />
+          <input value={query} placeholder={t('skins.search')} aria-label={t('skins.search')} onChange={(e) => setQuery(e.target.value)} />
         </label>
-        <h3 className="ds-heading">{t('skins.collection')}</h3>
-        <nav className="ds-cats">
+        <h3 className="section-title">{t('skins.collection')}</h3>
+        <nav className="wardrobe-cats">
           {CATEGORIES.map((c) => (
-            <button key={c.id} className={c.id === category ? 'active' : ''} onClick={() => setCategory(c.id)}>
+            <button key={c.id} className={`nav-item ${c.id === category ? 'active' : ''}`} onClick={() => setCategory(c.id)}>
               <span>{t(c.label)}</span>
-              <span className="ds-count">{list.filter(c.test).length}</span>
+              <span className="pill">{list.filter(c.test).length}</span>
             </button>
           ))}
         </nav>
-        <div className="ds-promo">
-          <SkinThumb skin={templateSkin('puma')} className="ds-promo-art" />
+        <div className="card news-card release wardrobe-promo">
+          <SkinThumb skin={templateSkin('puma')} className="wardrobe-promo-art" />
+          <span className="badge">{t('skins.create')}</span>
           <strong>{t('skins.promoTitle')}</strong>
-          <p>{t('skins.promoText')}</p>
+          <p className="muted">{t('skins.promoText')}</p>
           <button className="btn btn-primary btn-sm" onClick={() => go({ kind: 'editor', template: 'puma', back: here })}>
             <Icon name="plus" size={16} /> {t('skins.newSkin')}
           </button>
@@ -61,19 +62,28 @@ export function SkinWardrobe({ go, actions }: { go: (v: SkinView) => void; actio
       </aside>
 
       <section className="wardrobe-main">
-        <h2 className="ds-title">
-          <span className="ds-marker" aria-hidden />
-          {t(active.label)}
-          <span className="ds-title-count">{shown.length}</span>
-        </h2>
+        <div className="page-head">
+          <div>
+            <h1>{t(active.label)}</h1>
+            <p className="muted">{shown.length === 1 ? t('skins.countOne') : t('skins.count', { count: shown.length })}</p>
+          </div>
+        </div>
         {shown.length ? (
-          <div className="ds-grid">
+          <div className="skin-grid">
             {shown.map((s) => (
-              <WardrobeCard key={s.id} skin={s} worn={s.id === actions.wornId} busy={actions.busy === s.id} actions={actions} onOpen={() => go({ kind: 'inspect', id: s.id })} />
+              <SkinCard
+                key={s.id}
+                skin={s}
+                worn={s.id === actions.wornId}
+                busy={actions.busy === s.id}
+                actions={actions}
+                onOpen={() => go({ kind: 'inspect', id: s.id })}
+                onEdit={() => go({ kind: 'editor', id: s.id, back: here })}
+              />
             ))}
           </div>
         ) : (
-          <div className="ds-empty">
+          <div className="card empty">
             <Icon name="shirt" size={28} />
             <p>{q ? t('skins.noResults', { query }) : t('skins.empty')}</p>
           </div>
@@ -83,51 +93,59 @@ export function SkinWardrobe({ go, actions }: { go: (v: SkinView) => void; actio
   )
 }
 
-function WardrobeCard({ skin, worn, busy, actions, onOpen }: { skin: SkinEntry; worn: boolean; busy: boolean; actions: SkinActions; onOpen: () => void }) {
+function SkinCard({
+  skin,
+  worn,
+  busy,
+  actions,
+  onOpen,
+  onEdit
+}: {
+  skin: SkinEntry
+  worn: boolean
+  busy: boolean
+  actions: SkinActions
+  onOpen: () => void
+  onEdit: () => void
+}) {
   const { t } = useStore()
   const thumb = useThumbnail(skin)
   return (
-    <div className={`ds-card-frame ${worn ? 'worn' : ''}`}>
-      <article className="ds-card" role="button" tabIndex={0} onClick={onOpen} onKeyDown={(e) => e.key === 'Enter' && onOpen()}>
-        {worn && <span className="ds-worn">{t('skins.worn')}</span>}
-        <button
-          className={`ds-bookmark ${skin.favorite ? 'on' : ''}`}
-          aria-label={t(skin.favorite ? 'skins.unbookmark' : 'skins.bookmark')}
-          title={t(skin.favorite ? 'skins.unbookmark' : 'skins.bookmark')}
-          onClick={(e) => {
-            e.stopPropagation()
-            void actions.toggleFavorite(skin)
-          }}
-        >
-          <Icon name={skin.favorite ? 'bookmarkFilled' : 'bookmark'} size={18} />
+    <article className={`card skin-card ${worn ? 'worn' : ''}`}>
+      <button className="skin-cover" aria-label={`${t('skins.inspect')}: ${skin.name}`} onClick={onOpen}>
+        {thumb ? <img src={thumb.url} alt="" draggable={false} /> : <span className="skin-cover-placeholder" />}
+        {worn && <span className="pill pill-accent skin-worn">{t('skins.worn')}</span>}
+      </button>
+      <button
+        className={`icon-btn skin-bookmark ${skin.favorite ? 'on' : ''}`}
+        aria-label={t(skin.favorite ? 'skins.unbookmark' : 'skins.bookmark')}
+        title={t(skin.favorite ? 'skins.unbookmark' : 'skins.bookmark')}
+        onClick={() => void actions.toggleFavorite(skin)}
+      >
+        <Icon name={skin.favorite ? 'bookmarkFilled' : 'bookmark'} size={16} />
+      </button>
+      <div className="skin-info">
+        <strong title={skin.name}>{skin.name}</strong>
+        <span className="muted">
+          {t(MODEL_LABEL[skin.model])} · {t(SOURCE_LABEL[skin.source])}
+        </span>
+        <span className="skin-dots" aria-hidden>
+          {(thumb?.colors ?? []).map((c) => (
+            <i key={c} style={{ background: c }} />
+          ))}
+        </span>
+      </div>
+      <div className="skin-actions">
+        <button className={`btn btn-sm ${worn ? 'btn-ghost' : 'btn-primary'}`} disabled={busy} onClick={() => void actions.equip(worn ? null : skin)}>
+          {busy ? <span className="spinner sm" /> : <Icon name={worn ? 'minus' : 'shirt'} size={14} />} {t(worn ? 'skins.takeOff' : 'skins.wear')}
         </button>
-        {thumb ? <img className="ds-art" src={thumb.url} alt="" draggable={false} /> : <span className="ds-art placeholder" />}
-        <div className="ds-foot">
-          <div className="ds-meta">
-            <strong>{skin.name}</strong>
-            <span>
-              {t(MODEL_LABEL[skin.model])} · {t(SOURCE_LABEL[skin.source])}
-            </span>
-            <span className="ds-dots" aria-hidden>
-              {(thumb?.colors ?? []).map((c) => (
-                <i key={c} style={{ background: c }} />
-              ))}
-            </span>
-          </div>
-          <button
-            className="ds-equip"
-            disabled={busy}
-            aria-label={t(worn ? 'skins.takeOff' : 'skins.wear')}
-            title={t(worn ? 'skins.takeOff' : 'skins.wear')}
-            onClick={(e) => {
-              e.stopPropagation()
-              void actions.equip(worn ? null : skin)
-            }}
-          >
-            {busy ? <span className="spinner sm" /> : <Icon name={worn ? 'minus' : 'plus'} size={18} />}
-          </button>
-        </div>
-      </article>
-    </div>
+        <button className="icon-btn" title={t('skins.inspect')} aria-label={t('skins.inspect')} onClick={onOpen}>
+          <Icon name="search" size={16} />
+        </button>
+        <button className="icon-btn" title={t('skins.edit')} aria-label={t('skins.edit')} onClick={onEdit}>
+          <Icon name="pencil" size={16} />
+        </button>
+      </div>
+    </article>
   )
 }
