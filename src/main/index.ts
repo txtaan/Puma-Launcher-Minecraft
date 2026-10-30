@@ -92,6 +92,18 @@ async function prepareJava(inst: Instance): Promise<void> {
   }
 }
 
+/** Install the mods picked in the "new instance" dialog, shown as one task in the download dock. */
+async function installModsInBackground(inst: Instance, projectIds: string[]): Promise<void> {
+  const t = task(`mods:${inst.id}`, tr('task.modsFor', { name: inst.name }))
+  const failed: string[] = []
+  for (const [i, id] of projectIds.entries()) {
+    t.update(tr('task.installingMods'), i, projectIds.length)
+    await mods.installMod(inst, id).catch(() => failed.push(id))
+  }
+  if (failed.length) t.fail(new Error(tr('error.modsFailed', { failed: failed.length, total: projectIds.length })))
+  else t.finish()
+}
+
 function registerIpc(): void {
   // Window controls (frameless window)
   ipcMain.on('window:minimize', () => win?.minimize())
@@ -130,6 +142,7 @@ function registerIpc(): void {
   handle('loaders:versions', (type: Exclude<LoaderType, 'vanilla'>, mcVersion: string) => loaderVersions(type, mcVersion))
 
   handle('mods:list', (id: string) => mods.listMods(id))
+  handle('mods:recommended', (type: Exclude<LoaderType, 'vanilla'>, mcVersion: string) => mods.recommendedMods(type, mcVersion))
   handle('mods:setEnabled', (id: string, file: string, enabled: boolean) => mods.setModEnabled(id, file, enabled))
   handle('mods:delete', (id: string, file: string) => mods.deleteMod(id, file))
   handle('mods:search', async (id: string, query: string, offset?: number) =>
@@ -162,9 +175,10 @@ function registerIpc(): void {
   handle('instances:list', async () =>
     (await instances.listInstances()).map((i) => ({ ...i, running: isRunning(i.id), windowOpen: isWindowOpen(i.id) }))
   )
-  handle('instances:create', async (name: string, versionId: string, loader?: Instance['loader']) => {
+  handle('instances:create', async (name: string, versionId: string, loader?: Instance['loader'], modIds: string[] = []) => {
     const inst = await instances.createInstance(name, versionId, loader)
     void prepareJava(inst)
+    if (modIds.length) void installModsInBackground(inst, modIds)
     return inst
   })
   handle('instances:update', async (id: string, patch: Partial<Instance>) => {

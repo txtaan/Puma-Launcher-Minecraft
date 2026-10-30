@@ -9,6 +9,7 @@ import type {
   LoaderType,
   LoaderVersion,
   ModSearchHit,
+  RecommendedMod,
   JavaRuntimeOption,
   ProgressEvent,
   PublicAccount,
@@ -69,8 +70,8 @@ const api = {
   },
   instances: {
     list: () => invoke<InstanceWithState[]>('instances:list'),
-    create: (name: string, versionId: string, loader?: Instance['loader']) =>
-      invoke<Instance>('instances:create', name, versionId, loader),
+    create: (name: string, versionId: string, loader?: Instance['loader'], modIds: string[] = []) =>
+      invoke<Instance>('instances:create', name, versionId, loader, modIds),
     update: (id: string, patch: Partial<Instance>) => invoke<Instance>('instances:update', id, patch),
     remove: (id: string) => invoke<void>('instances:delete', id),
     openFolder: (id: string) => invoke<string>('instances:openFolder', id),
@@ -83,6 +84,8 @@ const api = {
   },
   mods: {
     list: (id: string) => invoke<InstalledMod[]>('mods:list', id),
+    recommended: (type: Exclude<LoaderType, 'vanilla'>, mcVersion: string) =>
+      invoke<RecommendedMod[]>('mods:recommended', type, mcVersion),
     setEnabled: (id: string, file: string, enabled: boolean) => invoke<void>('mods:setEnabled', id, file, enabled),
     remove: (id: string, file: string) => invoke<void>('mods:delete', id, file),
     search: (id: string, query: string, offset = 0) =>

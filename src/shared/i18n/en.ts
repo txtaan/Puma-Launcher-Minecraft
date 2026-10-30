@@ -113,6 +113,13 @@ export const en = {
   'create.version': 'Version',
   'create.noVersions': 'No versions loaded yet.',
   'create.created': 'Created {name}',
+  'create.recommended': 'Recommended mods',
+  'create.recommendedLoading': 'Finding mods for {version}…',
+  'create.recommendedFailed': 'Couldn’t load recommendations. You can add mods later from the Mods window.',
+  'create.recommendedNone': 'No recommended mods support Minecraft {version} with this loader yet.',
+  'create.recommendedOne': '1 mod will be installed with the instance.',
+  'create.recommendedMany': '{count} mods will be installed with the instance.',
+  'create.recommendedNoneSelected': 'No mods selected.',
 
   // Version types
   'type.release': 'Release',
@@ -244,6 +251,9 @@ export const en = {
 
   // Main process: download/launch progress
   'task.javaFor': 'Java for {name}',
+  'task.modsFor': 'Mods for {name}',
+  'task.installingMods': 'Installing mods',
+  'error.modsFailed': '{failed} of {total} mods could not be installed. Try again from the Mods window.',
   'task.installing': 'Installing {name}',
   'task.launching': 'Launching {name}',
   'stage.runtimeManifest': 'Fetching runtime manifest',

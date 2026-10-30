@@ -96,3 +96,14 @@ jobs:
           name: Puma Launcher ${{ inputs.release || github.ref_name }}
           files: dist/*
           generate_release_notes: true
+
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: .github/scripts
+
+      # Puts a "which file do I download?" table at the top of the release description (rebuilt on every run,
+      # so the macOS rows appear once a later run adds the macOS installers).
+      - name: Add the download guide to the release notes
+        run: .github/scripts/release-download-guide.sh "${{ inputs.release || github.ref_name }}"
+        env:
+          GH_TOKEN: ${{ github.token }}
