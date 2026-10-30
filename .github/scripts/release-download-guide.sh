@@ -44,9 +44,11 @@ rest="$(awk '/<!-- download-guide:start -->/{skip=1} !skip{print} /<!-- download
   echo '| --- | --- |'
   echo "$rows"
   echo
-  echo 'Which Mac do you have? Apple menu (top left) → **About This Mac**: "Apple M…" = Apple chip, "Intel" = Intel chip.  '
-  echo 'Che Mac hai? Menu Apple (in alto a sinistra) → **Informazioni su questo Mac**: "Apple M…" = chip Apple, "Intel" = chip Intel.'
-  echo
+  if grep -q 'macos-' <<<"$rows"; then
+    echo 'Which Mac do you have? Apple menu (top left) → **About This Mac**: "Apple M…" = Apple chip, "Intel" = Intel chip.  '
+    echo 'Che Mac hai? Menu Apple (in alto a sinistra) → **Informazioni su questo Mac**: "Apple M…" = chip Apple, "Intel" = chip Intel.'
+    echo
+  fi
   echo '> [!IMPORTANT]'
   echo '> **Don'"'"'t download** the `.blockmap` and `.yml` files or "Source code": the launcher uses them to update itself.  '
   echo '> **Non scaricare** i file `.blockmap` e `.yml` né "Source code": servono al launcher per aggiornarsi da solo.'
