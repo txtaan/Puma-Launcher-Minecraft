@@ -5,8 +5,6 @@ with gold ingots and compete on a leaderboard beside the screen.
 
 ![A Polymarket situation room in Minecraft: the live billboard and leaderboard above the bar, a dotted world-map wall and a globe](docs/situation-room.png)
 
-![The situation room's storefront at night: Monitoring the Situation.](docs/storefront.png)
-
 - **Live market:** the screen follows the current five-minute window, from Polymarket's
   [`btc-up-or-down-5m`](https://polymarket.com/crypto/5M) series. A new market starts every five minutes.
 - **What the screen shows:**
@@ -25,6 +23,8 @@ with gold ingots and compete on a leaderboard beside the screen.
     October 30, 8:20AM-8:25AM ET".
 - **No real money:** no Polymarket account, no keys, no wallet. The mod only reads Polymarket's public data, and the
   gold is Minecraft gold.
+
+![The billboard up close: the live market, Powered by Polymarket, and the leaderboard beside it](docs/board.png)
 
 ![Trading screen: buying Up with 5 gold ingots](docs/trading.png)
 
@@ -116,5 +116,17 @@ cd mods/polymarket
 ./gradlew runClient      # starts Minecraft with the mod
 ```
 
+## Screenshots
+
+The screenshots were taken in a test world, with a situation room built around a billboard and a few demo traders on
+the leaderboard. The market data on the billboards is live.
+
+![The situation room's storefront at night: Monitoring the Situation.](docs/storefront.png)
+
+## Notes
+
 Market data comes from Polymarket's public API. This is a game, not financial advice. It is not an official
 Polymarket product.
+
+The Polymarket name and logo belong to Polymarket. The logo image in
+`src/main/resources/assets/polymarket_billboard/textures/logo/` is not covered by this repository's license.

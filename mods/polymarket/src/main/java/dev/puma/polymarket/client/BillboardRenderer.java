@@ -3,6 +3,7 @@ package dev.puma.polymarket.client;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.math.Axis;
+import dev.puma.polymarket.PolymarketBillboard;
 import dev.puma.polymarket.block.BillboardBlock;
 import dev.puma.polymarket.block.BillboardBlockEntity;
 import dev.puma.polymarket.market.MarketFeed;
@@ -20,6 +21,7 @@ import net.minecraft.client.renderer.rendertype.RenderTypes;
 import net.minecraft.client.renderer.state.level.CameraRenderState;
 import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.Identifier;
 import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.util.LightCoordsUtil;
 import net.minecraft.world.phys.Vec3;
@@ -46,6 +48,11 @@ public class BillboardRenderer implements BlockEntityRenderer<BillboardBlockEnti
     private static final int AMBER = 0xFFFBBF24;
     /** Gap between the screen and the leaderboard panel. */
     private static final float PANEL_GAP = 20;
+    /** The Polymarket logo (icon and wordmark, white), shown after "Powered by". */
+    private static final Identifier LOGO = Identifier.fromNamespaceAndPath(PolymarketBillboard.MODID, "textures/logo/polymarket.png");
+    private static final float LOGO_ASPECT = 398F / 72F;
+    /** Where the wordmark's baseline sits, as a fraction of the logo's height. */
+    private static final float LOGO_BASELINE = 0.787F;
 
     private final Font font;
 
@@ -153,10 +160,14 @@ public class BillboardRenderer implements BlockEntityRenderer<BillboardBlockEnti
             }
         }
         text(pose, out, "Right-click the post to trade with gold", 24, 274, 1.15F, GRAY, Align.LEFT);
-        FormattedCharSequence powered = Component.literal("Powered by ").withColor(GRAY & 0xFFFFFF)
-            .append(Component.literal("Polymarket").withStyle(ChatFormatting.BOLD).withColor(WHITE & 0xFFFFFF))
-            .getVisualOrderText();
-        text(pose, out, powered, 476, 272, 1.5F, WHITE, Align.RIGHT);
+        // "Powered by" and the Polymarket logo, sharing a baseline, right-aligned.
+        float logoH = 18, logoW = logoH * LOGO_ASPECT, logoX = 476 - logoW;
+        float baseline = 273 + 7 * 1.5F;
+        float logoY = baseline - logoH * LOGO_BASELINE;
+        text(pose, out, "Powered by", logoX - 6, 273, 1.5F, GRAY, Align.RIGHT);
+        out.submitCustomGeometry(pose, RenderTypes.text(LOGO), (p, buffer) -> quad(buffer, p,
+            logoX, logoY + logoH, 0.4F, logoX + logoW, logoY + logoH, 0.4F, logoX + logoW, logoY, 0.4F, logoX, logoY, 0.4F,
+            0, 1, 1, 1, 1, 0, 0, 0, LightCoordsUtil.FULL_BRIGHT));
     }
 
     private enum Align { LEFT, RIGHT, CENTER_MIDDLE }
