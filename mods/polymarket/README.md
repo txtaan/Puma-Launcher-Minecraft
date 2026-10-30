@@ -59,8 +59,9 @@ public API.
 
 ## Use
 
-- **Get a billboard:** it's in the **Functional Blocks** creative tab. In survival you can craft it from three glass
-  panes on top, then a glass pane, redstone and a glass pane, and an iron ingot at the bottom centre.
+- **Get one:** the **Polymarket Prediction Market** block is in the **Functional Blocks** creative tab. In survival
+  you can craft it from three glass panes on top, then a glass pane, redstone and a glass pane, and an iron ingot at
+  the bottom centre.
 - **Place it:** the screen (5 blocks wide, 3 tall) and the leaderboard beside it appear above the post, facing you, so
   leave room above and to the right.
 - **Register:** right-click the post and pick a name: 3 to 16 letters, numbers or `_`, not already taken in the world.
