@@ -9,6 +9,7 @@ import dev.puma.polymarket.network.ClientState;
 import dev.puma.polymarket.network.Messages;
 import dev.puma.polymarket.network.Network;
 import java.net.URI;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import net.minecraft.ChatFormatting;
@@ -41,6 +42,8 @@ public class TradeScreen extends Screen {
     private static final int GRAY = 0xFF9CA3AF;
     private static final int WHITE = 0xFFFFFFFF;
     private static final int GOLD = 0xFFFBBF24;
+    private static final int POSITION_ROW = 23;
+    private static final int MAX_POSITIONS = 3;
 
     private final BlockPos board;
     private Tab tab = Tab.TRADE;
@@ -134,13 +137,21 @@ public class TradeScreen extends Screen {
     private void initProfile(Messages.Profile profile) {
         int y = top + 92;
         long now = System.currentTimeMillis() / 1000;
-        for (Messages.PositionView p : profile.positions().stream().limit(5).toList()) {
+        for (Messages.PositionView p : shownPositions(profile)) {
             if (now < p.windowEnd() - 3) {
                 addRenderableWidget(Button.builder(Component.literal("Sell"), b -> Network.toServer(new Messages.Sell(p.id())))
-                    .bounds(left + PANEL_W - 50, y - 4, 40, 15).build());
+                    .bounds(left + PANEL_W - 50, y + 1, 40, 16).build());
             }
-            y += 16;
+            y += POSITION_ROW;
         }
+    }
+
+    /** The positions the Profile tab has room for: the newest markets first. */
+    private static List<Messages.PositionView> shownPositions(Messages.Profile profile) {
+        return profile.positions().stream()
+            .sorted(Comparator.comparingLong(Messages.PositionView::windowEnd).reversed())
+            .limit(MAX_POSITIONS)
+            .toList();
     }
 
     /** What the widgets depend on: the profile's positions, the tab and the market window. */
@@ -286,18 +297,23 @@ public class TradeScreen extends Screen {
             g.text(font, "None: buy Up or Down in the Trade tab.", left + 10, y, GRAY);
             y += 16;
         }
-        for (Messages.PositionView v : p.positions().stream().limit(5).toList()) {
-            String line = v.outcome().label() + " · " + Fmt.shares(v.shares()) + " sh @ " + Fmt.cents(v.cost() / v.shares()) + " · " + Fmt.times(v.title()).replace(" ET", "");
+        for (Messages.PositionView v : shownPositions(p)) {
+            String line = v.outcome().label() + " · " + Fmt.shares(v.shares()) + " shares @ " + Fmt.cents(v.cost() / v.shares()) + " · " + Fmt.times(v.title());
+            g.text(font, line, left + 10, y, v.outcome() == Outcome.UP ? BoardTexture.UP : BoardTexture.DOWN);
+            String detail = "Paid " + gold(v.cost()) + " gold";
             boolean live = s.market() != null && v.slug().equals(s.market().slug());
             if (now >= v.windowEnd()) {
-                line += " · resolving…";
+                detail += " · waiting for Polymarket to resolve it";
             } else if (live && !Double.isNaN(s.book(v.outcome()).bestBid())) {
                 double value = v.shares() * s.book(v.outcome()).bestBid();
-                double change = Math.round((value - v.cost()) * 10) / 10.0;
-                line += " · now " + gold(value) + " gold (" + (change > 0 ? "+" : "") + gold(change) + ")";
+                detail += " · worth " + gold(value) + " gold now (" + signedGold(value - v.cost()) + ")";
             }
-            g.text(font, line, left + 10, y, v.outcome() == Outcome.UP ? BoardTexture.UP : BoardTexture.DOWN);
-            y += 16;
+            g.text(font, detail, left + 10, y + 10, GRAY);
+            y += POSITION_ROW;
+        }
+        if (p.positions().size() > MAX_POSITIONS) {
+            g.text(font, "+ " + (p.positions().size() - MAX_POSITIONS) + " older positions waiting to resolve", left + 10, y - 2, GRAY);
+            y += 9;
         }
 
         g.text(font, Component.literal("Recent trades").withStyle(ChatFormatting.BOLD), left + 10, y + 2, WHITE);
