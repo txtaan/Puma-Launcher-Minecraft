@@ -72,7 +72,12 @@ async function readModMeta(file: string): Promise<{ name?: string; version?: str
   if (toml) {
     const text = toml.toString('utf8')
     const name = /displayName\s*=\s*"([^"]+)"/.exec(text)?.[1]
-    const version = /^\s*version\s*=\s*"([^"]+)"/m.exec(text)?.[1]
+    let version = /^\s*version\s*=\s*"([^"]+)"/m.exec(text)?.[1]
+    // Many Forge mods take their version from the jar's manifest, like Forge itself does.
+    if (version === '${file.jarVersion}') {
+      const manifest = (await readZipEntry(file, 'META-INF/MANIFEST.MF'))?.toString('utf8') ?? ''
+      version = /^Implementation-Version:\s*(\S+)/m.exec(manifest)?.[1]
+    }
     return { name, version: version?.includes('${') ? undefined : version }
   }
   return {}
