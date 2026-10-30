@@ -59,7 +59,7 @@ With a mod loader picked, the dialog also suggests popular mods that have a buil
 (Fabric API, Sodium, Lithium, FerriteCore, Iris, JEI and more). The essentials and performance mods start ticked;
 untick or tick any of them, and they're installed with their dependencies as soon as the instance is created.
 
-<img src="docs/screenshots/new-instance.png" alt="New instance dialog" width="720">
+<img src="docs/screenshots/new-instance.png" alt="New instance dialog with recommended mods" width="720">
 
 ### 5. Press Play
 
