@@ -3,7 +3,7 @@
 A big screen in your world that shows Polymarket's live **Bitcoin Up or Down – 5 minute** market. Players trade it
 with gold ingots and compete on a leaderboard beside the screen.
 
-![The billboard and its leaderboard in a world, just after a win was announced in chat](docs/billboard.png)
+![A situation room built around the billboard: the live market, the leaderboard of traders and rows of consoles](docs/situation-room.png)
 
 - **Live market:** the screen follows the current five-minute window, from Polymarket's
   [`btc-up-or-down-5m`](https://polymarket.com/crypto/5M) series. A new market starts every five minutes.
@@ -71,6 +71,9 @@ by the server, so all the players of a world share one leaderboard.
   3. If you're offline, or there's no room in the chest either (it's full, or another block is in the way), the gold
      waits. You get it the next time you join the world (into your inventory) or open a billboard (into your
      inventory, then the chest behind that billboard).
+
+  ![A win announced in chat, with the gold in the hotbar](docs/billboard.png)
+
 - **Saved data:** traders, positions and results are saved in the world folder, in
   `polymarket_billboard/traders.json`.
 

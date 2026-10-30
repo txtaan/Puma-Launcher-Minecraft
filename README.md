@@ -139,7 +139,7 @@ them, and a countdown to the end of each window. Players register a trader name 
 at the real order-book prices; winners are paid in gold and ranked on a leaderboard beside the screen. See
 [its README](mods/polymarket/README.md) to install and build it.
 
-<img src="mods/polymarket/docs/billboard.png" alt="The Polymarket billboard and its leaderboard in Minecraft 26.3" width="720">
+<img src="mods/polymarket/docs/situation-room.png" alt="A situation room in Minecraft 26.3 built around the Polymarket billboard and its leaderboard" width="720">
 
 ## How it works
 
