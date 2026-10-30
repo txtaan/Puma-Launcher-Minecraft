@@ -131,6 +131,15 @@ Versions before 0.3.3 can't update themselves: download the latest installer onc
 - Light and dark themes, or follow the system setting (**Settings → Appearance**); dark is the default
 - English and Italian: follows your system language, or pick one in **Settings → Appearance**
 
+## Polymarket Billboard mod
+
+[`mods/polymarket`](mods/polymarket) is a Forge mod for Minecraft 26.3. It adds a billboard: a big screen showing
+Polymarket's live **Bitcoin Up or Down – 5 minute** market, with the Up and Down probabilities, a chart that moves with
+them, and a countdown to the end of each window. Right-click the billboard's post to paper-trade the market: virtual
+dollars, real order-book prices. See [its README](mods/polymarket/README.md) to install and build it.
+
+<img src="mods/polymarket/docs/billboard.png" alt="The Polymarket billboard in Minecraft 26.3" width="720">
+
 ## How it works
 
 Puma Launcher is modelled on the most active open-source launchers, checked in October 2026:

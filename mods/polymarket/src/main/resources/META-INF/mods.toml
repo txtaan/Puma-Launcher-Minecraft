@@ -1,0 +1,27 @@
+modLoader="javafml"
+loaderVersion="[66,)"
+license="GPL-3.0-or-later"
+issueTrackerURL="https://github.com/txtaan/Puma-Launcher-Minecraft/issues"
+
+[[mods]]
+modId="polymarket_billboard"
+version="${file.jarVersion}"
+displayName="Polymarket Billboard"
+authors="Puma Launcher"
+description='''A billboard that shows Polymarket's live "Bitcoin Up or Down - 5 minute" market: the Up and Down probabilities, a chart that moves with them, and a countdown to the end of each window. Right-click it to paper-trade the market with virtual dollars at the real order-book prices.
+
+Market data from Polymarket. Paper trading only: no real money, no account.'''
+
+[[dependencies.polymarket_billboard]]
+    modId="forge"
+    mandatory=true
+    versionRange="[66,)"
+    ordering="NONE"
+    side="BOTH"
+
+[[dependencies.polymarket_billboard]]
+    modId="minecraft"
+    mandatory=true
+    versionRange="[26.3,26.4)"
+    ordering="NONE"
+    side="BOTH"

@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "GGG",
+    "GRG",
+    " I "
+  ],
+  "key": {
+    "G": "minecraft:glass_pane",
+    "R": "minecraft:redstone",
+    "I": "minecraft:iron_ingot"
+  },
+  "result": {
+    "id": "polymarket_billboard:billboard",
+    "count": 1
+  }
+}

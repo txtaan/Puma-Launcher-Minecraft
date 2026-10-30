@@ -1,0 +1,43 @@
+name: Build Polymarket mod
+
+# Builds the Polymarket Billboard mod (mods/polymarket, Forge for Minecraft 26.3) and attaches the .jar to the run.
+on:
+  push:
+    branches: ['**']
+    paths: ['mods/polymarket/**', '.github/workflows/polymarket-mod.yml']
+  pull_request:
+    paths: ['mods/polymarket/**', '.github/workflows/polymarket-mod.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: polymarket-mod-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Forge 26.3 mod
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: mods/polymarket
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 25
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Build
+        run: ./gradlew build --console=plain
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: polymarket-billboard
+          path: mods/polymarket/build/libs/*.jar
+          if-no-files-found: error
