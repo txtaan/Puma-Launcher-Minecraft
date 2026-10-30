@@ -251,6 +251,7 @@ function registerIpc(): void {
     return skins.listSkins()
   })
   handle('skins:fromUsername', (username: string) => skins.skinFromUsername(username))
+  handle('skins:serverLink', (skinId: string) => skins.serverSkinLink(skinId))
   handle('skins:openFiles', async (): Promise<RawSkin[]> => {
     const pick = await dialog.showOpenDialog(win!, {
       properties: ['openFile', 'multiSelections'],

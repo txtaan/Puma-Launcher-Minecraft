@@ -81,12 +81,23 @@ Open **Skins**. Pick a skin in the **Wardrobe** and press **+** to wear it, or m
 under **Create** and paint it on the 3D model. You can also drop PNG skins onto the page, pick them with **From file**,
 or copy the skin any Java Edition player wears by typing their name.
 
-- **Microsoft accounts:** the skin is uploaded to your Minecraft profile, so everyone sees it, on any server.
+- **Microsoft accounts:** the skin is uploaded to your Minecraft profile, so everyone sees it on normal servers.
 - **Offline accounts:** when you press **Play**, Puma puts the skin in a resource pack (`PumaSkin`) and turns it on,
-  so you see it in game (Minecraft 1.8 and newer). Other players don't: a server can't receive a skin from an offline
-  account. Because the pack replaces the default skins, other players who use a default skin also look like you on
-  your screen. Take the skin off and the pack is removed at the next launch.
+  so you see it in game (Minecraft 1.8 and newer). The pack replaces only the default skin Minecraft gives your
+  account, so other players keep theirs. Take the skin off and the pack is removed at the next launch.
 - **Ely.by, LittleSkin and other servers** give your account its skin: export the PNG and upload it on their website.
+
+**Showing your skin to friends on a server.** Minecraft only shows skins that come from Mojang, so with offline
+accounts, or on a "cracked" server (such as Aternos with **Cracked** on), the others see a default skin. To fix it:
+
+1. Once, on the server: add **Skin Restorer** (a mod, for Forge, Fabric and NeoForge servers) or **SkinsRestorer** (a
+   plugin, for Paper and Spigot), and restart it. On Aternos: **Mods** or **Plugins**, search, **Install**. Players
+   don't need to install anything.
+2. In Puma Launcher, open the skin in **Skins** and press the server icon (**Show on a server**), then **Make the
+   command**. The skin is uploaded to [MineSkin](https://mineskin.org), which gives it a link on Minecraft's own skin
+   server.
+3. In the game, press **T**, paste the command (`/skin set web classic "https://textures.minecraft.net/…"`) and press
+   Enter. Everyone on the server sees your skin from then on; do it again only when you change skin.
 
 <img src="docs/screenshots/skins.png" alt="The Skins section" width="720">
 

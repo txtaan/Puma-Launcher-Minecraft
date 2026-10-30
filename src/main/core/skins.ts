@@ -1,4 +1,4 @@
-import { randomUUID } from 'node:crypto'
+import { createHash, randomUUID } from 'node:crypto'
 import { existsSync } from 'node:fs'
 import { mkdir, readFile, rm, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
@@ -12,7 +12,10 @@ import { paths } from './paths'
 // models and which skin each account wears. Images are prepared in the renderer, which has a canvas; the main process
 // only checks that they are 64×64 PNGs and stores them.
 
-type StoredSkin = Omit<SkinEntry, 'png' | 'alternate'>
+type StoredSkin = Omit<SkinEntry, 'png' | 'alternate'> & {
+  /** The skin's public link from MineSkin (see serverSkinLink), with the hash of the image and model it was made for. */
+  link?: { url: string; sha256: string }
+}
 interface SkinIndex {
   skins: StoredSkin[]
   equipped: Record<string, string>
@@ -158,17 +161,77 @@ export async function skinFromUsername(username: string): Promise<RawSkin> {
 }
 
 // ---------------------------------------------------------------------------------------------------------------------
+// Showing a skin to the other players on a server
+// ---------------------------------------------------------------------------------------------------------------------
+
+const MINESKIN = 'https://api.mineskin.org/v2/generate'
+
+interface MineskinResponse {
+  success?: boolean
+  skin?: { texture?: { url?: { skin?: string } } }
+  errors?: { code?: string; message?: string }[]
+}
+
+/**
+ * A public link to the skin on Minecraft's own texture server, made by MineSkin (mineskin.org). A server with a skin
+ * mod or plugin (Skin Restorer, SkinsRestorer) applies it to a player with a command, and then every player sees it,
+ * also with offline accounts and on "cracked" servers, where nobody gets skins from Mojang. The link is kept with the
+ * skin and made again only after the skin changes.
+ */
+export async function serverSkinLink(skinId: string): Promise<{ url: string; model: SkinModel }> {
+  const index = await loadIndex()
+  const skin = index.skins.find((s) => s.id === skinId)
+  if (!skin) throw new Error(tr('skins.error.notFound'))
+  const png = await readFile(pngFile(skin.id))
+  const sha256 = createHash('sha256').update(png).update(skin.model).digest('hex')
+  if (skin.link?.sha256 === sha256) return { url: skin.link.url, model: skin.model }
+
+  const form = new FormData()
+  form.set('file', new Blob([new Uint8Array(png)], { type: 'image/png' }), 'skin.png')
+  form.set('variant', skin.model)
+  form.set('name', skin.name.slice(0, 20))
+  form.set('visibility', 'unlisted')
+  const res = await fetch(MINESKIN, { method: 'POST', headers: { 'User-Agent': USER_AGENT }, body: form }).catch(() => null)
+  if (!res) throw new Error(tr('skins.error.mineskin', { error: tr('skins.error.offline') }))
+  const body = (await res.json().catch(() => null)) as MineskinResponse | null
+  const url = body?.skin?.texture?.url?.skin
+  if (res.status === 429) throw new Error(tr('skins.error.mineskinBusy'))
+  if (!res.ok || !body?.success || !url?.startsWith('https://textures.minecraft.net/texture/')) {
+    throw new Error(tr('skins.error.mineskin', { error: body?.errors?.[0]?.message ?? `HTTP ${res.status}` }))
+  }
+  skin.link = { url, sha256 }
+  await saveIndex(index)
+  return { url, model: skin.model }
+}
+
+// ---------------------------------------------------------------------------------------------------------------------
 // Offline accounts: a resource pack that replaces the default skins
 // ---------------------------------------------------------------------------------------------------------------------
 
 const PACK_FOLDER = 'PumaSkin'
-/** The default skins an offline player can get (picked from their UUID), since 1.19.3. */
-const DEFAULT_SKINS = ['steve', 'alex', 'ari', 'efe', 'kai', 'makena', 'noor', 'sunny', 'zuri']
+/** The default skins, in the game's order (1.19.3+): the slim version of each, then the wide one. */
+const DEFAULT_SKINS = ['alex', 'ari', 'efe', 'kai', 'makena', 'noor', 'steve', 'sunny', 'zuri']
+
+/** Java's UUID.hashCode(), which the game uses to pick a player's default skin: the XOR of its four 32-bit words. */
+export function javaUuidHash(uuid: string): number {
+  const hex = uuid.replace(/-/g, '')
+  let hash = 0
+  for (let i = 0; i < 32; i += 8) hash ^= parseInt(hex.slice(i, i + 8), 16) | 0
+  return hash | 0
+}
+
+/** The default skin texture a player with this UUID gets: in 1.19.3+ one of 18, in 1.8 – 1.19.2 Steve or Alex. */
+export function defaultSkinFor(uuid: string): { modern: { model: 'slim' | 'wide'; name: string }; legacy: 'steve' | 'alex' } {
+  const hash = javaUuidHash(uuid)
+  const i = ((hash % 18) + 18) % 18
+  return { modern: { model: i < 9 ? 'slim' : 'wide', name: DEFAULT_SKINS[i % 9] }, legacy: (hash & 1) === 1 ? 'alex' : 'steve' }
+}
 
 /**
  * Minecraft can't load a custom skin for an offline account, so the launcher puts the equipped skin in a resource
- * pack that replaces the default skins and turns it on in options.txt; without an equipped skin the pack is removed.
- * The game picks the arm width from the player's UUID, so both widths of the skin are included.
+ * pack that replaces the default skin the game gives this player (picked from their UUID) and turns it on in
+ * options.txt; without an equipped skin the pack is removed. Only that one default skin is replaced, so other players
+ * with default skins keep theirs. Others see the skin only if the server applies it (see serverSkinLink).
  *
  * @param modernIds Minecraft 1.13+ names folder packs "file/<folder>" in options.txt; older versions use the folder.
  * @returns the name of the skin applied, if any
@@ -194,15 +257,11 @@ export async function applyOfflineSkin(account: Account, gameDir: string, modern
   const slim = skin.model === 'slim' ? png : alternate
   await rm(packDir, { recursive: true, force: true })
   const textures = join(packDir, 'assets', 'minecraft', 'textures', 'entity')
-  await mkdir(join(textures, 'player', 'wide'), { recursive: true })
-  await mkdir(join(textures, 'player', 'slim'), { recursive: true })
-  for (const name of DEFAULT_SKINS) {
-    await writeFile(join(textures, 'player', 'wide', `${name}.png`), classic)
-    await writeFile(join(textures, 'player', 'slim', `${name}.png`), slim)
-  }
+  const own = defaultSkinFor(account.uuid)
+  await mkdir(join(textures, 'player', own.modern.model), { recursive: true })
+  await writeFile(join(textures, 'player', own.modern.model, `${own.modern.name}.png`), own.modern.model === 'slim' ? slim : classic)
   // 1.8 – 1.19.2 have two default skins, in the entity folder.
-  await writeFile(join(textures, 'steve.png'), classic)
-  await writeFile(join(textures, 'alex.png'), slim)
+  await writeFile(join(textures, `${own.legacy}.png`), own.legacy === 'alex' ? slim : classic)
   // Every format field any version reads, so no version flags the pack as made for another one.
   const pack = { pack: { pack_format: 1, supported_formats: [1, 9999], min_format: 1, max_format: 9999, description: `Puma Launcher: ${skin.name}` } }
   await writeFile(join(packDir, 'pack.mcmeta'), JSON.stringify(pack, null, 2))

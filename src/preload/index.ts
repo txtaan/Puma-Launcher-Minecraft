@@ -17,6 +17,7 @@ import type {
   Settings,
   SkinEntry,
   SkinLibrary,
+  SkinModel,
   SkinSaveInput,
   UpdateInfo,
   VersionList
@@ -107,6 +108,8 @@ const api = {
     /** Wear a skin with an account (null takes it off). Returns the updated library. */
     equip: (accountId: string, skinId: string | null) => invoke<SkinLibrary>('skins:equip', accountId, skinId),
     fromUsername: (username: string) => invoke<RawSkin>('skins:fromUsername', username),
+    /** A public link to the skin (made by MineSkin) for a server's skin mod or plugin. */
+    serverLink: (skinId: string) => invoke<{ url: string; model: SkinModel }>('skins:serverLink', skinId),
     openFiles: () => invoke<RawSkin[]>('skins:openFiles'),
     /** Save a PNG where the user picks; returns the path, or null if cancelled. */
     exportPng: (name: string, png: string) => invoke<string | null>('skins:export', name, png)
