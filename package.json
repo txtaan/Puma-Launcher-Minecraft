@@ -1,7 +1,7 @@
 {
   "name": "puma-launcher",
   "productName": "Puma Launcher",
-  "version": "0.3.3",
+  "version": "0.3.4",
   "description": "A modern open-source Minecraft launcher inspired by HMCL and Prism Launcher",
   "license": "GPL-3.0-or-later",
   "main": "out/main/index.js",
@@ -95,11 +95,13 @@
     "@types/node": "^26.6.6",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
+    "@types/three": "^0.186.0",
     "@types/yauzl": "^3.4.0",
     "@vitejs/plugin-react": "^6.1.2",
     "electron": "^45.1.0",
     "electron-builder": "^26.18.0",
     "electron-vite": "^6.0.0",
+    "three": "^0.187.0",
     "typescript": "^7.0.2",
     "vite": "^8.3.5"
   },

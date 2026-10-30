@@ -14,6 +14,8 @@ import type {
   ProgressEvent,
   PublicAccount,
   Settings,
+  SkinEntry,
+  SkinLibrary,
   VersionList,
   UpdateInfo
 } from '../src/shared/types'
@@ -21,6 +23,8 @@ import type { InstanceWithState, LauncherApi } from '../src/preload/index'
 import sample from './sample-data.json'
 import pkg from '../package.json'
 import { resolveLanguage, translate, type MessageKey } from '../src/shared/i18n'
+import { withAlternate } from '../src/renderer/src/skins/image'
+import { templatePixels } from '../src/renderer/src/skins/templates'
 
 type Listener<T> = (payload: T) => void
 const listeners = new Map<string, Set<Listener<unknown>>>()
@@ -121,6 +125,37 @@ const GAME_LOG = [
   'Loaded 1407 recipes',
   'Loaded 1520 advancements'
 ]
+
+// The skin library, seeded with the built-in templates the first time it is read.
+let skinLibrary: SkinLibrary | null = null
+function library(): SkinLibrary {
+  if (!skinLibrary) {
+    const now = Date.now()
+    const seed = (name: string, template: 'puma' | 'explorer', model: 'classic' | 'slim', age: number, favorite: boolean): SkinEntry => ({
+      id: uuid(),
+      name,
+      ...withAlternate(templatePixels(template, model), model),
+      source: 'created',
+      favorite,
+      createdAt: now - age,
+      updatedAt: now - age
+    })
+    skinLibrary = {
+      skins: [seed('Night Puma', 'puma', 'classic', 3_600_000, true), seed('Explorer', 'explorer', 'slim', 86_400_000, false)],
+      equipped: {}
+    }
+  }
+  return skinLibrary
+}
+const copyLibrary = (): SkinLibrary => ({ skins: library().skins.map((s) => ({ ...s })), equipped: { ...library().equipped } })
+
+function download(name: string, png: string): string {
+  const a = document.createElement('a')
+  a.href = png
+  a.download = `${name}.png`
+  a.click()
+  return `${name}.png`
+}
 
 let update: UpdateInfo = { current: pkg.version, supported: true, method: 'restart', state: { status: 'idle' } }
 
@@ -310,6 +345,60 @@ const api: LauncherApi = {
       return [fileName]
     },
     openFolder: async () => ''
+  },
+  skins: {
+    list: async () => copyLibrary(),
+    save: async (input) => {
+      const lib = library()
+      const now = Date.now()
+      const existing = input.id ? lib.skins.find((s) => s.id === input.id) : undefined
+      const name = input.name.trim().slice(0, 48) || tr('skins.untitled')
+      const entry: SkinEntry = existing
+        ? { ...existing, name, model: input.model, png: input.png, alternate: input.alternate, favorite: input.favorite ?? existing.favorite, updatedAt: now }
+        : { id: uuid(), name, model: input.model, png: input.png, alternate: input.alternate, source: input.source ?? 'created', favorite: input.favorite ?? false, createdAt: now, updatedAt: now }
+      lib.skins = existing ? lib.skins.map((s) => (s.id === entry.id ? entry : s)) : [entry, ...lib.skins]
+      return { ...entry }
+    },
+    setFavorite: async (id, favorite) => {
+      const skin = library().skins.find((s) => s.id === id)
+      if (skin) skin.favorite = favorite
+    },
+    remove: async (id) => {
+      const lib = library()
+      lib.skins = lib.skins.filter((s) => s.id !== id)
+      for (const [account, skin] of Object.entries(lib.equipped)) if (skin === id) delete lib.equipped[account]
+    },
+    equip: async (accountId, skinId) => {
+      await wait(accounts.find((a) => a.id === accountId)?.type === 'microsoft' ? 900 : 150)
+      if (skinId) library().equipped[accountId] = skinId
+      else delete library().equipped[accountId]
+      return copyLibrary()
+    },
+    fromUsername: async (username) => {
+      await wait(500)
+      if (!/^\w{1,16}$/.test(username.trim())) throw new Error(tr('skins.error.username'))
+      // No network in the preview: every player "wears" the explorer template.
+      return { name: username.trim(), png: withAlternate(templatePixels('explorer', 'classic'), 'classic').png, model: 'classic' }
+    },
+    openFiles: async () =>
+      new Promise((resolve) => {
+        const input = document.createElement('input')
+        input.type = 'file'
+        input.accept = 'image/png'
+        input.multiple = true
+        input.onchange = async () => {
+          const files = [...(input.files ?? [])]
+          const read = (f: File) =>
+            new Promise<string>((ok) => {
+              const reader = new FileReader()
+              reader.onload = () => ok(String(reader.result))
+              reader.readAsDataURL(f)
+            })
+          resolve(await Promise.all(files.map(async (f) => ({ name: f.name.replace(/\.png$/i, ''), png: await read(f) }))))
+        }
+        input.click()
+      }),
+    exportPng: async (name, png) => download(name, png)
   },
   updates: {
     get: async () => update,

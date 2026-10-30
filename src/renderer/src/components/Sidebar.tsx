@@ -8,6 +8,7 @@ const NAV: { page: Page; label: MessageKey; icon: string }[] = [
   { page: 'instances', label: 'nav.instances', icon: 'grid' },
   { page: 'versions', label: 'nav.versions', icon: 'layers' },
   { page: 'java', label: 'nav.java', icon: 'coffee' },
+  { page: 'skins', label: 'nav.skins', icon: 'shirt' },
   { page: 'settings', label: 'nav.settings', icon: 'settings' }
 ]
 
@@ -45,7 +46,7 @@ export function Sidebar() {
             <Avatar account={account} size={34} />
             <div className="account-meta">
               <strong>{account.username}</strong>
-              <span>{account.type === 'microsoft' ? t('account.microsoft') : account.type === 'authlib' ? account.serverName : t('account.offline')}</span>
+              {account.type !== 'offline' && <span>{account.type === 'microsoft' ? t('account.microsoft') : account.serverName}</span>}
             </div>
             <button className="icon-btn" aria-label={t('nav.signOut')} title={t('nav.switchAccount')} onClick={() => void selectAccount(undefined)}>
               <Icon name="logout" />

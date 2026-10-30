@@ -75,6 +75,9 @@
   --snapshot-glow: #355888;
   --recent-icon-bg: var(--avatar-bg);
 
+  /* Skins: behind the 3D models and skin pictures */
+  --stage-bg: radial-gradient(ellipse at 50% 30%, #25304a 0%, #151522 58%, #0e0e17 100%);
+
   --radius-s: 8px;
   --radius: 12px;
   --radius-l: 20px;
@@ -136,6 +139,8 @@
   --recent-icon-bg: #be803b;
   --console-bg: rgba(255, 255, 255, 0.97);
   --log-text: #3b3852;
+
+  --stage-bg: radial-gradient(ellipse at 50% 30%, #fff7e8 0%, #f0e8dc 55%, #e3ded6 100%);
 
   --shadow: 0 10px 30px rgba(24, 20, 56, 0.12);
   --shadow-glow: 0 8px 24px rgba(190, 128, 59, 0.3);

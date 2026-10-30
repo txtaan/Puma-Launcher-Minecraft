@@ -1,8 +1,8 @@
 # Puma Launcher
 
 A modern, open-source Minecraft: Java Edition launcher for Windows, macOS and Linux. It installs any Minecraft
-version, with or without Fabric, Quilt, Forge or NeoForge, downloads the right Java for you and installs mods from
-Modrinth. Available in English and Italian.
+version, with or without Fabric, Quilt, Forge or NeoForge, downloads the right Java for you, installs mods from
+Modrinth, and has a wardrobe and 3D editor for your skins. Available in English and Italian.
 
 <sub>NOT AN OFFICIAL MINECRAFT PRODUCT. NOT APPROVED BY OR ASSOCIATED WITH MOJANG OR MICROSOFT.</sub>
 
@@ -55,7 +55,11 @@ An instance is one Minecraft installation with its own worlds and mods. On the h
 latest Minecraft version is already selected: give it a name, pick a mod loader such as **Fabric** if you want
 mods, and click **Create**. The right Java version starts downloading by itself.
 
-<img src="docs/screenshots/new-instance.png" alt="New instance dialog" width="720">
+With a mod loader picked, the dialog also suggests popular mods that have a build for that exact version and loader
+(Fabric API, Sodium, Lithium, FerriteCore, Iris, JEI and more). The essentials and performance mods start ticked;
+untick or tick any of them, and they're installed with their dependencies as soon as the instance is created.
+
+<img src="docs/screenshots/new-instance.png" alt="New instance dialog with recommended mods" width="720">
 
 ### 5. Press Play
 
@@ -70,6 +74,21 @@ Go to **Instances**, click the puzzle-piece icon on your instance, open **Browse
 Required mods are installed with it. Mods need an instance with a mod loader (Fabric, Quilt, Forge or NeoForge).
 
 <img src="docs/screenshots/mods.png" alt="Installing mods from Modrinth" width="720">
+
+### 7. Wear a skin (optional)
+
+Open **Skins**. Pick a skin in the **Wardrobe** and press **+** to wear it, or make your own: start from a template
+under **Create** and paint it on the 3D model. You can also drop PNG skins onto the page, pick them with **From file**,
+or copy the skin any Java Edition player wears by typing their name.
+
+- **Microsoft accounts:** the skin is uploaded to your Minecraft profile, so everyone sees it, on any server.
+- **Offline accounts:** when you press **Play**, Puma puts the skin in a resource pack (`PumaSkin`) and turns it on,
+  so you see it in game (Minecraft 1.8 and newer). Other players don't: a server can't receive a skin from an offline
+  account. Because the pack replaces the default skins, other players who use a default skin also look like you on
+  your screen. Take the skin off and the pack is removed at the next launch.
+- **Ely.by, LittleSkin and other servers** give your account its skin: export the PNG and upload it on their website.
+
+<img src="docs/screenshots/skins.png" alt="The Skins section" width="720">
 
 You can switch between the light and dark theme, and between English and Italian, in **Settings → Appearance**.
 
@@ -91,15 +110,23 @@ Versions before 0.3.3 can't update themselves: download the latest installer onc
 | --- | --- | --- |
 | ![Home screen, light theme](docs/screenshots/home-light.png) | ![Home screen in Italian](docs/screenshots/home-italian.png) | ![Java](docs/screenshots/java.png) |
 
+| Wardrobe | Inspect a skin | Skin editor |
+| --- | --- | --- |
+| ![Wardrobe](docs/screenshots/skins-wardrobe.png) | ![Inspect a skin](docs/screenshots/skins-inspect.png) | ![Skin editor](docs/screenshots/skins-editor.png) |
+
 ## Features
 
 - Login screen: Microsoft, offline, or Ely.by / LittleSkin / custom server, plus saved accounts to switch between
 - Home screen with a jungle-scene hero (moonlit or daylight, following the theme), latest release/snapshot cards and a large **Play** button
 - Instances: create with any version and mod loader; edit version, loader, Java, memory, JVM args and resolution
-- Mods: Modrinth browser with dependency resolution, plus installed-mod list with enable, disable and delete
+- Mods: recommended mods when creating an instance, a Modrinth browser with dependency resolution, plus an
+  installed-mod list with enable, disable and delete
 - Versions browser: releases, snapshots, beta and alpha, with search and "installed" badges
 - Java manager: one-click Mojang and Temurin runtimes plus the Java installations found on this PC
 - Download manager: parallel downloads with SHA-1/SHA-256 checks, retries and live progress
+- Skins: a wardrobe of your skins (search, filters, bookmarks), an inspect view (turnable 3D model, animations,
+  screenshots, colour palette and per-part stats) and a 3D skin editor; wear a skin with one click (see
+  [step 7](#7-wear-a-skin-optional))
 - Game console showing the game log (log4j XML converted to readable lines), with errors highlighted
 - Light and dark themes, or follow the system setting (**Settings → Appearance**); dark is the default
 - English and Italian: follows your system language, or pick one in **Settings → Appearance**
@@ -123,6 +150,29 @@ Puma Launcher is modelled on the most active open-source launchers, checked in O
 | Mods from Modrinth | Prism, HMCL | Search mods compatible with the instance's loader and version, install them with their required dependencies (SHA-1 verified), and enable, disable or delete installed mods. |
 | Isolated instances | Prism | Each instance has its own game folder, loader, Java, memory, JVM arguments and window size. |
 | Accounts | HMCL, Prism, ElyPrism, Fjord | Microsoft (device code), offline, and **authlib-injector** servers (Ely.by, LittleSkin or any custom Yggdrasil server). Tokens are encrypted with the OS keychain. |
+
+### Skins
+
+The skin editor is Puma's own code (`src/renderer/src/skins/`), written for the launcher. Before writing it we read
+the README and changelog of [MineSkin PRO](https://github.com/hamza512b/mineskin), an AGPL-3.0 web and mobile skin
+editor, to see what users ask for and what went wrong there; none of its code was used.
+
+| | MineSkin PRO (from its README and changelog) | Puma |
+| --- | --- | --- |
+| Where it runs | Web, iOS and Android app (Next.js, Capacitor), with Sentry and Vercel Analytics | Inside the launcher, offline, no tracking |
+| Using the skin | Export the PNG and apply it in Minecraft yourself (its usage guide explains how) | **Wear** uploads it to your Microsoft profile, or adds it to the game for offline accounts |
+| Rendering | Custom WebGL renderer; the changelog lists fixes for flickering and for artifacts around the skin | three.js, redrawn only when something changes; faces are sampled slightly inside their edges so they never bleed into each other |
+| Export | Browser download, which failed silently in some in-app browsers until September 2026 | The system's Save dialog |
+| Shortcuts | Undo and redo shortcuts on Mac fixed in October 2025 | Ctrl or ⌘ for undo, redo and save, plus one-key tools |
+
+Puma's editor also has a mirror that follows the body (paint the right arm and the left arm gets the same, outer side
+to outer side), a fill that stays inside the face you click, an arm-width switch that resamples the arms instead of
+leaving gaps, the old 64×32 format upgraded the way the game does it, and an inspect view with the skin's palette and
+per-part numbers. MineSkin has things Puma's editor doesn't have yet: posing limbs by hand, reference images and clip
+recording.
+
+The 3D model is built with [three.js](https://threejs.org) (MIT). Templates are drawn in code: Puma ships no Mojang
+textures.
 
 No code was copied from HMCL or Prism Launcher. The launcher uses their public metadata services and the
 ForgeWrapper and authlib-injector jars at runtime. It is licensed GPL-3.0-or-later, the same licence as both projects.
@@ -173,7 +223,8 @@ Offline mode works without any of this.
 | Linux | `~/.config/puma-launcher` |
 
 To use another folder, set the `PUMA_HOME` environment variable. Data from older versions (the `txtaan-launcher` folder, from before the rename) is moved to the new folder automatically on first start. The layout follows `.minecraft`
-(`versions/`, `libraries/`, `assets/`), plus `runtime/` for downloaded Java and `instances/` for instances.
+(`versions/`, `libraries/`, `assets/`), plus `runtime/` for downloaded Java, `instances/` for instances and `skins/`
+for your skin library.
 
 ## Building from source
 
@@ -223,11 +274,13 @@ src/
       http.ts      downloads with SHA-1 checks, retries and concurrency
       i18n.ts      language for main-process text (progress, errors, console lines)
       updater.ts   the launcher's own updates from GitHub Releases
+      skins.ts     skin library, Mojang skin upload, and the resource pack for offline accounts
   preload/         typed, sandboxed IPC bridge (window.launcher)
   renderer/        React UI
     src/styles/theme.css  all colours, gradients and radii for the dark and light themes (edit this file to re-theme)
     src/styles/app.css    layout and components
-    src/pages/            Login, Home, Instances, Versions, Java, Settings
+    src/pages/            Login, Home, Instances, Versions, Java, Skins, Settings
+    src/skins/            the 3D player model (three.js), skin layout maths, the editor, and the Skins screens
   shared/types.ts  types shared by all three layers
   shared/i18n/     English (en.ts, the source of every message) and Italian (it.ts) text
 ```

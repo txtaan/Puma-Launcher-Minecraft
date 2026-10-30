@@ -1,7 +1,7 @@
-import { app, BrowserWindow, clipboard, ipcMain, nativeTheme, shell } from 'electron'
-import { mkdir } from 'node:fs/promises'
-import { join } from 'node:path'
-import type { Instance, LoaderType, Settings, ThemePreference } from '@shared/types'
+import { app, BrowserWindow, clipboard, dialog, ipcMain, nativeTheme, shell } from 'electron'
+import { mkdir, readFile, writeFile } from 'node:fs/promises'
+import { basename, extname, join } from 'node:path'
+import type { Instance, LoaderType, RawSkin, Settings, SkinSaveInput, ThemePreference } from '@shared/types'
 import * as auth from './core/auth'
 import * as instances from './core/instances'
 import { resolveVersion } from './core/install'
@@ -13,6 +13,7 @@ import { paths } from './core/paths'
 import { seconds, setLanguage, tr } from './core/i18n'
 import { emit, setProgressTarget, task } from './core/progress'
 import { getSettings, updateSettings } from './core/settings'
+import * as skins from './core/skins'
 import { checkForUpdates, installUpdate, startUpdater, updateInfo } from './core/updater'
 import { getVersions, refreshVersions, startVersionWatcher } from './core/versions'
 
@@ -225,6 +226,39 @@ function registerIpc(): void {
     }
   })
   handle('paths:openRoot', () => shell.openPath(paths.root()))
+
+  // Skins
+  handle('skins:list', () => skins.listSkins())
+  handle('skins:save', (input: SkinSaveInput) => skins.saveSkin(input))
+  handle('skins:favorite', (id: string, favorite: boolean) => skins.setFavorite(id, favorite))
+  handle('skins:delete', (id: string) => skins.deleteSkin(id))
+  handle('skins:equip', async (accountId: string, skinId: string | null) => {
+    const settings = await getSettings()
+    await skins.equipSkin(await auth.getLaunchAccount(accountId, settings.msClientId), skinId)
+    return skins.listSkins()
+  })
+  handle('skins:fromUsername', (username: string) => skins.skinFromUsername(username))
+  handle('skins:openFiles', async (): Promise<RawSkin[]> => {
+    const pick = await dialog.showOpenDialog(win!, {
+      properties: ['openFile', 'multiSelections'],
+      filters: [{ name: tr('skins.fileFilter'), extensions: ['png'] }]
+    })
+    const files: RawSkin[] = []
+    for (const path of pick.filePaths) {
+      const png = await readFile(path)
+      if (png.length <= 256 * 1024) files.push({ name: basename(path, extname(path)), png: `data:image/png;base64,${png.toString('base64')}` })
+    }
+    return files
+  })
+  handle('skins:export', async (name: string, png: string) => {
+    const pick = await dialog.showSaveDialog(win!, {
+      defaultPath: `${name.replace(/[\\/:*?"<>|]/g, '_') || 'skin'}.png`,
+      filters: [{ name: tr('skins.fileFilter'), extensions: ['png'] }]
+    })
+    if (pick.canceled || !pick.filePath) return null
+    await writeFile(pick.filePath, Buffer.from(png.replace(/^data:image\/png;base64,/, ''), 'base64'))
+    return pick.filePath
+  })
 
   // The launcher's own updates
   handle('updates:get', async () => updateInfo())
