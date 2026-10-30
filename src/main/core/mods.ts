@@ -1,5 +1,5 @@
 import { existsSync } from 'node:fs'
-import { mkdir, readdir, rename, rm } from 'node:fs/promises'
+import { copyFile, mkdir, readdir, rename, rm } from 'node:fs/promises'
 import { join } from 'node:path'
 import type { InstalledMod, Instance, LoaderType, ModSearchHit, RecommendedMod } from '@shared/types'
 import { readZipEntry } from './archive'
@@ -7,6 +7,7 @@ import { readJson, writeJson } from './fsutil'
 import { downloadAll, fetchJson } from './http'
 import { gameDir } from './instances'
 import { tr } from './i18n'
+import { fetchPumaJar, pumaMod, pumaModsFor, type PumaMod } from './pumaMods'
 
 // Mod management in the spirit of Prism's and HMCL's mod pages, using Modrinth's public API.
 
@@ -131,19 +132,29 @@ export async function searchMods(
   offset = 0
 ): Promise<{ hits: ModSearchHit[]; total: number }> {
   const loaders = requireLoader(instance)
+  const installed = new Set(Object.values(await readIndex(instance.id)))
+  // Puma's own mods come first, on the first page; Modrinth's results follow.
+  const q = query.trim().toLowerCase()
+  const own = pumaModsFor(instance.loader?.type, instance.versionId).filter(
+    (m) => !q || `${m.title} ${tr(m.description)} puma`.toLowerCase().includes(q)
+  )
   const facets = [['project_type:mod'], loaders.map((l) => `categories:${l}`), [`versions:${instance.versionId}`]]
   const params = new URLSearchParams({
     query,
     facets: JSON.stringify(facets),
     index: query ? 'relevance' : 'downloads',
     limit: '20',
-    offset: String(offset)
+    offset: String(Math.max(0, offset - own.length))
   })
-  const res = await fetchJson<SearchResponse>(`${MODRINTH}/search?${params}`)
-  const installed = new Set(Object.values(await readIndex(instance.id)))
+  const res = await fetchJson<SearchResponse>(`${MODRINTH}/search?${params}`).catch((err) => {
+    if (own.length && !offset) return { hits: [], total_hits: 0 } satisfies SearchResponse
+    throw err
+  })
   return {
-    total: res.total_hits,
-    hits: res.hits.map((h) => ({
+    total: res.total_hits + own.length,
+    hits: [
+      ...(offset ? [] : own.map((m) => ownHit(m, installed.has(m.id)))),
+      ...res.hits.map((h) => ({
       projectId: h.project_id,
       slug: h.slug,
       title: h.title,
@@ -153,7 +164,12 @@ export async function searchMods(
       iconUrl: h.icon_url,
       installed: installed.has(h.project_id)
     }))
+    ]
   }
+}
+
+function ownHit(mod: PumaMod, installed: boolean): ModSearchHit {
+  return { projectId: mod.id, slug: mod.slug, title: mod.title, description: tr(mod.description), author: 'Puma Launcher', downloads: 0, installed, featured: true }
 }
 
 interface ModrinthVersion {
@@ -222,8 +238,24 @@ const RECOMMENDED: Record<Exclude<LoaderType, 'vanilla'>, { slug: string; presel
   ]
 }
 
-/** Recommended mods that actually have a build for this loader + Minecraft version. */
+/** Recommended mods that actually have a build for this loader + Minecraft version, Puma's own mods first. */
 export async function recommendedMods(type: Exclude<LoaderType, 'vanilla'>, mcVersion: string): Promise<RecommendedMod[]> {
+  const own: RecommendedMod[] = pumaModsFor(type, mcVersion).map((m) => ({
+    projectId: m.id,
+    slug: m.slug,
+    title: m.title,
+    description: tr(m.description),
+    preselected: false,
+    featured: true
+  }))
+  const fromModrinth = await modrinthRecommended(type, mcVersion).catch((err) => {
+    if (own.length) return []
+    throw err
+  })
+  return [...own, ...fromModrinth]
+}
+
+async function modrinthRecommended(type: Exclude<LoaderType, 'vanilla'>, mcVersion: string): Promise<RecommendedMod[]> {
   const list = RECOMMENDED[type]
   const ids = encodeURIComponent(JSON.stringify(list.map((r) => r.slug)))
   const projects = await fetchJson<{ id: string; slug: string; title: string; description: string; icon_url?: string }[]>(
@@ -240,9 +272,11 @@ export async function recommendedMods(type: Exclude<LoaderType, 'vanilla'>, mcVe
   return checked.filter((m): m is RecommendedMod => m !== null)
 }
 
-/** Install the newest compatible version of a Modrinth project plus its required dependencies. */
+/** Install the newest compatible version of a Modrinth project plus its required dependencies, or a Puma mod. */
 export async function installMod(instance: Instance, projectId: string): Promise<string[]> {
   requireLoader(instance)
+  const own = pumaMod(projectId)
+  if (own) return installPumaMod(instance, own)
   const dir = modsDir(instance.id)
   await mkdir(dir, { recursive: true })
   const index = await readIndex(instance.id)
@@ -283,4 +317,26 @@ export async function installMod(instance: Instance, projectId: string): Promise
   }
   await writeJson(indexFile(instance.id), index)
   return installedNames
+}
+
+/** Install one of Puma's own mods from the launcher's GitHub release, replacing an older copy. */
+async function installPumaMod(instance: Instance, mod: PumaMod): Promise<string[]> {
+  if (!pumaModsFor(instance.loader?.type, instance.versionId).includes(mod)) {
+    throw new Error(tr('error.noModVersion', { version: instance.versionId, loader: instance.loader?.type ?? '' }))
+  }
+  const { file, name } = await fetchPumaJar(mod)
+  const dir = modsDir(instance.id)
+  await mkdir(dir, { recursive: true })
+  const index = await readIndex(instance.id)
+  for (const [old, pid] of Object.entries(index)) {
+    if (pid === mod.id) {
+      await rm(join(dir, old), { force: true })
+      await rm(join(dir, `${old}.disabled`), { force: true })
+      delete index[old]
+    }
+  }
+  await copyFile(file, join(dir, name))
+  index[name] = mod.id
+  await writeJson(indexFile(instance.id), index)
+  return [name]
 }

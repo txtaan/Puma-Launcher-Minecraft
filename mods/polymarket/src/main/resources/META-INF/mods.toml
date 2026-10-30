@@ -7,6 +7,8 @@ issueTrackerURL="https://github.com/txtaan/Puma-Launcher-Minecraft/issues"
 modId="polymarket_billboard"
 version="${file.jarVersion}"
 displayName="Polymarket Billboard"
+logoFile="polymarket_billboard.png"
+displayURL="https://github.com/txtaan/Puma-Launcher-Minecraft/tree/main/mods/polymarket"
 authors="Puma Launcher"
 description='''A billboard that shows Polymarket's live "Bitcoin Up or Down - 5 minute" market: the Up and Down probabilities, a chart that moves with them, and a countdown to the end of each window. Register a trader name, then trade the market with gold ingots at the real order-book prices. Winning shares pay 1 gold each, and a leaderboard beside the screen ranks every trader by profit.
 

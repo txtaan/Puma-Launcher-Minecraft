@@ -95,6 +95,8 @@ const api = {
     search: (id: string, query: string, offset = 0) =>
       invoke<{ hits: ModSearchHit[]; total: number }>('mods:search', id, query, offset),
     install: (id: string, projectId: string) => invoke<string[]>('mods:install', id, projectId),
+    /** Save one of Puma's own mods as a .jar (for a server). Resolves to the saved path, or null if cancelled. */
+    saveJar: (projectId: string) => invoke<string | null>('mods:saveJar', projectId),
     openFolder: (id: string) => invoke<string>('mods:openFolder', id)
   },
   skins: {

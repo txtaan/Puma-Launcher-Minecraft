@@ -143,7 +143,7 @@ export const en = {
   // Mods
   'mods.title': 'Mods · {name}',
   'mods.installedTab': 'Installed',
-  'mods.browse': 'Browse Modrinth',
+  'mods.browse': 'Browse mods',
   'mods.folder': 'Mods folder',
   'mods.vanilla': 'This is a vanilla instance. Pick Fabric, Quilt, Forge or NeoForge in the instance settings to use mods.',
   'mods.reading': 'Reading mods…',
@@ -163,6 +163,13 @@ export const en = {
   'mods.install': 'Install',
   'mods.loadMore': 'Load more',
   'mods.hint': 'Mods and their required dependencies are downloaded from Modrinth and verified by SHA-1.',
+  'mods.polymarketDescription': "A big screen with Polymarket's live Bitcoin Up or Down market. Trade it with gold ingots and climb the leaderboard.",
+  'mods.byPuma': 'Made by Puma Launcher',
+  'mods.saveJar': 'Server .jar',
+  'mods.saveJarTitle': 'Save the mod file to put on a server',
+  'mods.savedJar': 'Saved {file}',
+  'mods.jarFilter': 'Mod file',
+  'mods.serverHint': 'On a server, the .jar goes in its mods folder too. Aternos only installs mods from CurseForge or Modrinth.',
 
   // Versions
   'versions.subtitle': 'Straight from Mojang — new releases and snapshots appear automatically.',
@@ -430,6 +437,8 @@ export const en = {
   // Main process: errors
   'error.stopBeforeDelete': 'Stop the game before deleting this instance.',
   'error.needLoader': 'Install a mod loader (Fabric, Quilt, Forge or NeoForge) on this instance to use mods.',
+  'error.pumaModMissing': "Couldn't find {title} in Puma Launcher's releases on GitHub.",
+  'error.pumaModUnverified': "GitHub didn't publish a checksum for {title}, so the download can't be verified.",
   'error.invalidFileName': 'Invalid file name',
   'error.noModVersion': 'No version of this mod supports {version} with {loader}.',
   'error.metaUnavailable': '{name} {version} is not available (HTTP {status})',

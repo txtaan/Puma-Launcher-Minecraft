@@ -1,5 +1,5 @@
 import { app, BrowserWindow, clipboard, dialog, ipcMain, nativeTheme, shell } from 'electron'
-import { mkdir, readFile, writeFile } from 'node:fs/promises'
+import { copyFile, mkdir, readFile, writeFile } from 'node:fs/promises'
 import { basename, extname, join } from 'node:path'
 import type { Instance, LoaderType, RawSkin, Settings, SkinSaveInput, ThemePreference } from '@shared/types'
 import * as auth from './core/auth'
@@ -10,6 +10,7 @@ import { isRunning, isWindowOpen, killInstance, launchInstance } from './core/la
 import { loaderVersions } from './core/meta'
 import * as mods from './core/mods'
 import { paths } from './core/paths'
+import { fetchPumaJar, pumaMod } from './core/pumaMods'
 import { seconds, setLanguage, tr } from './core/i18n'
 import { emit, setProgressTarget, task } from './core/progress'
 import { getSettings, updateSettings } from './core/settings'
@@ -152,6 +153,18 @@ function registerIpc(): void {
   handle('mods:install', async (id: string, projectId: string) =>
     mods.installMod(await instances.getInstance(id), projectId)
   )
+  handle('mods:saveJar', async (projectId: string) => {
+    const mod = pumaMod(projectId)
+    if (!mod) throw new Error(tr('error.pumaModMissing', { title: projectId }))
+    const { file, name } = await fetchPumaJar(mod)
+    const pick = await dialog.showSaveDialog(win!, {
+      defaultPath: join(app.getPath('downloads'), name),
+      filters: [{ name: tr('mods.jarFilter'), extensions: ['jar'] }]
+    })
+    if (pick.canceled || !pick.filePath) return null
+    await copyFile(file, pick.filePath)
+    return pick.filePath
+  })
   handle('mods:openFolder', async (id: string) => {
     const dir = join(instances.gameDir(id), 'mods')
     await mkdir(dir, { recursive: true })

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import type { InstalledMod, Instance, ModSearchHit } from '@shared/types'
 import { api, errorMessage } from '../api'
+import { modIcon } from '../modIcons'
 import { useStore } from '../store'
 import { Icon } from './Icon'
 import { loaderLabel } from './LoaderPicker'
@@ -148,6 +149,15 @@ function Browse({ instance, onInstalled }: { instance: Instance; onInstalled: ()
     return () => clearTimeout(timer)
   }, [query, search])
 
+  const saveJar = async (hit: ModSearchHit) => {
+    try {
+      const file = await api.mods.saveJar(hit.projectId)
+      if (file) toast(t('mods.savedJar', { file }), 'success')
+    } catch (err) {
+      toast(errorMessage(err), 'error')
+    }
+  }
+
   const install = async (hit: ModSearchHit) => {
     setBusy((b) => ({ ...b, [hit.projectId]: true }))
     try {
@@ -177,28 +187,44 @@ function Browse({ instance, onInstalled }: { instance: Instance; onInstalled: ()
       <div className="mod-list browse">
         {!hits && <div className="muted pad"><span className="spinner sm" /> {t('mods.searching')}</div>}
         {hits?.length === 0 && <div className="muted pad">{t('mods.noneFound')}</div>}
-        {hits?.map((h) => (
-          <div key={h.projectId} className="mod-row">
-            {h.iconUrl ? <img className="mod-icon" src={h.iconUrl} alt="" loading="lazy" /> : <span className="mod-icon">{h.title[0]}</span>}
-            <div className="grow">
-              <div className="row gap-s">
-                <strong>{h.title}</strong>
-                <span className="muted small">{t('mods.by', { author: h.author })}</span>
+        {hits?.map((h) => {
+          const icon = modIcon(h.projectId, h.iconUrl)
+          return (
+            <div key={h.projectId} className={`mod-row ${h.featured ? 'featured' : ''}`}>
+              {icon ? <img className="mod-icon" src={icon} alt="" loading="lazy" /> : <span className="mod-icon">{h.title[0]}</span>}
+              <div className="grow">
+                <div className="row gap-s">
+                  <strong>{h.title}</strong>
+                  {h.featured ? (
+                    <span className="pill">{t('mods.byPuma')}</span>
+                  ) : (
+                    <span className="muted small">{t('mods.by', { author: h.author })}</span>
+                  )}
+                </div>
+                <div className="muted small clamp">{h.description}</div>
+                {h.featured ? (
+                  <div className="muted small">{t('mods.serverHint')}</div>
+                ) : (
+                  <div className="muted small">
+                    <Icon name="download" size={12} /> {compact(h.downloads, locale)}
+                  </div>
+                )}
               </div>
-              <div className="muted small clamp">{h.description}</div>
-              <div className="muted small">
-                <Icon name="download" size={12} /> {compact(h.downloads, locale)}
-              </div>
+              {h.featured && (
+                <button className="btn btn-ghost btn-sm" title={t('mods.saveJarTitle')} onClick={() => void saveJar(h)}>
+                  <Icon name="download" size={14} /> {t('mods.saveJar')}
+                </button>
+              )}
+              <button
+                className={`btn btn-sm ${h.installed ? 'btn-ghost' : 'btn-primary'}`}
+                disabled={busy[h.projectId]}
+                onClick={() => void install(h)}
+              >
+                {busy[h.projectId] ? t('mods.installing') : h.installed ? t('mods.update') : t('mods.install')}
+              </button>
             </div>
-            <button
-              className={`btn btn-sm ${h.installed ? 'btn-ghost' : 'btn-primary'}`}
-              disabled={busy[h.projectId]}
-              onClick={() => void install(h)}
-            >
-              {busy[h.projectId] ? t('mods.installing') : h.installed ? t('mods.update') : t('mods.install')}
-            </button>
-          </div>
-        ))}
+          )
+        })}
         {hits && hits.length < total && (
           <button className="btn btn-ghost btn-sm w-full" onClick={() => void search(query, hits.length)}>
             {t('mods.loadMore')}

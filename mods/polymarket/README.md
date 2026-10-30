@@ -30,15 +30,32 @@ with gold ingots and compete on a leaderboard beside the screen.
 
 ## Install
 
-1. In [Puma Launcher](../../README.md) (or any launcher), create an instance with **Minecraft 26.3** and **Forge**
-   (66.1 or newer).
-2. Download `polymarket-billboard-<version>.jar`: in the repository's **Actions** tab, open the latest
-   "Build Polymarket mod" run and download the `polymarket-billboard` artifact.
-3. Put the jar in the instance's `mods` folder. In Puma Launcher: **Instances** → the puzzle icon → **Mods folder**.
-4. Start the game.
+**With Puma Launcher:**
 
-On a server, install the mod on the server and on every player's game. Trades, payouts and the leaderboard are handled
-by the server, so all the players of a world share one leaderboard.
+1. Create an instance with **Minecraft 26.3** and **Forge** (66.1 or newer). Among the recommended mods, tick
+   **Polymarket Billboard**.
+2. Or, for an instance you already have: **Instances** → the puzzle icon → **Browse mods** → **Polymarket Billboard** →
+   **Install**.
+3. Start the game.
+
+The launcher downloads the jar from its GitHub release and checks it against the SHA-256 checksum GitHub publishes.
+
+**By hand:** download `polymarket-billboard-<version>.jar` from the
+[latest release](https://github.com/txtaan/Puma-Launcher-Minecraft/releases/latest) and put it in the `mods` folder of a
+Forge 26.3 instance.
+
+### On a server
+
+Install the mod on the server and on every player's game. Trades, payouts and the leaderboard are handled by the
+server, so all the players of a world share one leaderboard. The server needs internet access, to read Polymarket's
+public API.
+
+- **A server where you can upload files** (your own, or hosts such as exaroton): put the jar in the server's `mods`
+  folder. In Puma Launcher, **Browse mods** → **Server .jar** saves it for you.
+- **Aternos** only installs mods from CurseForge and Modrinth, so it needs the mod to be published there first. The
+  release workflow can publish each new version on Modrinth: create the project on Modrinth, then add a
+  `MODRINTH_TOKEN` secret and a `MODRINTH_PROJECT_ID` variable to the repository (see `.github/workflows/build.yml`).
+  Aternos also has to offer Forge for Minecraft 26.3.
 
 ## Use
 

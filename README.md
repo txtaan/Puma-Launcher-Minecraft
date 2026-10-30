@@ -70,7 +70,7 @@ minutes; the progress shows in the bottom-right corner. After that the game star
 
 ### 6. Add mods (optional)
 
-Go to **Instances**, click the puzzle-piece icon on your instance, open **Browse Modrinth** and click **Install**.
+Go to **Instances**, click the puzzle-piece icon on your instance, open **Browse mods** and click **Install**.
 Required mods are installed with it. Mods need an instance with a mod loader (Fabric, Quilt, Forge or NeoForge).
 
 <img src="docs/screenshots/mods.png" alt="Installing mods from Modrinth" width="720">
@@ -137,7 +137,11 @@ Versions before 0.3.3 can't update themselves: download the latest installer onc
 Polymarket's live **Bitcoin Up or Down – 5 minute** market, with the Up and Down probabilities, a chart that moves with
 them, and a countdown to the end of each window. Players register a trader name and trade the market with gold ingots
 at the real order-book prices; winners are paid in gold and ranked on a leaderboard beside the screen. See
-[its README](mods/polymarket/README.md) to install and build it.
+[its README](mods/polymarket/README.md) for how to play it and build it.
+
+Puma Launcher installs it for you. Create an instance with Minecraft 26.3 and Forge and tick **Polymarket Billboard**
+among the recommended mods, or open an instance's mods (puzzle icon) → **Browse mods** → **Install**. Every
+[release](https://github.com/txtaan/Puma-Launcher-Minecraft/releases/latest) also has the `.jar`, for a server.
 
 <img src="mods/polymarket/docs/situation-room.png" alt="A Polymarket situation room in Minecraft 26.3: the live billboard and leaderboard above the bar, a world-map wall and a globe" width="720">
 

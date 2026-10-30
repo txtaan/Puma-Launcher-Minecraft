@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import type { Instance, RecommendedMod } from '@shared/types'
 import { api } from '../api'
+import { modIcon } from '../modIcons'
 import { useStore } from '../store'
 import { Icon } from './Icon'
 
@@ -63,16 +64,17 @@ export function RecommendedMods({
           <div className="recommended-grid">
             {mods.map((m) => {
               const on = selected.includes(m.projectId)
+              const icon = modIcon(m.projectId, m.iconUrl)
               return (
                 <button
                   key={m.projectId}
                   type="button"
-                  className={`recommended ${on ? 'on' : ''}`}
+                  className={`recommended ${on ? 'on' : ''} ${m.featured ? 'featured' : ''}`}
                   aria-pressed={on}
                   title={m.description}
                   onClick={() => toggle(m.projectId)}
                 >
-                  {m.iconUrl ? <img className="mod-icon sm" src={m.iconUrl} alt="" /> : <span className="mod-icon sm">{m.title[0]}</span>}
+                  {icon ? <img className="mod-icon sm" src={icon} alt="" /> : <span className="mod-icon sm">{m.title[0]}</span>}
                   <span className="recommended-text">
                     <span className="recommended-title">{m.title}</span>
                     <span className="muted small clamp-1">{m.description}</span>

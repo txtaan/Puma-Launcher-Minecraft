@@ -61,6 +61,16 @@ const instances: Instance[] = []
 const running = new Set<string>()
 const windowOpen = new Set<string>()
 const mods = new Map<string, (InstalledMod & { projectId: string })[]>()
+/** Puma Launcher's own mod, offered for Forge 26.3 like in the real launcher. */
+const polymarket = {
+  projectId: 'puma:polymarket-billboard',
+  slug: 'polymarket-billboard',
+  title: 'Polymarket Billboard',
+  author: 'Puma Launcher',
+  downloads: 0,
+  featured: true
+}
+const offersPolymarket = (loader: string | undefined, version: string) => loader === 'forge' && version === '26.3'
 const javaInstalled = new Set<string>()
 
 const versionList = (): VersionList => ({
@@ -230,6 +240,9 @@ const api: LauncherApi = {
           mods.set(
             inst.id,
             modIds.map((projectId) => {
+              if (projectId === polymarket.projectId) {
+                return { fileName: 'polymarket-billboard-1.0.0.jar', enabled: true, name: polymarket.title, version: '1.0.0', projectId }
+              }
               const m = sample.mods.find((x) => x.projectId === projectId)!
               return { fileName: `${m.slug}-latest.jar`, enabled: true, name: m.title, version: 'latest', projectId }
             })
@@ -296,8 +309,11 @@ const api: LauncherApi = {
   },
   mods: {
     list: async (id) => (mods.get(id) ?? []).map((m) => ({ ...m })),
-    recommended: async (type) => {
+    recommended: async (type, mcVersion) => {
       await wait(400)
+      const own = offersPolymarket(type, mcVersion)
+        ? [{ ...polymarket, description: tr('mods.polymarketDescription'), preselected: false }]
+        : []
       // The sample data holds Fabric mods; reuse them for every loader in the preview.
       const picks: [string, boolean][] = [
         ['fabric-api', type === 'fabric' || type === 'quilt'],
@@ -311,10 +327,13 @@ const api: LauncherApi = {
         ['xaeros-minimap', false],
         ['jei', false]
       ]
-      return picks.flatMap(([slug, preselected]) => {
-        const m = sample.mods.find((x) => x.slug === slug)
-        return m ? [{ projectId: m.projectId, slug: m.slug, title: m.title, description: m.description, preselected }] : []
-      })
+      return [
+        ...own,
+        ...picks.flatMap(([slug, preselected]) => {
+          const m = sample.mods.find((x) => x.slug === slug)
+          return m ? [{ projectId: m.projectId, slug: m.slug, title: m.title, description: m.description, preselected }] : []
+        })
+      ]
     },
     setEnabled: async (id, file, enabled) => {
       const m = mods.get(id)?.find((x) => x.fileName === file)
@@ -330,13 +349,26 @@ const api: LauncherApi = {
       if (!inst.loader) throw new Error(tr('error.needLoader'))
       const installed = new Set((mods.get(id) ?? []).map((m) => m.projectId))
       const q = query.toLowerCase()
-      const hits: ModSearchHit[] = sample.mods
-        .filter((m) => !q || m.title.toLowerCase().includes(q) || m.description.toLowerCase().includes(q))
-        .map((m) => ({ ...m, installed: installed.has(m.projectId) }))
+      const own: ModSearchHit[] = offersPolymarket(inst.loader.type, inst.versionId) && (!q || 'polymarket billboard puma'.includes(q))
+        ? [{ ...polymarket, description: tr('mods.polymarketDescription'), installed: installed.has(polymarket.projectId) }]
+        : []
+      const hits: ModSearchHit[] = [
+        ...own,
+        ...sample.mods
+          .filter((m) => !q || m.title.toLowerCase().includes(q) || m.description.toLowerCase().includes(q))
+          .map((m) => ({ ...m, installed: installed.has(m.projectId) }))
+      ]
       return { hits: hits.slice(offset, offset + 20), total: hits.length }
     },
     install: async (id, projectId) => {
       await wait(700)
+      if (projectId === polymarket.projectId) {
+        const list = mods.get(id) ?? []
+        const fileName = 'polymarket-billboard-1.0.0.jar'
+        if (!list.some((x) => x.projectId === projectId)) list.push({ fileName, enabled: true, name: polymarket.title, version: '1.0.0', projectId })
+        mods.set(id, list)
+        return [fileName]
+      }
       const m = sample.mods.find((x) => x.projectId === projectId)!
       const list = mods.get(id) ?? []
       const fileName = `${m.slug}-latest.jar`
@@ -344,6 +376,7 @@ const api: LauncherApi = {
       mods.set(id, list)
       return [fileName]
     },
+    saveJar: async () => null,
     openFolder: async () => ''
   },
   skins: {
