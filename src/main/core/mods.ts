@@ -1,7 +1,7 @@
 import { existsSync } from 'node:fs'
 import { mkdir, readdir, rename, rm } from 'node:fs/promises'
 import { join } from 'node:path'
-import type { InstalledMod, Instance, ModSearchHit } from '@shared/types'
+import type { InstalledMod, Instance, LoaderType, ModSearchHit, RecommendedMod } from '@shared/types'
 import { readZipEntry } from './archive'
 import { readJson, writeJson } from './fsutil'
 import { downloadAll, fetchJson } from './http'
@@ -170,6 +170,73 @@ async function compatibleVersion(instance: Instance, projectId: string): Promise
   })
   const versions = await fetchJson<ModrinthVersion[]>(`${MODRINTH}/project/${projectId}/version?${params}`)
   return versions[0]
+}
+
+// Popular, well-maintained mods suggested when creating an instance. Ticked ones are the essentials
+// (the loader's API) and performance mods that are safe in almost any setup.
+const RECOMMENDED: Record<Exclude<LoaderType, 'vanilla'>, { slug: string; preselected: boolean }[]> = {
+  fabric: [
+    { slug: 'fabric-api', preselected: true },
+    { slug: 'sodium', preselected: true },
+    { slug: 'lithium', preselected: true },
+    { slug: 'ferrite-core', preselected: true },
+    { slug: 'entityculling', preselected: false },
+    { slug: 'iris', preselected: false },
+    { slug: 'modmenu', preselected: false },
+    { slug: 'appleskin', preselected: false },
+    { slug: 'xaeros-minimap', preselected: false },
+    { slug: 'jei', preselected: false }
+  ],
+  // Quilt runs Fabric mods; Fabric API is the maintained API for both.
+  quilt: [
+    { slug: 'fabric-api', preselected: true },
+    { slug: 'sodium', preselected: true },
+    { slug: 'lithium', preselected: true },
+    { slug: 'ferrite-core', preselected: true },
+    { slug: 'entityculling', preselected: false },
+    { slug: 'iris', preselected: false },
+    { slug: 'modmenu', preselected: false },
+    { slug: 'appleskin', preselected: false },
+    { slug: 'xaeros-minimap', preselected: false }
+  ],
+  forge: [
+    { slug: 'embeddium', preselected: true },
+    { slug: 'ferrite-core', preselected: true },
+    { slug: 'modernfix', preselected: true },
+    { slug: 'entityculling', preselected: true },
+    { slug: 'jei', preselected: false },
+    { slug: 'appleskin', preselected: false },
+    { slug: 'xaeros-minimap', preselected: false },
+    { slug: 'journeymap', preselected: false }
+  ],
+  neoforge: [
+    { slug: 'sodium', preselected: true },
+    { slug: 'ferrite-core', preselected: true },
+    { slug: 'modernfix', preselected: true },
+    { slug: 'entityculling', preselected: true },
+    { slug: 'iris', preselected: false },
+    { slug: 'jei', preselected: false },
+    { slug: 'appleskin', preselected: false },
+    { slug: 'xaeros-minimap', preselected: false }
+  ]
+}
+
+/** Recommended mods that actually have a build for this loader + Minecraft version. */
+export async function recommendedMods(type: Exclude<LoaderType, 'vanilla'>, mcVersion: string): Promise<RecommendedMod[]> {
+  const list = RECOMMENDED[type]
+  const ids = encodeURIComponent(JSON.stringify(list.map((r) => r.slug)))
+  const projects = await fetchJson<{ id: string; slug: string; title: string; description: string; icon_url?: string }[]>(
+    `${MODRINTH}/projects?ids=${ids}`
+  )
+  const probe = { id: '', name: '', createdAt: 0, versionId: mcVersion, loader: { type, version: '' } } satisfies Instance
+  const checked = await Promise.all(
+    list.map(async (r): Promise<RecommendedMod | null> => {
+      const p = projects.find((x) => x.slug === r.slug)
+      if (!p || !(await compatibleVersion(probe, p.id).catch(() => undefined))) return null
+      return { projectId: p.id, slug: p.slug, title: p.title, description: p.description, iconUrl: p.icon_url, preselected: r.preselected }
+    })
+  )
+  return checked.filter((m): m is RecommendedMod => m !== null)
 }
 
 /** Install the newest compatible version of a Modrinth project plus its required dependencies. */

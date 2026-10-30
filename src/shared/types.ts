@@ -97,6 +97,17 @@ export interface ModSearchHit {
   installed: boolean
 }
 
+/** A mod suggested in the "new instance" dialog, already checked against the chosen version and loader. */
+export interface RecommendedMod {
+  projectId: string
+  slug: string
+  title: string
+  description: string
+  iconUrl?: string
+  /** Ticked by default (essentials and performance mods). */
+  preselected: boolean
+}
+
 export interface Instance {
   id: string
   name: string

@@ -4,6 +4,7 @@ import { api, errorMessage } from '../api'
 import { useStore } from '../store'
 import { LoaderPicker } from './LoaderPicker'
 import { Modal } from './Modal'
+import { RecommendedMods } from './RecommendedMods'
 
 const FILTERS: { key: VersionType; label: string }[] = [
   { key: 'release', label: 'Releases' },
@@ -21,13 +22,14 @@ export function CreateInstance({ presetVersion, onClose }: { presetVersion?: str
   const [busy, setBusy] = useState(false)
   const [loader, setLoader] = useState<Instance['loader']>()
   const [loaderReady, setLoaderReady] = useState(true)
+  const [modIds, setModIds] = useState<string[]>([])
 
   const list = useMemo(() => versions?.versions.filter((v) => v.type === filter) ?? [], [versions, filter])
 
   const create = async () => {
     setBusy(true)
     try {
-      const inst = await api.instances.create(name || versionId, versionId, loader)
+      const inst = await api.instances.create(name || versionId, versionId, loader, loader ? modIds : [])
       await saveSettings({ selectedInstanceId: inst.id })
       await refreshInstances()
       toast(`Created ${inst.name}`, 'success')
@@ -73,6 +75,7 @@ export function CreateInstance({ presetVersion, onClose }: { presetVersion?: str
             setLoaderReady(ready)
           }}
         />
+        <RecommendedMods mcVersion={versionId} loader={loader} selected={modIds} onChange={setModIds} />
         <div className="row end gap-s">
           <button className="btn btn-ghost" onClick={onClose}>
             Cancel
