@@ -1,0 +1,39 @@
+name: Release download guide
+
+# Adds (or refreshes) the "Which file do I download?" table at the top of release descriptions.
+# New releases from "Build installers" get it automatically; run this manually for older releases,
+# or after editing a release's files by hand. Releases published by hand on GitHub get it too.
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag to update (e.g. v0.3.3). Leave empty to update every release.'
+        required: false
+        type: string
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+
+jobs:
+  guide:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: .github/scripts
+
+      - name: Update release descriptions
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.event.release.tag_name || inputs.tag }}
+        run: |
+          if [ -n "$TAG" ]; then
+            tags="$TAG"
+          else
+            tags="$(gh release list --repo "$GITHUB_REPOSITORY" --limit 200 --json tagName --jq '.[].tagName')"
+          fi
+          for tag in $tags; do
+            .github/scripts/release-download-guide.sh "$tag"
+          done
