@@ -4,6 +4,8 @@ import { paths } from './paths'
 
 export const DEFAULT_SETTINGS: Settings = {
   msClientId: process.env.PUMA_MS_CLIENT_ID ?? process.env.TXTAAN_MS_CLIENT_ID ?? '',
+  theme: 'dark',
+  language: 'system',
   defaultMaxMemoryMb: 4096,
   defaultMinMemoryMb: 512,
   autoDownloadJava: true,

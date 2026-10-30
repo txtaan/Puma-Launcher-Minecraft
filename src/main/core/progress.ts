@@ -1,5 +1,6 @@
 import type { WebContents } from 'electron'
 import type { ProgressEvent } from '@shared/types'
+import { tr } from './i18n'
 
 let target: WebContents | undefined
 
@@ -22,8 +23,8 @@ export function task(taskId: string, title: string) {
   }
   return {
     update: (stage: string, done: number, total: number) => send({ stage, done, total }, done === total),
-    finish: () => send({ stage: 'Done', done: 1, total: 1, finished: true }, true),
+    finish: () => send({ stage: tr('task.done'), done: 1, total: 1, finished: true }, true),
     fail: (err: unknown) =>
-      send({ stage: 'Failed', done: 0, total: 1, finished: true, error: err instanceof Error ? err.message : String(err) }, true)
+      send({ stage: tr('task.failed'), done: 0, total: 1, finished: true, error: err instanceof Error ? err.message : String(err) }, true)
   }
 }

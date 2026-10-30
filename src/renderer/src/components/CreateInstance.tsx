@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import type { MessageKey } from '@shared/i18n'
 import type { Instance, VersionType } from '@shared/types'
 import { api, errorMessage } from '../api'
 import { useStore } from '../store'
@@ -6,15 +7,15 @@ import { LoaderPicker } from './LoaderPicker'
 import { Modal } from './Modal'
 import { RecommendedMods } from './RecommendedMods'
 
-const FILTERS: { key: VersionType; label: string }[] = [
-  { key: 'release', label: 'Releases' },
-  { key: 'snapshot', label: 'Snapshots' },
-  { key: 'old_beta', label: 'Beta' },
-  { key: 'old_alpha', label: 'Alpha' }
+const FILTERS: { key: VersionType; label: MessageKey }[] = [
+  { key: 'release', label: 'type.releases' },
+  { key: 'snapshot', label: 'type.snapshots' },
+  { key: 'old_beta', label: 'type.old_beta' },
+  { key: 'old_alpha', label: 'type.old_alpha' }
 ]
 
 export function CreateInstance({ presetVersion, onClose }: { presetVersion?: string; onClose: () => void }) {
-  const { versions, refreshInstances, saveSettings, toast } = useStore()
+  const { versions, refreshInstances, saveSettings, toast, t, locale } = useStore()
   const preset = versions?.versions.find((v) => v.id === presetVersion)
   const [filter, setFilter] = useState<VersionType>(preset?.type ?? 'release')
   const [versionId, setVersionId] = useState(presetVersion ?? versions?.latest.release ?? '')
@@ -32,7 +33,7 @@ export function CreateInstance({ presetVersion, onClose }: { presetVersion?: str
       const inst = await api.instances.create(name || versionId, versionId, loader, loader ? modIds : [])
       await saveSettings({ selectedInstanceId: inst.id })
       await refreshInstances()
-      toast(`Created ${inst.name}`, 'success')
+      toast(t('create.created', { name: inst.name }), 'success')
       onClose()
     } catch (err) {
       toast(errorMessage(err), 'error')
@@ -42,18 +43,18 @@ export function CreateInstance({ presetVersion, onClose }: { presetVersion?: str
   }
 
   return (
-    <Modal title="New instance" onClose={onClose} wide>
+    <Modal title={t('common.newInstance')} onClose={onClose} wide>
       <div className="stack">
         <label className="field">
-          <span>Name</span>
-          <input value={name} placeholder={versionId || 'My world'} onChange={(e) => setName(e.target.value)} />
+          <span>{t('common.name')}</span>
+          <input value={name} placeholder={versionId || t('create.namePlaceholder')} onChange={(e) => setName(e.target.value)} />
         </label>
         <div className="field">
-          <span>Version</span>
+          <span>{t('create.version')}</span>
           <div className="segmented">
             {FILTERS.map((f) => (
               <button key={f.key} className={filter === f.key ? 'active' : ''} onClick={() => setFilter(f.key)}>
-                {f.label}
+                {t(f.label)}
               </button>
             ))}
           </div>
@@ -61,10 +62,10 @@ export function CreateInstance({ presetVersion, onClose }: { presetVersion?: str
             {list.map((v) => (
               <button key={v.id} className={`version-option ${versionId === v.id ? 'active' : ''}`} onClick={() => setVersionId(v.id)}>
                 <span>{v.id}</span>
-                <span className="muted">{new Date(v.releaseTime).toLocaleDateString()}</span>
+                <span className="muted">{new Date(v.releaseTime).toLocaleDateString(locale)}</span>
               </button>
             ))}
-            {!list.length && <div className="muted pad">No versions loaded yet.</div>}
+            {!list.length && <div className="muted pad">{t('create.noVersions')}</div>}
           </div>
         </div>
         <LoaderPicker
@@ -78,10 +79,10 @@ export function CreateInstance({ presetVersion, onClose }: { presetVersion?: str
         <RecommendedMods mcVersion={versionId} loader={loader} selected={modIds} onChange={setModIds} />
         <div className="row end gap-s">
           <button className="btn btn-ghost" onClick={onClose}>
-            Cancel
+            {t('common.cancel')}
           </button>
           <button className="btn btn-primary" disabled={!versionId || busy || !loaderReady} onClick={() => void create()}>
-            Create
+            {t('common.create')}
           </button>
         </div>
       </div>

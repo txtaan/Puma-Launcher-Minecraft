@@ -1,7 +1,9 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
-import type { GameLogEvent, ProgressEvent, PublicAccount, Settings, VersionList } from '@shared/types'
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import { resolveLanguage, translate, type Language, type Translate } from '@shared/i18n'
+import type { GameLogEvent, ProgressEvent, PublicAccount, Settings, UpdateInfo, VersionList } from '@shared/types'
 import type { InstanceWithState } from '../../preload/index'
 import { api, errorMessage } from './api'
+import { setThemePreference } from './theme'
 
 export type Page = 'home' | 'instances' | 'versions' | 'java' | 'settings'
 
@@ -33,6 +35,16 @@ interface Store {
   toasts: Toast[]
   toast: (text: string, kind?: Toast['kind']) => void
   launch: (instanceId: string) => Promise<void>
+  language: Language
+  /** Translates a message key into the current language. */
+  t: Translate
+  /** Locale for dates and numbers: the system default in English, Italian formatting in Italian. */
+  locale: string | undefined
+  /** The launcher's own update. */
+  update: UpdateInfo | null
+  checkUpdates: () => Promise<void>
+  /** Restart into the downloaded version, or open the downloaded installer (with a hint on what to do next). */
+  installUpdate: () => Promise<void>
 }
 
 const Ctx = createContext<Store | null>(null)
@@ -49,6 +61,16 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [logs, setLogs] = useState<GameLogEvent[]>([])
   const [consoleOpen, setConsoleOpen] = useState(false)
   const [toasts, setToasts] = useState<Toast[]>([])
+  const [update, setUpdate] = useState<UpdateInfo | null>(null)
+  const updateStatus = useRef<string | undefined>(undefined)
+
+  // Until settings load, follow the system language (in Electron the same locale the main process sees).
+  const language = resolveLanguage(settings?.language, navigator.language)
+  const t = useCallback<Translate>((key, vars) => translate(language, key, vars), [language])
+  const locale = language === 'it' ? 'it-IT' : undefined
+  useEffect(() => {
+    document.documentElement.lang = language
+  }, [language])
 
   const toast = useCallback((text: string, kind: Toast['kind'] = 'info') => {
     const id = Date.now() + Math.random()
@@ -67,15 +89,20 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       try {
         setVersions(await api.versions.list(force))
       } catch (err) {
-        toast(`Could not load versions: ${errorMessage(err)}`, 'error')
+        toast(t('toast.versionsFailed', { error: errorMessage(err) }), 'error')
       }
     },
-    [toast]
+    [toast, t]
   )
 
   const saveSettings = useCallback(async (patch: Partial<Settings>) => {
     setSettings(await api.settings.update(patch))
   }, [])
+
+  const theme = settings?.theme
+  useEffect(() => {
+    if (theme) setThemePreference(theme)
+  }, [theme])
 
   const selectAccount = useCallback(
     async (id: string | undefined) => {
@@ -91,7 +118,40 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       setReady(true)
       await refreshVersions()
     })()
+    void api.updates.get().then((info) => {
+      updateStatus.current = info.state.status
+      setUpdate(info)
+    })
   }, [refreshAccounts, refreshInstances, refreshVersions])
+
+  useEffect(
+    () =>
+      api.events.onUpdate((next) => {
+        if (next.state.status === 'ready' && updateStatus.current !== 'ready') {
+          toast(t('update.ready', { version: next.state.version }), 'success')
+        }
+        updateStatus.current = next.state.status
+        setUpdate(next)
+      }),
+    [toast, t]
+  )
+
+  const checkUpdates = useCallback(async () => {
+    try {
+      setUpdate(await api.updates.check())
+    } catch (err) {
+      toast(errorMessage(err), 'error')
+    }
+  }, [toast])
+
+  const installUpdate = useCallback(async () => {
+    try {
+      await api.updates.install()
+      if (update?.method === 'installer') toast(t(api.platform === 'darwin' ? 'update.macHint' : 'update.debHint'), 'info')
+    } catch (err) {
+      toast(errorMessage(err), 'error')
+    }
+  }, [toast, t, update?.method])
 
   useEffect(() => {
     const offs = [
@@ -104,20 +164,21 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       }),
       api.events.onLog((e) => setLogs((l) => (l.length >= MAX_LOG_LINES ? [...l.slice(-MAX_LOG_LINES / 2), e] : [...l, e]))),
       api.events.onStarted(() => void refreshInstances()),
+      api.events.onWindowOpen(() => void refreshInstances()),
       api.events.onExit((e) => {
         void refreshInstances()
         if (e.code !== 0 && e.code !== null) {
-          toast(`Game exited with code ${e.code}. Check the console for details.`, 'error')
+          toast(t('toast.gameExited', { code: e.code }), 'error')
           setConsoleOpen(true)
         }
       }),
       api.versions.onNew((latest) => {
-        toast(`New Minecraft version available: ${latest.snapshot !== latest.release ? latest.snapshot : latest.release}`, 'success')
+        toast(t('toast.newVersion', { version: latest.snapshot !== latest.release ? latest.snapshot : latest.release }), 'success')
         void refreshVersions()
       })
     ]
     return () => offs.forEach((off) => off())
-  }, [refreshInstances, refreshVersions, toast])
+  }, [refreshInstances, refreshVersions, toast, t])
 
   const account = useMemo(
     () => accounts.find((a) => a.id === settings?.selectedAccountId) ?? null,
@@ -160,7 +221,13 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     setConsoleOpen,
     toasts,
     toast,
-    launch
+    launch,
+    language,
+    t,
+    locale,
+    update,
+    checkUpdates,
+    installUpdate
   }
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>
 }

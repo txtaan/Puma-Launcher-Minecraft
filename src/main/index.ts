@@ -1,20 +1,31 @@
-import { app, BrowserWindow, clipboard, ipcMain, shell } from 'electron'
+import { app, BrowserWindow, clipboard, ipcMain, nativeTheme, shell } from 'electron'
 import { mkdir } from 'node:fs/promises'
 import { join } from 'node:path'
-import type { Instance, LoaderType, Settings } from '@shared/types'
+import type { Instance, LoaderType, Settings, ThemePreference } from '@shared/types'
 import * as auth from './core/auth'
 import * as instances from './core/instances'
 import { resolveVersion } from './core/install'
 import { availableRuntimes, detectJava, installRuntime, resolveJava } from './core/java'
-import { isRunning, killInstance, launchInstance } from './core/launch'
+import { isRunning, isWindowOpen, killInstance, launchInstance } from './core/launch'
 import { loaderVersions } from './core/meta'
 import * as mods from './core/mods'
 import { paths } from './core/paths'
+import { seconds, setLanguage, tr } from './core/i18n'
 import { emit, setProgressTarget, task } from './core/progress'
 import { getSettings, updateSettings } from './core/settings'
+import { checkForUpdates, installUpdate, startUpdater, updateInfo } from './core/updater'
 import { getVersions, refreshVersions, startVersionWatcher } from './core/versions'
 
 let win: BrowserWindow | undefined
+
+/** Matches --bg in theme.css, so the window doesn't flash the wrong colour while loading or resizing. */
+const windowBackground = () => (nativeTheme.shouldUseDarkColors ? '#0b0b14' : '#e7e7e7')
+
+/** Native parts (macOS window buttons, form controls, prefers-color-scheme) follow the launcher's theme. */
+function applyTheme(theme: ThemePreference): void {
+  nativeTheme.themeSource = theme
+  win?.setBackgroundColor(windowBackground())
+}
 
 function createWindow(): void {
   win = new BrowserWindow({
@@ -26,7 +37,7 @@ function createWindow(): void {
     ...(process.platform === 'darwin'
       ? { titleBarStyle: 'hiddenInset' as const, trafficLightPosition: { x: 14, y: 13 } }
       : { frame: false }),
-    backgroundColor: '#0b0b14',
+    backgroundColor: windowBackground(),
     show: false,
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
@@ -71,7 +82,7 @@ async function prepareJava(inst: Instance): Promise<void> {
       autoDownload: true,
       concurrency: settings.concurrentDownloads,
       onProgress: (stage, done, total) => {
-        t ??= task(`java-prepare:${inst.id}`, `Java for ${inst.name}`)
+        t ??= task(`java-prepare:${inst.id}`, tr('task.javaFor', { name: inst.name }))
         t.update(stage, done, total)
       }
     })
@@ -110,6 +121,8 @@ function registerIpc(): void {
   handle('settings:update', async (patch: Partial<Settings>) => {
     const s = await updateSettings(patch)
     if (patch.versionRefreshMinutes) startVersionWatcher(s.versionRefreshMinutes)
+    if (patch.theme) applyTheme(s.theme)
+    if (patch.language) setLanguage(s.language)
     return s
   })
 
@@ -148,7 +161,7 @@ function registerIpc(): void {
   handle('java:runtimes', () => availableRuntimes())
   handle('java:install', async (component: string) => {
     const { concurrentDownloads } = await getSettings()
-    const t = task(`java:${component}`, `Installing ${component}`)
+    const t = task(`java:${component}`, tr('task.installing', { name: component }))
     try {
       const exe = await installRuntime(component, concurrentDownloads, t.update)
       t.finish()
@@ -160,7 +173,7 @@ function registerIpc(): void {
   })
 
   handle('instances:list', async () =>
-    (await instances.listInstances()).map((i) => ({ ...i, running: isRunning(i.id) }))
+    (await instances.listInstances()).map((i) => ({ ...i, running: isRunning(i.id), windowOpen: isWindowOpen(i.id) }))
   )
   handle('instances:create', async (name: string, versionId: string, loader?: Instance['loader'], modIds: string[] = []) => {
     const inst = await instances.createInstance(name, versionId, loader)
@@ -175,7 +188,7 @@ function registerIpc(): void {
     return inst
   })
   handle('instances:delete', (id: string) => {
-    if (isRunning(id)) throw new Error('Stop the game before deleting this instance.')
+    if (isRunning(id)) throw new Error(tr('error.stopBeforeDelete'))
     return instances.deleteInstance(id)
   })
   handle('instances:openFolder', (id: string) => shell.openPath(instances.gameDir(id)))
@@ -183,14 +196,19 @@ function registerIpc(): void {
   handle('instances:launch', async (id: string, accountId: string) => {
     const settings = await getSettings()
     const instance = await instances.getInstance(id)
+    const signInStartedAt = performance.now()
     const account = await auth.getLaunchAccount(accountId, settings.msClientId)
-    const t = task(`launch:${id}`, `Launching ${instance.name}`)
+    const signInMs = performance.now() - signInStartedAt
+    const t = task(`launch:${id}`, tr('task.launching', { name: instance.name }))
     const log = (line: string, stream: 'stdout' | 'stderr' | 'launcher') =>
       emit('game:log', { instanceId: id, line, stream })
+    // Only worth a line when the account had to be renewed online (Microsoft about once a day).
+    if (signInMs >= 100) log(tr('log.signedIn', { seconds: seconds(signInMs) }), 'launcher')
     try {
       await launchInstance(instance, account, settings, {
         onProgress: t.update,
         onLog: log,
+        onWindowOpen: () => emit('game:windowOpen', { instanceId: id }),
         onExit: (code) => {
           emit('game:exit', { instanceId: id, code })
           if (settings.closeOnLaunch) win?.show()
@@ -202,17 +220,25 @@ function registerIpc(): void {
       if (settings.closeOnLaunch) win?.hide()
     } catch (err) {
       t.fail(err)
-      log(`Launch failed: ${err instanceof Error ? err.message : String(err)}`, 'launcher')
+      log(tr('log.launchFailed', { error: err instanceof Error ? err.message : String(err) }), 'launcher')
       throw err
     }
   })
   handle('paths:openRoot', () => shell.openPath(paths.root()))
+
+  // The launcher's own updates
+  handle('updates:get', async () => updateInfo())
+  handle('updates:check', () => checkForUpdates())
+  handle('updates:install', () => installUpdate())
 }
 
 app.whenReady().then(async () => {
   registerIpc()
-  createWindow()
   const settings = await getSettings()
+  applyTheme(settings.theme)
+  setLanguage(settings.language)
+  nativeTheme.on('updated', () => win?.setBackgroundColor(windowBackground()))
+  createWindow()
   void refreshVersions()
     .catch(() => undefined)
     .then(async () => {
@@ -220,6 +246,7 @@ app.whenReady().then(async () => {
       for (const inst of await instances.listInstances()) await prepareJava(inst)
     })
   startVersionWatcher(settings.versionRefreshMinutes)
+  startUpdater()
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow()
   })

@@ -6,6 +6,7 @@ import { readZipEntry } from './archive'
 import { readJson, writeJson } from './fsutil'
 import { downloadAll, fetchJson } from './http'
 import { gameDir } from './instances'
+import { tr } from './i18n'
 
 // Mod management in the spirit of Prism's and HMCL's mod pages, using Modrinth's public API.
 
@@ -42,7 +43,7 @@ function modLoaders(instance: Instance): string[] {
 
 function requireLoader(instance: Instance): string[] {
   const loaders = modLoaders(instance)
-  if (!loaders.length) throw new Error('Install a mod loader (Fabric, Quilt, Forge or NeoForge) on this instance to use mods.')
+  if (!loaders.length) throw new Error(tr('error.needLoader'))
   return loaders
 }
 
@@ -104,7 +105,7 @@ export async function setModEnabled(instanceId: string, fileName: string, enable
 }
 
 export async function deleteMod(instanceId: string, fileName: string): Promise<void> {
-  if (fileName.includes('/') || fileName.includes('\\')) throw new Error('Invalid file name')
+  if (fileName.includes('/') || fileName.includes('\\')) throw new Error(tr('error.invalidFileName'))
   await rm(join(modsDir(instanceId), fileName), { force: true })
   const index = await readIndex(instanceId)
   delete index[fileName.replace(/\.disabled$/i, '')]
@@ -256,7 +257,7 @@ export async function installMod(instance: Instance, projectId: string): Promise
       ? await fetchJson<ModrinthVersion>(`${MODRINTH}/version/${next.versionId}`)
       : await compatibleVersion(instance, next.projectId!)
     if (!version) {
-      if (next.projectId === projectId) throw new Error(`No version of this mod supports ${instance.versionId} with ${instance.loader?.type}.`)
+      if (next.projectId === projectId) throw new Error(tr('error.noModVersion', { version: instance.versionId, loader: instance.loader?.type ?? '' }))
       continue
     }
     if (seen.has(version.project_id)) continue

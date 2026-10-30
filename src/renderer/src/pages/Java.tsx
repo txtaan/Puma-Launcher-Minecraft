@@ -5,7 +5,7 @@ import { Icon } from '../components/Icon'
 import { useStore } from '../store'
 
 export function Java() {
-  const { toast, tasks } = useStore()
+  const { toast, tasks, t } = useStore()
   const [runtimes, setRuntimes] = useState<JavaRuntimeOption[] | null>(null)
   const [installs, setInstalls] = useState<JavaInstall[] | null>(null)
   const [error, setError] = useState('')
@@ -24,7 +24,7 @@ export function Java() {
   const install = async (component: string) => {
     try {
       await api.java.install(component)
-      toast('Java installed', 'success')
+      toast(t('java.installedToast'), 'success')
       await load()
     } catch (err) {
       toast(errorMessage(err), 'error')
@@ -36,18 +36,14 @@ export function Java() {
       <div className="page-head">
         <div>
           <h1>Java</h1>
-          <p className="muted">
-            You don’t need to install Java yourself: the launcher downloads the right version as soon as you create an
-            instance (Java 25 for Minecraft 26.x, 21 for 1.20.5–1.21, 17 for 1.18–1.20.4, 8 for older versions). You can
-            also download any version here.
-          </p>
+          <p className="muted">{t('java.subtitle')}</p>
         </div>
         <button className="btn btn-ghost" onClick={() => void load()}>
-          <Icon name="refresh" /> Rescan
+          <Icon name="refresh" /> {t('java.rescan')}
         </button>
       </div>
 
-      <h2 className="section-title">One-click downloads (Mojang runtimes, Eclipse Temurin where Mojang has none)</h2>
+      <h2 className="section-title">{t('java.oneClick')}</h2>
       {error && <div className="error-box">{error}</div>}
       <div className="runtime-grid">
         {runtimes?.map((r) => {
@@ -63,20 +59,20 @@ export function Java() {
               </div>
               {r.installed ? (
                 <span className="pill pill-ok">
-                  <Icon name="check" size={14} /> Installed
+                  <Icon name="check" size={14} /> {t('java.installed')}
                 </span>
               ) : (
                 <button className="btn btn-primary btn-sm" disabled={!!busy} onClick={() => void install(r.component)}>
-                  <Icon name="download" size={16} /> {busy ? 'Installing…' : 'Download'}
+                  <Icon name="download" size={16} /> {busy ? t('java.installing') : t('java.download')}
                 </button>
               )}
             </article>
           )
         })}
-        {!runtimes && !error && <div className="muted">Loading Mojang runtimes…</div>}
+        {!runtimes && !error && <div className="muted">{t('java.loading')}</div>}
       </div>
 
-      <h2 className="section-title">Java found on this PC</h2>
+      <h2 className="section-title">{t('java.found')}</h2>
       <div className="card table">
         {installs?.map((j) => (
           <div key={j.path} className="table-row java-row">
@@ -87,13 +83,13 @@ export function Java() {
             <code className="path" title={j.path}>
               {j.path}
             </code>
-            <span className="pill">{j.source === 'managed' ? 'Downloaded' : 'System'}</span>
+            <span className="pill">{j.source === 'managed' ? t('java.downloaded') : t('java.system')}</span>
           </div>
         ))}
-        {installs?.length === 0 && <div className="muted pad">No Java installations found. Download one above.</div>}
+        {installs?.length === 0 && <div className="muted pad">{t('java.none')}</div>}
         {!installs && (
           <div className="muted pad">
-            <span className="spinner sm" /> Scanning…
+            <span className="spinner sm" /> {t('java.scanning')}
           </div>
         )}
       </div>

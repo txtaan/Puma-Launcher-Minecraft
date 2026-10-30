@@ -1,19 +1,20 @@
 import { useMemo, useState } from 'react'
+import type { MessageKey } from '@shared/i18n'
 import type { VersionType } from '@shared/types'
 import { CreateInstance } from '../components/CreateInstance'
 import { Icon } from '../components/Icon'
 import { useStore } from '../store'
 
-const TABS: { key: VersionType | 'all'; label: string }[] = [
-  { key: 'release', label: 'Releases' },
-  { key: 'snapshot', label: 'Snapshots' },
-  { key: 'old_beta', label: 'Beta' },
-  { key: 'old_alpha', label: 'Alpha' },
-  { key: 'all', label: 'All' }
+const TABS: { key: VersionType | 'all'; label: MessageKey }[] = [
+  { key: 'release', label: 'type.releases' },
+  { key: 'snapshot', label: 'type.snapshots' },
+  { key: 'old_beta', label: 'type.old_beta' },
+  { key: 'old_alpha', label: 'type.old_alpha' },
+  { key: 'all', label: 'type.all' }
 ]
 
 export function Versions() {
-  const { versions, refreshVersions } = useStore()
+  const { versions, refreshVersions, t, locale } = useStore()
   const [tab, setTab] = useState<VersionType | 'all'>('release')
   const [query, setQuery] = useState('')
   const [creating, setCreating] = useState<string | null>(null)
@@ -31,10 +32,14 @@ export function Versions() {
     <div className="page">
       <div className="page-head">
         <div>
-          <h1>Versions</h1>
+          <h1>{t('nav.versions')}</h1>
           <p className="muted">
-            Straight from Mojang — new releases and snapshots appear automatically.
-            {versions?.fetchedAt ? ` Last checked ${new Date(versions.fetchedAt).toLocaleTimeString()}.` : versions ? ' Showing cached list (offline).' : ''}
+            {t('versions.subtitle')}
+            {versions?.fetchedAt
+              ? ` ${t('versions.lastChecked', { time: new Date(versions.fetchedAt).toLocaleTimeString(locale) })}`
+              : versions
+                ? ` ${t('versions.cached')}`
+                : ''}
           </p>
         </div>
         <button
@@ -46,21 +51,21 @@ export function Versions() {
             setRefreshing(false)
           }}
         >
-          <Icon name="refresh" className={refreshing ? 'spin' : ''} /> Refresh
+          <Icon name="refresh" className={refreshing ? 'spin' : ''} /> {t('common.refresh')}
         </button>
       </div>
 
       <div className="toolbar">
         <div className="segmented">
-          {TABS.map((t) => (
-            <button key={t.key} className={tab === t.key ? 'active' : ''} onClick={() => setTab(t.key)}>
-              {t.label}
+          {TABS.map((tb) => (
+            <button key={tb.key} className={tab === tb.key ? 'active' : ''} onClick={() => setTab(tb.key)}>
+              {t(tb.label)}
             </button>
           ))}
         </div>
         <label className="search">
           <Icon name="search" size={16} />
-          <input placeholder="Search versions" value={query} onChange={(e) => setQuery(e.target.value)} />
+          <input placeholder={t('versions.search')} value={query} onChange={(e) => setQuery(e.target.value)} />
         </label>
       </div>
 
@@ -69,18 +74,18 @@ export function Versions() {
           <div key={v.id} className="table-row">
             <div className="version-id">
               <strong>{v.id}</strong>
-              {v.id === versions?.latest.release && <span className="pill pill-accent">Latest</span>}
-              {v.id === versions?.latest.snapshot && v.type === 'snapshot' && <span className="pill pill-accent">Latest snapshot</span>}
-              {v.installed && <span className="pill">Installed</span>}
+              {v.id === versions?.latest.release && <span className="pill pill-accent">{t('versions.latest')}</span>}
+              {v.id === versions?.latest.snapshot && v.type === 'snapshot' && <span className="pill pill-accent">{t('versions.latestSnapshot')}</span>}
+              {v.installed && <span className="pill">{t('versions.installed')}</span>}
             </div>
-            <span className="muted capitalize">{v.type.replace('old_', '')}</span>
-            <span className="muted">{new Date(v.releaseTime).toLocaleDateString()}</span>
+            <span className="muted">{t(`type.${v.type}`)}</span>
+            <span className="muted">{new Date(v.releaseTime).toLocaleDateString(locale)}</span>
             <button className="btn btn-ghost btn-sm" onClick={() => setCreating(v.id)}>
-              <Icon name="plus" size={16} /> Create instance
+              <Icon name="plus" size={16} /> {t('versions.createInstance')}
             </button>
           </div>
         ))}
-        {!list.length && <div className="muted pad">{versions ? 'No versions match your search.' : 'Loading versions…'}</div>}
+        {!list.length && <div className="muted pad">{versions ? t('versions.noMatch') : t('versions.loading')}</div>}
       </div>
 
       {creating && <CreateInstance presetVersion={creating} onClose={() => setCreating(null)} />}

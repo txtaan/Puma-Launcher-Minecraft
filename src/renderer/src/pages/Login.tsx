@@ -1,12 +1,13 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { DeviceCodePrompt } from '@shared/types'
 import { api, errorMessage } from '../api'
 import { Avatar } from '../components/Avatar'
 import { Icon } from '../components/Icon'
+import { rich } from '../rich'
 import { useStore } from '../store'
 
 export function Login() {
-  const { accounts, refreshAccounts, selectAccount, toast, settings } = useStore()
+  const { accounts, refreshAccounts, selectAccount, toast, settings, t } = useStore()
   const [mode, setMode] = useState<'choose' | 'offline' | 'microsoft' | 'server'>('choose')
   const [presets, setPresets] = useState<Record<string, string>>({})
   const [server, setServer] = useState('https://authserver.ely.by/api/authlib-injector')
@@ -15,6 +16,8 @@ export function Login() {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const [prompt, setPrompt] = useState<DeviceCodePrompt | null>(null)
+  // Set when the user cancels a Microsoft sign-in, so its "cancelled" error isn't shown.
+  const cancelled = useRef(false)
 
   useEffect(() => api.accounts.onDeviceCode(setPrompt), [])
   useEffect(() => void api.accounts.authPresets().then(setPresets), [])
@@ -25,7 +28,7 @@ export function Login() {
     try {
       const acc = await api.accounts.addAuthlib(server, username, password)
       setPassword('')
-      toast(`Signed in as ${acc.username} (${acc.serverName})`, 'success')
+      toast(t('login.signedInServer', { name: acc.username, server: acc.serverName ?? '' }), 'success')
       await finish(acc.id)
     } catch (err) {
       setError(errorMessage(err))
@@ -54,22 +57,23 @@ export function Login() {
 
   const loginMicrosoft = async () => {
     setMode('microsoft')
+    cancelled.current = false
     setBusy(true)
     setError('')
     setPrompt(null)
     try {
       const acc = await api.accounts.loginMicrosoft()
-      toast(`Signed in as ${acc.username}`, 'success')
+      toast(t('login.signedIn', { name: acc.username }), 'success')
       await finish(acc.id)
     } catch (err) {
-      const msg = errorMessage(err)
-      if (msg !== 'Login cancelled') setError(msg)
+      if (!cancelled.current) setError(errorMessage(err))
     } finally {
       setBusy(false)
     }
   }
 
   const cancel = () => {
+    cancelled.current = true
     void api.accounts.cancelLogin()
     setMode('choose')
     setPrompt(null)
@@ -80,16 +84,14 @@ export function Login() {
   return (
     <div className="login">
       <div className="login-bg" aria-hidden>
-        <span className="blob b1" />
-        <span className="blob b2" />
-        <span className="blob b3" />
+        <div className="login-art" />
       </div>
       <div className="login-card glass">
         <div className="login-logo">
           <span className="brand-mark big" />
         </div>
-        <h1>Welcome</h1>
-        <p className="muted">Sign in to start playing Minecraft</p>
+        <h1>{t('login.welcome')}</h1>
+        <p className="muted">{t('login.subtitle')}</p>
 
         {mode === 'choose' && (
           <>
@@ -101,12 +103,12 @@ export function Login() {
                       <Avatar account={a} size={32} />
                       <div>
                         <strong>{a.username}</strong>
-                        <span>{a.type === 'microsoft' ? 'Microsoft account' : a.type === 'authlib' ? a.serverName : 'Offline'}</span>
+                        <span>{a.type === 'microsoft' ? t('account.microsoftAccount') : a.type === 'authlib' ? a.serverName : t('account.offline')}</span>
                       </div>
                     </button>
                     <button
                       className="icon-btn"
-                      aria-label={`Remove ${a.username}`}
+                      aria-label={t('common.remove', { name: a.username })}
                       onClick={async () => {
                         await api.accounts.remove(a.id)
                         await refreshAccounts()
@@ -117,23 +119,21 @@ export function Login() {
                   </div>
                 ))}
                 <div className="divider">
-                  <span>or add an account</span>
+                  <span>{t('login.orAdd')}</span>
                 </div>
               </div>
             )}
             <button className="btn btn-primary btn-lg w-full" onClick={() => void loginMicrosoft()}>
-              <MicrosoftLogo /> Sign in with Microsoft
+              <MicrosoftLogo /> {t('login.microsoft')}
             </button>
             <button className="btn btn-ghost btn-lg w-full" onClick={() => setMode('offline')}>
-              <Icon name="user" /> Play offline
+              <Icon name="user" /> {t('login.offline')}
             </button>
             <button className="btn btn-ghost w-full" onClick={() => setMode('server')}>
-              <Icon name="server" /> Ely.by, LittleSkin or other server
+              <Icon name="server" /> {t('login.server')}
             </button>
             {!settings?.msClientId && (
-              <p className="hint">
-                Microsoft login needs an Azure client ID. You can add it later in Settings; offline mode works right away.
-              </p>
+              <p className="hint">{t('login.msHint')}</p>
             )}
           </>
         )}
@@ -147,14 +147,14 @@ export function Login() {
             }}
           >
             <label className="field">
-              <span>Username</span>
+              <span>{t('login.username')}</span>
               <input autoFocus value={username} maxLength={16} placeholder="Steve" onChange={(e) => setUsername(e.target.value)} />
             </label>
             <button className="btn btn-primary btn-lg w-full" disabled={busy || username.length < 3}>
-              Continue
+              {t('login.continue')}
             </button>
             <button type="button" className="btn btn-ghost w-full" onClick={cancel}>
-              Back
+              {t('common.back')}
             </button>
           </form>
         )}
@@ -168,7 +168,7 @@ export function Login() {
             }}
           >
             <label className="field">
-              <span>Authentication server</span>
+              <span>{t('login.authServer')}</span>
               <select
                 value={Object.values(presets).includes(server) ? server : '__custom'}
                 onChange={(e) => setServer(e.target.value === '__custom' ? '' : e.target.value)}
@@ -178,28 +178,28 @@ export function Login() {
                     {name}
                   </option>
                 ))}
-                <option value="__custom">Custom (authlib-injector URL)…</option>
+                <option value="__custom">{t('login.customServer')}</option>
               </select>
             </label>
             {!Object.values(presets).includes(server) && (
               <label className="field">
-                <span>Server URL</span>
+                <span>{t('login.serverUrl')}</span>
                 <input value={server} placeholder="https://example.com/api/yggdrasil" onChange={(e) => setServer(e.target.value)} />
               </label>
             )}
             <label className="field">
-              <span>Email or username</span>
+              <span>{t('login.emailOrUsername')}</span>
               <input autoFocus value={username} onChange={(e) => setUsername(e.target.value)} />
             </label>
             <label className="field">
-              <span>Password</span>
+              <span>{t('login.password')}</span>
               <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
             </label>
             <button className="btn btn-primary btn-lg w-full" disabled={busy || !username || !password || !server}>
-              {busy ? 'Signing in…' : 'Sign in'}
+              {busy ? t('login.signingIn') : t('login.signIn')}
             </button>
             <button type="button" className="btn btn-ghost w-full" onClick={cancel}>
-              Back
+              {t('common.back')}
             </button>
           </form>
         )}
@@ -208,32 +208,30 @@ export function Login() {
           <div className="stack">
             {!prompt && !error && (
               <div className="center muted">
-                <span className="spinner" /> Contacting Microsoft…
+                <span className="spinner" /> {t('login.contacting')}
               </div>
             )}
             {prompt && (
               <div className="device-code">
-                <p>
-                  Open <strong>{prompt.verificationUri}</strong> and enter this code:
-                </p>
+                <p>{rich(t('login.openAndEnter'), { url: <strong>{prompt.verificationUri}</strong> })}</p>
                 <div className="code">{prompt.userCode}</div>
                 <div className="row gap-s center">
                   <button className="btn btn-ghost btn-sm" onClick={() => void api.copy(prompt.userCode)}>
-                    <Icon name="copy" size={16} /> Copy code
+                    <Icon name="copy" size={16} /> {t('login.copyCode')}
                   </button>
                   <button className="btn btn-primary btn-sm" onClick={() => void api.openExternal(prompt.verificationUri)}>
-                    <Icon name="external" size={16} /> Open browser
+                    <Icon name="external" size={16} /> {t('login.openBrowser')}
                   </button>
                 </div>
                 {busy && (
                   <p className="muted center">
-                    <span className="spinner sm" /> Waiting for you to finish signing in…
+                    <span className="spinner sm" /> {t('login.waiting')}
                   </p>
                 )}
               </div>
             )}
             <button className="btn btn-ghost w-full" onClick={cancel}>
-              {error ? 'Back' : 'Cancel'}
+              {error ? t('common.back') : t('common.cancel')}
             </button>
           </div>
         )}

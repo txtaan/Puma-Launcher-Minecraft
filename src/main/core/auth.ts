@@ -6,6 +6,7 @@ import { dirname, join } from 'node:path'
 import type { Account, DeviceCodePrompt, PublicAccount } from '@shared/types'
 import { downloadAll, fetchJson, USER_AGENT } from './http'
 import { paths } from './paths'
+import { tr } from './i18n'
 
 interface StoredAccount extends Account {
   msRefreshToken?: string
@@ -80,7 +81,7 @@ export function offlineUuid(name: string): string {
 export async function addOfflineAccount(username: string): Promise<PublicAccount> {
   const name = username.trim()
   if (!/^[A-Za-z0-9_]{3,16}$/.test(name)) {
-    throw new Error('Username must be 3-16 characters: letters, numbers and underscores only.')
+    throw new Error(tr('error.username'))
   }
   return upsert({ id: randomUUID(), type: 'offline', username: name, uuid: offlineUuid(name), accessToken: '0' })
 }
@@ -102,7 +103,7 @@ async function postForm<T>(url: string, body: Record<string, string>, signal?: A
     signal
   })
   const json = (await res.json()) as T
-  if (!res.ok && !(json as { error?: string }).error) throw new Error(`HTTP ${res.status} from ${url}`)
+  if (!res.ok && !(json as { error?: string }).error) throw new Error(tr('error.httpFrom', { status: res.status, url }))
   return json
 }
 
@@ -115,10 +116,10 @@ async function postJson<T>(url: string, body: unknown): Promise<T> {
   if (!res.ok) {
     const text = await res.text()
     const xerr = /"XErr":\s*(\d+)/.exec(text)?.[1]
-    if (xerr === '2148916233') throw new Error('This Microsoft account has no Xbox profile. Sign in at xbox.com first.')
-    if (xerr === '2148916238') throw new Error('Child accounts must be added to a Microsoft Family by an adult.')
-    if (xerr === '2148916235') throw new Error('Xbox Live is not available in your country.')
-    throw new Error(`HTTP ${res.status} from ${url}: ${text}`)
+    if (xerr === '2148916233') throw new Error(tr('error.noXbox'))
+    if (xerr === '2148916238') throw new Error(tr('error.childAccount'))
+    if (xerr === '2148916235') throw new Error(tr('error.xboxCountry'))
+    throw new Error(`${tr('error.httpFrom', { status: res.status, url })}: ${text}`)
   }
   return (await res.json()) as T
 }
@@ -156,8 +157,8 @@ async function minecraftFromMsToken(msAccessToken: string): Promise<Omit<StoredA
   const profileRes = await fetch('https://api.minecraftservices.com/minecraft/profile', {
     headers: { Authorization: `Bearer ${mc.access_token}`, 'User-Agent': USER_AGENT }
   })
-  if (profileRes.status === 404) throw new Error('This Microsoft account does not own Minecraft: Java Edition.')
-  if (!profileRes.ok) throw new Error(`Could not load Minecraft profile (HTTP ${profileRes.status})`)
+  if (profileRes.status === 404) throw new Error(tr('error.noMinecraft'))
+  if (!profileRes.ok) throw new Error(tr('error.profile', { status: profileRes.status }))
   const profile = (await profileRes.json()) as { id: string; name: string }
 
   let xuid: string | undefined
@@ -185,7 +186,7 @@ export async function loginMicrosoft(
   onPrompt: (prompt: DeviceCodePrompt) => void
 ): Promise<PublicAccount> {
   if (!clientId) {
-    throw new Error('Microsoft login needs an Azure application (client) ID. Add one in Settings → Accounts.')
+    throw new Error(tr('error.needClientId'))
   }
   loginAbort?.abort()
   const abort = (loginAbort = new AbortController())
@@ -207,7 +208,7 @@ export async function loginMicrosoft(
   const deadline = Date.now() + code.expires_in * 1000
   while (Date.now() < deadline) {
     await new Promise((r) => setTimeout(r, interval))
-    if (abort.signal.aborted) throw new Error('Login cancelled')
+    if (abort.signal.aborted) throw new Error(tr('error.loginCancelled'))
     const token = await postForm<MsToken>(
       `${MS_AUTHORITY}/token`,
       { grant_type: 'urn:ietf:params:oauth:grant-type:device_code', client_id: clientId, device_code: code.device_code },
@@ -218,11 +219,11 @@ export async function loginMicrosoft(
       interval += 5000
       continue
     }
-    if (token.error || !token.access_token) throw new Error(token.error_description ?? token.error ?? 'Login failed')
+    if (token.error || !token.access_token) throw new Error(token.error_description ?? token.error ?? tr('error.loginFailed'))
     const mc = await minecraftFromMsToken(token.access_token)
     return upsert({ id: randomUUID(), ...mc, msRefreshToken: token.refresh_token })
   }
-  throw new Error('The login code expired. Please try again.')
+  throw new Error(tr('error.codeExpired'))
 }
 
 export function cancelLogin(): void {
@@ -233,10 +234,10 @@ export function cancelLogin(): void {
 export async function getLaunchAccount(id: string, clientId: string): Promise<Account> {
   const list = await load()
   const account = list.find((a) => a.id === id)
-  if (!account) throw new Error('Account not found. Please sign in again.')
+  if (!account) throw new Error(tr('error.accountNotFound'))
   if (account.type === 'authlib') return refreshAuthlib(account)
   if (account.type !== 'microsoft' || (account.expiresAt ?? 0) > Date.now()) return account
-  if (!account.msRefreshToken || !clientId) throw new Error('Your Microsoft session expired. Please sign in again.')
+  if (!account.msRefreshToken || !clientId) throw new Error(tr('error.msExpired'))
 
   const token = await postForm<MsToken>(`${MS_AUTHORITY}/token`, {
     grant_type: 'refresh_token',
@@ -244,7 +245,7 @@ export async function getLaunchAccount(id: string, clientId: string): Promise<Ac
     refresh_token: account.msRefreshToken,
     scope: SCOPE
   })
-  if (token.error || !token.access_token) throw new Error('Your Microsoft session expired. Please sign in again.')
+  if (token.error || !token.access_token) throw new Error(tr('error.msExpired'))
   const mc = await minecraftFromMsToken(token.access_token)
   Object.assign(account, mc, { msRefreshToken: token.refresh_token ?? account.msRefreshToken })
   await save()
@@ -272,7 +273,7 @@ async function resolveAuthServer(url: string): Promise<{ api: string; name: stri
   const meta = (await (await fetch(api, { headers: { 'User-Agent': USER_AGENT } })).json().catch(() => null)) as {
     meta?: { serverName?: string }
   } | null
-  if (!meta?.meta) throw new Error('That address is not an authlib-injector authentication server.')
+  if (!meta?.meta) throw new Error(tr('error.notAuthlib'))
   return { api, name: meta.meta.serverName ?? new URL(api).hostname }
 }
 
@@ -306,7 +307,7 @@ export async function addAuthlibAccount(server: string, username: string, passwo
     requestUser: true
   })
   const profile = data.selectedProfile ?? data.availableProfiles?.[0]
-  if (!profile) throw new Error(`No Minecraft character on this ${name} account. Create one on the website first.`)
+  if (!profile) throw new Error(tr('error.noCharacter', { server: name }))
   return upsert({
     id: randomUUID(),
     type: 'authlib',
@@ -336,7 +337,7 @@ async function refreshAuthlib(account: StoredAccount): Promise<Account> {
     await save()
     return account
   } catch {
-    throw new Error(`Your ${account.serverName ?? 'authentication server'} session expired. Please sign in again.`)
+    throw new Error(tr('error.serverExpired', { server: account.serverName ?? tr('error.authServer') }))
   }
 }
 
@@ -353,7 +354,7 @@ export async function authlibAgentArgs(api: string): Promise<string[]> {
   } else {
     // Offline: use whatever version we downloaded before.
     const versions = existsSync(dir) ? (await readdir(dir)).sort() : []
-    if (!versions.length) throw new Error('authlib-injector could not be downloaded. Check your connection.')
+    if (!versions.length) throw new Error(tr('error.authlibDownload'))
     const v = versions[versions.length - 1]
     jar = join(dir, v, `authlib-injector-${v}.jar`)
   }

@@ -4,6 +4,8 @@ name: Build installers
 # - Every push / pull request: installers are attached to the run as downloadable artifacts.
 # - Pushing a tag like v0.3.0, or running it manually from the Actions tab with a "release" version:
 #   the installers are also published as a GitHub Release (the tag is created if it doesn't exist).
+#   A manual run with "mac" unticked builds only Windows and Linux; a later manual run for the same version
+#   with "mac" ticked adds the macOS installers to that release.
 on:
   push:
     branches: ['**']
@@ -15,6 +17,11 @@ on:
         description: 'Publish a GitHub Release with this version tag (e.g. v0.3.0). Leave empty to only build.'
         required: false
         type: string
+      mac:
+        description: 'Build the macOS installers. Untick to build (and release) only Windows and Linux.'
+        required: false
+        type: boolean
+        default: true
 
 permissions:
   contents: read
@@ -27,20 +34,12 @@ concurrency:
 jobs:
   build:
     name: ${{ matrix.name }}
-    runs-on: ${{ matrix.os }}
+    runs-on: ${{ matrix.name == 'Windows' && 'windows-latest' || matrix.name == 'macOS' && 'macos-latest' || 'ubuntu-latest' }}
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - name: Windows
-            os: windows-latest
-            target: --win
-          - name: macOS
-            os: macos-latest
-            target: --mac
-          - name: Linux
-            os: ubuntu-latest
-            target: --linux
+        # Every platform, except in a manual run with "mac" unticked.
+        name: ${{ fromJSON((github.event_name != 'workflow_dispatch' || inputs.mac) && '["Windows", "macOS", "Linux"]' || '["Windows", "Linux"]') }}
     steps:
       - uses: actions/checkout@v4
 
@@ -57,7 +56,7 @@ jobs:
 
       - name: Build installers
         shell: bash
-        run: npx electron-vite build && npx electron-builder ${{ matrix.target }} --publish never
+        run: npx electron-vite build && npx electron-builder ${{ matrix.name == 'Windows' && '--win' || matrix.name == 'macOS' && '--mac' || '--linux' }} --publish never
         env:
           # No signing certificates are configured: macOS builds are ad-hoc signed (see package.json),
           # Windows builds are unsigned. Add CSC_LINK / CSC_KEY_PASSWORD secrets later to sign.
@@ -67,11 +66,14 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: PumaLauncher-${{ matrix.name }}
+          # latest*.yml and the .blockmap files are what the launcher's built-in updater reads from a release.
           path: |
             release/*.exe
             release/*.dmg
             release/*.AppImage
             release/*.deb
+            release/latest*.yml
+            release/*.blockmap
           if-no-files-found: error
 
   release:

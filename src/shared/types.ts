@@ -1,4 +1,5 @@
 // Types shared between the main process, preload bridge and renderer.
+import type { LanguagePreference } from './i18n'
 
 export type VersionType = 'release' | 'snapshot' | 'old_beta' | 'old_alpha'
 
@@ -125,9 +126,14 @@ export interface Instance {
   height?: number
 }
 
+/** "system" follows the operating system's light/dark setting. */
+export type ThemePreference = 'system' | 'light' | 'dark'
+
 export interface Settings {
   /** Azure application (client) ID used for Microsoft login. */
   msClientId: string
+  theme: ThemePreference
+  language: LanguagePreference
   defaultMaxMemoryMb: number
   defaultMinMemoryMb: number
   /** Download the Java version required by Mojang automatically when launching. */
@@ -138,6 +144,25 @@ export interface Settings {
   closeOnLaunch: boolean
   selectedAccountId?: string
   selectedInstanceId?: string
+}
+
+/** Where the launcher's own update stands (see src/main/core/updater.ts). */
+export type UpdateStatus =
+  | { status: 'idle' }
+  | { status: 'checking' }
+  | { status: 'latest' }
+  | { status: 'downloading'; version: string; percent: number }
+  | { status: 'ready'; version: string }
+  | { status: 'error'; message: string }
+
+export interface UpdateInfo {
+  /** The running version. */
+  current: string
+  /** False in development builds and the browser preview, which can't update themselves. */
+  supported: boolean
+  /** `restart`: installs on restart (Windows, Linux AppImage). `installer`: opens the downloaded installer (macOS, .deb). */
+  method: 'restart' | 'installer'
+  state: UpdateStatus
 }
 
 export interface ProgressEvent {

@@ -6,6 +6,7 @@ import { readJson, writeJson } from './fsutil'
 import { paths } from './paths'
 import { mojangArch, mojangOs, rulesAllow, type Rule } from './platform'
 import { findVersion } from './versions'
+import { tr } from './i18n'
 import type { Component } from './meta'
 
 // ---------------------------------------------------------------------------
@@ -81,7 +82,7 @@ async function loadVersionJson(id: string): Promise<VersionJson> {
     return remote
   }
   const local = await readJson<VersionJson | null>(file, null)
-  if (!local) throw new Error(`Version ${id} is not available. Check your internet connection.`)
+  if (!local) throw new Error(tr('error.versionUnavailable', { id }))
   return local
 }
 
@@ -207,14 +208,14 @@ export async function installVersion(
   onProgress: (stage: string, done: number, total: number) => void,
   loaderComponents: Component[] = []
 ): Promise<VersionJson> {
-  onProgress('Resolving version', 0, 1)
+  onProgress(tr('stage.resolvingVersion'), 0, 1)
   const version = applyComponents(await resolveVersion(id), loaderComponents)
   const files: DownloadItem[] = []
 
   const jarId = version.jar ?? version.id
   const client = version.downloads?.client
   if (client) files.push({ url: client.url, dest: paths.versionJar(jarId), sha1: client.sha1, size: client.size })
-  else if (!existsSync(paths.versionJar(jarId))) throw new Error(`No client download for ${jarId}`)
+  else if (!existsSync(paths.versionJar(jarId))) throw new Error(tr('error.noClient', { id: jarId }))
 
   for (const lib of activeLibraries(version)) {
     const art = libraryArtifact(lib)
@@ -231,14 +232,15 @@ export async function installVersion(
   const logging = version.logging?.client?.file
   if (logging) files.push({ url: logging.url, dest: logConfigPath(version)!, sha1: logging.sha1, size: logging.size })
 
-  await downloadAll(files, concurrency, (d, t) => onProgress('Downloading game files', d, t))
+  // Client jars, libraries and log configs never change once published: a size check is enough for files on disk.
+  await downloadAll(files, concurrency, (d, t) => onProgress(tr('stage.downloadingFiles'), d, t), 'size')
 
   if (version.assetIndex) {
     const indexFile = join(paths.assets(), 'indexes', `${version.assetIndex.id}.json`)
     await downloadAll(
       [{ url: version.assetIndex.url, dest: indexFile, sha1: version.assetIndex.sha1, size: version.assetIndex.size }],
       1,
-      () => onProgress('Downloading asset index', 0, 1)
+      () => onProgress(tr('stage.downloadingAssetIndex'), 0, 1)
     )
     const index = JSON.parse(await readFile(indexFile, 'utf8')) as AssetIndex
     const objects = Object.values(index.objects).map<DownloadItem>((o) => ({
@@ -247,7 +249,8 @@ export async function installVersion(
       sha1: o.hash,
       size: o.size
     }))
-    await downloadAll(objects, concurrency, (d, t) => onProgress('Downloading assets', d, t))
+    // Asset objects are named after their hash, so they never change either.
+    await downloadAll(objects, concurrency, (d, t) => onProgress(tr('stage.downloadingAssets'), d, t), 'size')
 
     // Pre-1.7 versions read assets from a flat folder instead of the hashed object store.
     if (index.virtual || index.map_to_resources) {
@@ -260,7 +263,7 @@ export async function installVersion(
           await mkdir(dirname(dest), { recursive: true })
           await copyFile(join(paths.assets(), 'objects', o.hash.slice(0, 2), o.hash), dest)
         }
-        onProgress('Preparing legacy assets', ++done, entries.length)
+        onProgress(tr('stage.legacyAssets'), ++done, entries.length)
       }
     }
   }
