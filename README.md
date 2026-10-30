@@ -55,6 +55,10 @@ An instance is one Minecraft installation with its own worlds and mods. On the h
 latest Minecraft version is already selected: give it a name, pick a mod loader such as **Fabric** if you want
 mods, and click **Create**. The right Java version starts downloading by itself.
 
+With a mod loader picked, the dialog also suggests popular mods that have a build for that exact version and loader
+(Fabric API, Sodium, Lithium, FerriteCore, Iris, JEI and more). The essentials and performance mods start ticked;
+untick or tick any of them, and they're installed with their dependencies as soon as the instance is created.
+
 <img src="docs/screenshots/new-instance.png" alt="New instance dialog" width="720">
 
 ### 5. Press Play
@@ -115,7 +119,8 @@ Versions before 0.3.3 can't update themselves: download the latest installer onc
 - Login screen: Microsoft, offline, or Ely.by / LittleSkin / custom server, plus saved accounts to switch between
 - Home screen with a jungle-scene hero (moonlit or daylight, following the theme), latest release/snapshot cards and a large **Play** button
 - Instances: create with any version and mod loader; edit version, loader, Java, memory, JVM args and resolution
-- Mods: Modrinth browser with dependency resolution, plus installed-mod list with enable, disable and delete
+- Mods: recommended mods when creating an instance, a Modrinth browser with dependency resolution, plus an
+  installed-mod list with enable, disable and delete
 - Versions browser: releases, snapshots, beta and alpha, with search and "installed" badges
 - Java manager: one-click Mojang and Temurin runtimes plus the Java installations found on this PC
 - Download manager: parallel downloads with SHA-1/SHA-256 checks, retries and live progress

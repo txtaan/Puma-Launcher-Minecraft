@@ -221,10 +221,21 @@ const api: LauncherApi = {
       [...instances]
         .sort((a, b) => (b.lastPlayed ?? b.createdAt) - (a.lastPlayed ?? a.createdAt))
         .map((i) => ({ ...i, running: running.has(i.id), windowOpen: windowOpen.has(i.id) })),
-    create: async (name, versionId, loader) => {
+    create: async (name, versionId, loader, modIds = []) => {
       const inst: Instance = { id: uuid(), name: name.trim() || versionId, versionId, loader, createdAt: Date.now() }
       instances.push(inst)
       void prepareJava(inst)
+      if (modIds.length) {
+        void simulate(`mods:${inst.id}`, tr('task.modsFor', { name: inst.name }), [[tr('stage.installingMods'), modIds.length * 6]]).then(() =>
+          mods.set(
+            inst.id,
+            modIds.map((projectId) => {
+              const m = sample.mods.find((x) => x.projectId === projectId)!
+              return { fileName: `${m.slug}-latest.jar`, enabled: true, name: m.title, version: 'latest', projectId }
+            })
+          )
+        )
+      }
       return inst
     },
     update: async (id, patch) => {
@@ -285,6 +296,26 @@ const api: LauncherApi = {
   },
   mods: {
     list: async (id) => (mods.get(id) ?? []).map((m) => ({ ...m })),
+    recommended: async (type) => {
+      await wait(400)
+      // The sample data holds Fabric mods; reuse them for every loader in the preview.
+      const picks: [string, boolean][] = [
+        ['fabric-api', type === 'fabric' || type === 'quilt'],
+        ['sodium', true],
+        ['lithium', true],
+        ['ferrite-core', true],
+        ['entityculling', false],
+        ['iris', false],
+        ['modmenu', false],
+        ['appleskin', false],
+        ['xaeros-minimap', false],
+        ['jei', false]
+      ]
+      return picks.flatMap(([slug, preselected]) => {
+        const m = sample.mods.find((x) => x.slug === slug)
+        return m ? [{ projectId: m.projectId, slug: m.slug, title: m.title, description: m.description, preselected }] : []
+      })
+    },
     setEnabled: async (id, file, enabled) => {
       const m = mods.get(id)?.find((x) => x.fileName === file)
       if (m) {
