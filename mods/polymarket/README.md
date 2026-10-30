@@ -3,7 +3,7 @@
 A big screen in your world that shows Polymarket's live **Bitcoin Up or Down – 5 minute** market. Players trade it
 with gold ingots and compete on a leaderboard beside the screen.
 
-![The billboard and its leaderboard in a world](docs/billboard.png)
+![The billboard and its leaderboard in a world, just after a win was announced in chat](docs/billboard.png)
 
 - **Live market:** the screen follows the current five-minute window, from Polymarket's
   [`btc-up-or-down-5m`](https://polymarket.com/crypto/5M) series. A new market starts every five minutes.
@@ -55,6 +55,9 @@ by the server, so all the players of a world share one leaderboard.
   - your rank, profit, wins and losses;
   - your open positions with what they're worth now, and **Sell**;
   - your last trades.
+
+  ![Profile tab: profit, an open position with Sell, and recent trades](docs/profile.png)
+
 - **Leaderboard** (Leaderboard tab): every trader, ranked by profit (realised, in gold), with their trades and wins.
 
 ### Getting paid
