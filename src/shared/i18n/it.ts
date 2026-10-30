@@ -371,6 +371,7 @@ export const it: Messages = {
   'skins.error.mineskin': 'MineSkin non è riuscito a creare un link per questa skin ({error}). Riprova tra un minuto.',
   'skins.error.mineskinBusy': 'MineSkin è occupato: aspetta qualche secondo e riprova.',
   'skins.error.offline': 'impossibile raggiungere mineskin.org',
+  'skins.error.timeout': 'nessuna risposta dopo 90 secondi',
   'skins.server': 'Mostra su un server',
   'skins.server.title': 'Mostra {name} ai tuoi amici',
   'skins.server.why': 'Minecraft mostra solo le skin che arrivano da Mojang. Gli account offline e i server "cracked" (come Aternos con Cracked attivo) non le ricevono, quindi gli altri vedono una skin predefinita. Una mod per le skin sul server risolve il problema.',

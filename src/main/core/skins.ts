@@ -165,6 +165,7 @@ export async function skinFromUsername(username: string): Promise<RawSkin> {
 // ---------------------------------------------------------------------------------------------------------------------
 
 const MINESKIN = 'https://api.mineskin.org/v2/generate'
+const MINESKIN_TIMEOUT = 90_000
 
 interface MineskinResponse {
   success?: boolean
@@ -191,9 +192,13 @@ export async function serverSkinLink(skinId: string): Promise<{ url: string; mod
   form.set('variant', skin.model)
   form.set('name', skin.name.slice(0, 20))
   form.set('visibility', 'unlisted')
-  const res = await fetch(MINESKIN, { method: 'POST', headers: { 'User-Agent': USER_AGENT }, body: form }).catch(() => null)
-  if (!res) throw new Error(tr('skins.error.mineskin', { error: tr('skins.error.offline') }))
+  // MineSkin can stall when its queue is long: give up after a while rather than spin forever.
+  const signal = AbortSignal.timeout(MINESKIN_TIMEOUT)
+  const failed = () => new Error(tr('skins.error.mineskin', { error: tr(signal.aborted ? 'skins.error.timeout' : 'skins.error.offline') }))
+  const res = await fetch(MINESKIN, { method: 'POST', headers: { 'User-Agent': USER_AGENT }, body: form, signal }).catch(() => null)
+  if (!res) throw failed()
   const body = (await res.json().catch(() => null)) as MineskinResponse | null
+  if (!body && signal.aborted) throw failed()
   const url = body?.skin?.texture?.url?.skin
   if (res.status === 429) throw new Error(tr('skins.error.mineskinBusy'))
   if (!res.ok || !body?.success || !url?.startsWith('https://textures.minecraft.net/texture/')) {

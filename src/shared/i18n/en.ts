@@ -368,6 +368,7 @@ export const en = {
   'skins.error.mineskin': "MineSkin couldn't make a link for this skin ({error}). Try again in a minute.",
   'skins.error.mineskinBusy': 'MineSkin is busy: wait a few seconds and try again.',
   'skins.error.offline': "can't reach mineskin.org",
+  'skins.error.timeout': 'no answer after 90 seconds',
   'skins.server': 'Show on a server',
   'skins.server.title': 'Show {name} to your friends',
   'skins.server.why': 'Minecraft only shows skins that come from Mojang. Offline accounts and "cracked" servers (like Aternos with Cracked on) don’t get them, so everyone else sees a default skin. A skin mod on the server fixes it.',
