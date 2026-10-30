@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import type { Instance, RecommendedMod } from '@shared/types'
 import { api } from '../api'
+import { useStore } from '../store'
 import { Icon } from './Icon'
 
 /**
@@ -18,6 +19,7 @@ export function RecommendedMods({
   selected: string[]
   onChange: (projectIds: string[]) => void
 }) {
+  const { t } = useStore()
   const [mods, setMods] = useState<RecommendedMod[] | null>(null)
   const [failed, setFailed] = useState(false)
   const type = loader?.type
@@ -48,14 +50,14 @@ export function RecommendedMods({
 
   return (
     <div className="field">
-      <span>Recommended mods</span>
-      {failed && <div className="muted">Couldn’t load recommendations. You can add mods later from the Mods window.</div>}
+      <span>{t('create.recommended')}</span>
+      {failed && <div className="muted">{t('create.recommendedFailed')}</div>}
       {!mods && !failed && (
         <div className="muted">
-          <span className="spinner sm" /> Finding mods for {mcVersion}…
+          <span className="spinner sm" /> {t('create.recommendedLoading', { version: mcVersion })}
         </div>
       )}
-      {mods?.length === 0 && <div className="muted">No recommended mods support Minecraft {mcVersion} with this loader yet.</div>}
+      {mods?.length === 0 && <div className="muted">{t('create.recommendedNone', { version: mcVersion })}</div>}
       {mods && mods.length > 0 && (
         <>
           <div className="recommended-grid">
@@ -81,7 +83,11 @@ export function RecommendedMods({
             })}
           </div>
           <div className="muted small">
-            {selected.length ? `${selected.length} mod${selected.length > 1 ? 's' : ''} will be installed with the instance.` : 'No mods selected.'}
+            {selected.length === 0
+              ? t('create.recommendedNoneSelected')
+              : selected.length === 1
+                ? t('create.recommendedOne')
+                : t('create.recommendedMany', { count: selected.length })}
           </div>
         </>
       )}

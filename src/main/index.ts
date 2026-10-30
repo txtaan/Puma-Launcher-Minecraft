@@ -94,13 +94,13 @@ async function prepareJava(inst: Instance): Promise<void> {
 
 /** Install the mods picked in the "new instance" dialog, shown as one task in the download dock. */
 async function installModsInBackground(inst: Instance, projectIds: string[]): Promise<void> {
-  const t = task(`mods:${inst.id}`, `Mods for ${inst.name}`)
+  const t = task(`mods:${inst.id}`, tr('task.modsFor', { name: inst.name }))
   const failed: string[] = []
   for (const [i, id] of projectIds.entries()) {
-    t.update('Installing mods', i, projectIds.length)
+    t.update(tr('task.installingMods'), i, projectIds.length)
     await mods.installMod(inst, id).catch(() => failed.push(id))
   }
-  if (failed.length) t.fail(new Error(`${failed.length} of ${projectIds.length} mods could not be installed. Try again from the Mods window.`))
+  if (failed.length) t.fail(new Error(tr('error.modsFailed', { failed: failed.length, total: projectIds.length })))
   else t.finish()
 }
 

@@ -115,6 +115,13 @@ export const it: Messages = {
   'create.version': 'Versione',
   'create.noVersions': 'Nessuna versione caricata.',
   'create.created': 'Istanza {name} creata',
+  'create.recommended': 'Mod consigliate',
+  'create.recommendedLoading': 'Cerco le mod per la {version}…',
+  'create.recommendedFailed': 'Impossibile caricare i consigli. Puoi aggiungere le mod più tardi dalla finestra delle mod.',
+  'create.recommendedNone': 'Nessuna mod consigliata supporta ancora Minecraft {version} con questo loader.',
+  'create.recommendedOne': '1 mod verrà installata insieme all’istanza.',
+  'create.recommendedMany': '{count} mod verranno installate insieme all’istanza.',
+  'create.recommendedNoneSelected': 'Nessuna mod selezionata.',
 
   // Version types
   'type.release': 'Release',
@@ -247,6 +254,9 @@ export const it: Messages = {
 
   // Main process: download/launch progress
   'task.javaFor': 'Java per {name}',
+  'task.modsFor': 'Mod per {name}',
+  'task.installingMods': 'Installazione delle mod',
+  'error.modsFailed': '{failed} mod su {total} non sono state installate. Riprova dalla finestra delle mod.',
   'task.installing': 'Installazione di {name}',
   'task.launching': 'Avvio di {name}',
   'stage.runtimeManifest': 'Lettura dell’elenco dei runtime',
