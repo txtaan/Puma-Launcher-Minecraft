@@ -3,7 +3,9 @@
 A big screen in your world that shows Polymarket's live **Bitcoin Up or Down – 5 minute** market. Players trade it
 with gold ingots and compete on a leaderboard beside the screen.
 
-![A situation room built around the billboard: the live market, the leaderboard of traders and rows of consoles](docs/situation-room.png)
+![A Polymarket situation room in Minecraft: the live billboard and leaderboard above the bar, a dotted world-map wall and a globe](docs/situation-room.png)
+
+![The situation room's storefront at night: Monitoring the Situation.](docs/storefront.png)
 
 - **Live market:** the screen follows the current five-minute window, from Polymarket's
   [`btc-up-or-down-5m`](https://polymarket.com/crypto/5M) series. A new market starts every five minutes.
