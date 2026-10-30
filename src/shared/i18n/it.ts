@@ -440,6 +440,7 @@ export const it: Messages = {
   // Main process: errors
   'error.stopBeforeDelete': 'Chiudi il gioco prima di eliminare questa istanza.',
   'error.pumaModMissing': 'Impossibile trovare {title} nelle release di Puma Launcher su GitHub.',
+  'error.githubRateLimited': 'GitHub sta limitando le richieste dalla tua rete in questo momento, quindi {title} non può essere scaricata. Riprova tra qualche minuto.',
   'error.pumaModUnverified': 'GitHub non ha pubblicato un checksum per {title}: il download non può essere verificato.',
   'error.needLoader': 'Installa un mod loader (Fabric, Quilt, Forge o NeoForge) su questa istanza per usare le mod.',
   'error.invalidFileName': 'Nome file non valido',
