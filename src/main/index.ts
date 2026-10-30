@@ -98,7 +98,7 @@ async function installModsInBackground(inst: Instance, projectIds: string[]): Pr
   const t = task(`mods:${inst.id}`, tr('task.modsFor', { name: inst.name }))
   const failed: string[] = []
   for (const [i, id] of projectIds.entries()) {
-    t.update(tr('stage.installingMods'), i, projectIds.length)
+    t.update(tr('task.installingMods'), i, projectIds.length)
     await mods.installMod(inst, id).catch(() => failed.push(id))
   }
   if (failed.length) t.fail(new Error(tr('error.modsFailed', { failed: failed.length, total: projectIds.length })))

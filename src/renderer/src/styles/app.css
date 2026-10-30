@@ -334,10 +334,10 @@ select option { background: var(--bg-elev); color: var(--text); }
 .recommended-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; max-height: 232px; overflow-y: auto; }
 .recommended { min-width: 0; display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: var(--radius-s); border: 1px solid var(--border); background: var(--surface); text-align: left; transition: border-color 0.15s, background 0.15s; }
 .recommended:hover { border-color: var(--border-strong); }
-.recommended.on { border-color: var(--accent); background: var(--accent-soft); }
+.recommended.on { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 14%, transparent); }
 .recommended-text { flex: 1; min-width: 0; display: flex; flex-direction: column; }
 .recommended-title { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .recommended-check { width: 20px; height: 20px; flex-shrink: 0; border-radius: 6px; border: 1px solid var(--border-strong); display: grid; place-items: center; }
-.recommended.on .recommended-check { background: var(--accent); border-color: var(--accent); color: var(--text-on-accent); }
+.recommended.on .recommended-check { background: var(--accent); border-color: var(--accent); color: #fff; }
 .mod-icon.sm { width: 32px; height: 32px; border-radius: 8px; font-size: 13px; }
 .clamp-1 { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }

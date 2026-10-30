@@ -83,11 +83,11 @@ export function RecommendedMods({
             })}
           </div>
           <div className="muted small">
-            {selected.length === 1
-              ? t('create.recommendedOne')
-              : selected.length
-                ? t('create.recommendedCount', { count: selected.length })
-                : t('create.recommendedOff')}
+            {selected.length === 0
+              ? t('create.recommendedNoneSelected')
+              : selected.length === 1
+                ? t('create.recommendedOne')
+                : t('create.recommendedMany', { count: selected.length })}
           </div>
         </>
       )}

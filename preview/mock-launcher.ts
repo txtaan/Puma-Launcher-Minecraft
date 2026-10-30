@@ -226,7 +226,7 @@ const api: LauncherApi = {
       instances.push(inst)
       void prepareJava(inst)
       if (modIds.length) {
-        void simulate(`mods:${inst.id}`, tr('task.modsFor', { name: inst.name }), [[tr('stage.installingMods'), modIds.length * 6]]).then(() =>
+        void simulate(`mods:${inst.id}`, `Mods for ${inst.name}`, [['Installing mods', modIds.length * 6]]).then(() =>
           mods.set(
             inst.id,
             modIds.map((projectId) => {
