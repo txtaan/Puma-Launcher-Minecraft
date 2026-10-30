@@ -4,6 +4,7 @@ import type { SkinActions, SkinView } from '../pages/Skins'
 import { useStore } from '../store'
 import { ConfirmDialog, MODEL_LABEL, PART_COLOR, PART_LABEL, RenameDialog, SkinFace, SOURCE_LABEL } from './common'
 import { readPixels } from './image'
+import { ServerSkinDialog } from './ServerSkin'
 import { PARTS, skinStats, type Part, type SkinStats } from './layout'
 import type { Animation, PlayerScene } from './player'
 import { SkinViewer } from './SkinViewer'
@@ -23,7 +24,7 @@ export function SkinInspect({ id, go, actions }: { id: string; go: (v: SkinView)
   const [tab, setTab] = useState<Tab>('palette')
   const [highlight, setHighlight] = useState<string[]>([])
   const [hidden, setHidden] = useState<Part[]>([])
-  const [dialog, setDialog] = useState<'rename' | 'delete' | null>(null)
+  const [dialog, setDialog] = useState<'rename' | 'delete' | 'server' | null>(null)
   const scene = useRef<PlayerScene | null>(null)
 
   useEffect(() => {
@@ -109,6 +110,9 @@ export function SkinInspect({ id, go, actions }: { id: string; go: (v: SkinView)
             </button>
             <button className="icon-btn" title={t('skins.rename')} aria-label={t('skins.rename')} onClick={() => setDialog('rename')}>
               <Icon name="rename" />
+            </button>
+            <button className="icon-btn" title={t('skins.server')} aria-label={t('skins.server')} onClick={() => setDialog('server')}>
+              <Icon name="server" size={16} />
             </button>
             <button className="icon-btn danger" title={t('common.delete')} aria-label={t('common.delete')} onClick={() => setDialog('delete')}>
               <Icon name="trash" />
@@ -251,6 +255,7 @@ export function SkinInspect({ id, go, actions }: { id: string; go: (v: SkinView)
         )}
       </section>
 
+      {dialog === 'server' && <ServerSkinDialog skin={skin} onClose={() => setDialog(null)} />}
       {dialog === 'rename' && <RenameDialog skin={skin} onClose={() => setDialog(null)} onRename={(name) => void actions.rename(skin, name)} />}
       {dialog === 'delete' && (
         <ConfirmDialog

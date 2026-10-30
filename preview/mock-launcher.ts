@@ -431,6 +431,12 @@ const api: LauncherApi = {
         }
         input.click()
       }),
+    serverLink: async (id) => {
+      await wait(1200)
+      const skin = library().skins.find((s) => s.id === id)
+      // A made-up texture hash: the preview doesn't upload anything.
+      return { url: 'https://textures.minecraft.net/texture/3a1b5c7d9e2f4a6b8c0d1e3f5a7b9c2d4e6f8a0b1c3d5e7f9a2b4c6d8e0f1a3b', model: skin?.model ?? 'classic' }
+    },
     exportPng: async (name, png) => download(name, png)
   },
   updates: {
