@@ -99,10 +99,22 @@ jobs:
       - name: Build
         run: ./gradlew build --console=plain
 
+      # The launcher reads the jar's name and SHA-256 from this file (a plain release download, unlike GitHub's
+      # rate-limited API) and checks every download against it.
+      - name: Write puma-mods.json
+        working-directory: mods/polymarket/build/libs
+        run: |
+          jar="$(ls polymarket-billboard-*.jar)"
+          jq -n --arg file "$jar" --arg sha256 "$(sha256sum "$jar" | cut -d ' ' -f 1)" --argjson size "$(stat -c %s "$jar")" \
+            '{mods: [{id: "puma:polymarket-billboard", file: $file, sha256: $sha256, size: $size}]}' > puma-mods.json
+          cat puma-mods.json
+
       - uses: actions/upload-artifact@v4
         with:
           name: polymarket-billboard
-          path: mods/polymarket/build/libs/polymarket-billboard-*.jar
+          path: |
+            mods/polymarket/build/libs/polymarket-billboard-*.jar
+            mods/polymarket/build/libs/puma-mods.json
           if-no-files-found: error
 
   release:

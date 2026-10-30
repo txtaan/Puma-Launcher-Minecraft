@@ -438,6 +438,7 @@ export const en = {
   'error.stopBeforeDelete': 'Stop the game before deleting this instance.',
   'error.needLoader': 'Install a mod loader (Fabric, Quilt, Forge or NeoForge) on this instance to use mods.',
   'error.pumaModMissing': "Couldn't find {title} in Puma Launcher's releases on GitHub.",
+  'error.githubRateLimited': "GitHub is limiting requests from your network right now, so {title} can't be downloaded. Try again in a few minutes.",
   'error.pumaModUnverified': "GitHub didn't publish a checksum for {title}, so the download can't be verified.",
   'error.invalidFileName': 'Invalid file name',
   'error.noModVersion': 'No version of this mod supports {version} with {loader}.',

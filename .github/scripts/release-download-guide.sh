@@ -51,8 +51,8 @@ rest="$(awk '/<!-- download-guide:start -->/{skip=1} !skip{print} /<!-- download
     echo
   fi
   echo '> [!IMPORTANT]'
-  echo '> **Don'"'"'t download** the `.blockmap` and `.yml` files or "Source code": the launcher uses them to update itself.  '
-  echo '> **Non scaricare** i file `.blockmap` e `.yml` né "Source code": servono al launcher per aggiornarsi da solo.'
+  echo '> **Don'"'"'t download** the `.blockmap`, `.yml` and `puma-mods.json` files or "Source code": the launcher uses them.  '
+  echo '> **Non scaricare** i file `.blockmap`, `.yml` e `puma-mods.json` né "Source code": servono al launcher.'
   if [ -n "$mod" ]; then
     echo
     echo '### 🧩 Polymarket Billboard mod (Forge 26.3)'
