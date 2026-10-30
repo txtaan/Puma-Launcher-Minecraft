@@ -135,10 +135,11 @@ Versions before 0.3.3 can't update themselves: download the latest installer onc
 
 [`mods/polymarket`](mods/polymarket) is a Forge mod for Minecraft 26.3. It adds a billboard: a big screen showing
 Polymarket's live **Bitcoin Up or Down – 5 minute** market, with the Up and Down probabilities, a chart that moves with
-them, and a countdown to the end of each window. Right-click the billboard's post to paper-trade the market: virtual
-dollars, real order-book prices. See [its README](mods/polymarket/README.md) to install and build it.
+them, and a countdown to the end of each window. Players register a trader name and trade the market with gold ingots
+at the real order-book prices; winners are paid in gold and ranked on a leaderboard beside the screen. See
+[its README](mods/polymarket/README.md) to install and build it.
 
-<img src="mods/polymarket/docs/billboard.png" alt="The Polymarket billboard in Minecraft 26.3" width="720">
+<img src="mods/polymarket/docs/billboard.png" alt="The Polymarket billboard and its leaderboard in Minecraft 26.3" width="720">
 
 ## How it works
 

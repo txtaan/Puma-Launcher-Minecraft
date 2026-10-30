@@ -22,16 +22,6 @@ final class Fmt {
         return (Math.abs(c - Math.round(c)) < 0.05 ? String.valueOf(Math.round(c)) : String.format(Locale.ROOT, "%.1f", c)) + "¢";
     }
 
-    static String dollars(double d) {
-        double cents = Math.round(d * 100) / 100.0;
-        return (cents < 0 ? "-$" : "$") + String.format(Locale.ROOT, "%,.2f", Math.abs(cents));
-    }
-
-    /** With a + for gains; no sign when it rounds to zero. */
-    static String signedDollars(double d) {
-        return (Math.round(d * 100) > 0 ? "+" : "") + dollars(d);
-    }
-
     static String shares(double s) {
         return String.format(Locale.ROOT, s >= 100 ? "%.0f" : "%.2f", s);
     }

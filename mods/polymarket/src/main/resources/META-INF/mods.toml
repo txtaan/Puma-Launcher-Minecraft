@@ -8,9 +8,9 @@ modId="polymarket_billboard"
 version="${file.jarVersion}"
 displayName="Polymarket Billboard"
 authors="Puma Launcher"
-description='''A billboard that shows Polymarket's live "Bitcoin Up or Down - 5 minute" market: the Up and Down probabilities, a chart that moves with them, and a countdown to the end of each window. Right-click it to paper-trade the market with virtual dollars at the real order-book prices.
+description='''A billboard that shows Polymarket's live "Bitcoin Up or Down - 5 minute" market: the Up and Down probabilities, a chart that moves with them, and a countdown to the end of each window. Register a trader name, then trade the market with gold ingots at the real order-book prices. Winning shares pay 1 gold each, and a leaderboard beside the screen ranks every trader by profit.
 
-Market data from Polymarket. Paper trading only: no real money, no account.'''
+Market data from Polymarket. No real money, no account: you trade with Minecraft gold.'''
 
 [[dependencies.polymarket_billboard]]
     modId="forge"

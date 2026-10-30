@@ -12,10 +12,10 @@ public class BillboardBlockEntity extends BlockEntity {
         super(PolymarketBillboard.BILLBOARD_ENTITY.get(), pos, state);
     }
 
-    /** The screen reaches well past the block, so it must stay visible when only the screen is in view. */
+    /** The screen and leaderboard reach well past the block: keep them visible when only they are in view. */
     @Override
     public AABB getRenderBoundingBox() {
         BlockPos p = getBlockPos();
-        return new AABB(p.getX() - 3, p.getY(), p.getZ() - 3, p.getX() + 4, p.getY() + BillboardBlock.SCREEN_TOP + 1, p.getZ() + 4);
+        return new AABB(p.getX() - 6, p.getY(), p.getZ() - 6, p.getX() + 7, p.getY() + BillboardBlock.SCREEN_TOP + 1, p.getZ() + 7);
     }
 }

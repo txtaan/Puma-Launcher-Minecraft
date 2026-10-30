@@ -25,7 +25,8 @@ import org.slf4j.Logger;
 /**
  * Follows Polymarket's "Bitcoin Up or Down - 5 minute" markets: finds the market of the current window, polls both
  * order books every second and records the Up probability, so the billboards and the trading screen can read the
- * latest {@link Snapshot} at any time without waiting on the network.
+ * latest {@link Snapshot} at any time without waiting on the network. The server uses it too, for fresh order books
+ * when a trade is placed and to learn how markets resolved.
  *
  * Only Polymarket's public read endpoints are used (Gamma for markets, the CLOB for order books); no account is needed.
  */
@@ -46,7 +47,6 @@ public final class MarketFeed {
     private volatile Snapshot snapshot = Snapshot.LOADING;
     private ScheduledExecutorService executor;
     private long historyWindow = -1;
-    private long lastResolveCheck;
     /** When a billboard was last drawn or the trading screen last open; the feed rests when nothing shows it. */
     private volatile long lastUsed;
 
@@ -81,11 +81,6 @@ public final class MarketFeed {
 
     private void tick() {
         try {
-            // Settle paper positions of markets that have ended, every 10 seconds, even when nothing is on screen.
-            if (System.currentTimeMillis() - lastResolveCheck > 10_000) {
-                lastResolveCheck = System.currentTimeMillis();
-                PaperWallet.get().settle(this::resolution);
-            }
             if (System.currentTimeMillis() - lastUsed > 15_000) return;
             long now = Instant.now().getEpochSecond();
             long start = windowStart(now);
@@ -139,7 +134,16 @@ public final class MarketFeed {
         return Optional.of(market);
     }
 
-    /** The order book of one outcome token, best prices first. */
+    /** The market of the window running now (blocking network call the first time). */
+    public Optional<Market> currentMarket() throws IOException, InterruptedException {
+        return market(windowStart(Instant.now().getEpochSecond()));
+    }
+
+    /** The order book of one outcome token right now, best prices first (blocking network call). */
+    public Book fetchBook(String token) throws IOException, InterruptedException {
+        return book(token);
+    }
+
     private Book book(String token) throws IOException, InterruptedException {
         JsonObject json = getJson(CLOB + "/book?token_id=" + token).getAsJsonObject();
         List<Book.Level> bids = levels(json.getAsJsonArray("bids"));

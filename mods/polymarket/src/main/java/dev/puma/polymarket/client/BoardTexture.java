@@ -39,7 +39,15 @@ public final class BoardTexture {
     private static final int GRID = 0xFF1A2333;
     private static final int MIDLINE = 0xFF3A4658;
 
+    /** The leaderboard panel beside the screen: a fixed background, the names are drawn as text. */
+    public static final Identifier PANEL_ID = Identifier.fromNamespaceAndPath(PolymarketBillboard.MODID, "dynamic/leaderboard");
+    public static final int PANEL_WIDTH = 240;
+    public static final int PANEL_ROWS = 9;
+    public static final int PANEL_FIRST_ROW = 66;
+    public static final int PANEL_ROW_HEIGHT = 22;
+
     private static DynamicTexture texture;
+    private static DynamicTexture panel;
     private static long drawnFor = -1;
     private static long drawnSecond = -1;
 
@@ -50,6 +58,10 @@ public final class BoardTexture {
         if (texture == null) {
             texture = new DynamicTexture(() -> "Polymarket billboard", WIDTH, HEIGHT, true);
             Minecraft.getInstance().getTextureManager().register(ID, texture);
+            panel = new DynamicTexture(() -> "Polymarket leaderboard", PANEL_WIDTH, HEIGHT, true);
+            paintPanel(panel.getPixels());
+            panel.upload();
+            Minecraft.getInstance().getTextureManager().register(PANEL_ID, panel);
         }
         Snapshot snapshot = MarketFeed.get().snapshot();
         long second = System.currentTimeMillis() / 1000;
@@ -146,6 +158,29 @@ public final class BoardTexture {
         if (prevX != Integer.MIN_VALUE) {
             disc(img, prevX, prevY, 7, (line & 0x00FFFFFF) | 0x55000000);
             disc(img, prevX, prevY, 4, line);
+        }
+    }
+
+    private static void paintPanel(NativeImage img) {
+        int w = PANEL_WIDTH;
+        for (int y = 0; y < HEIGHT; y++) {
+            int c = lerpColor(BG_TOP, BG_BOTTOM, y / (float) HEIGHT);
+            for (int x = 0; x < w; x++) img.setPixel(x, y, c);
+        }
+        fill(img, w, 0, 0, w, 4, FRAME);
+        fill(img, w, 0, HEIGHT - 4, w, 4, FRAME);
+        fill(img, w, 0, 0, 4, HEIGHT, FRAME);
+        fill(img, w, w - 4, 0, 4, HEIGHT, FRAME);
+        fill(img, w, 4, 4, w - 8, 2, BITCOIN);
+        fill(img, w, 14, PANEL_FIRST_ROW - 8, w - 28, 1, MIDLINE);
+        for (int r = 0; r < PANEL_ROWS; r++) {
+            if (r % 2 == 0) fill(img, w, 10, PANEL_FIRST_ROW + r * PANEL_ROW_HEIGHT - 4, w - 20, PANEL_ROW_HEIGHT, CHART_BG);
+        }
+    }
+
+    private static void fill(NativeImage img, int imgWidth, int x, int y, int w, int h, int color) {
+        for (int yy = Math.max(0, y); yy < Math.min(HEIGHT, y + h); yy++) {
+            for (int xx = Math.max(0, x); xx < Math.min(imgWidth, x + w); xx++) img.setPixel(xx, yy, color);
         }
     }
 

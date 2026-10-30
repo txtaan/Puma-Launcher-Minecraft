@@ -7,6 +7,8 @@ import dev.puma.polymarket.block.BillboardBlock;
 import dev.puma.polymarket.block.BillboardBlockEntity;
 import dev.puma.polymarket.market.MarketFeed;
 import dev.puma.polymarket.market.Snapshot;
+import dev.puma.polymarket.network.ClientState;
+import dev.puma.polymarket.network.Messages;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.renderer.SubmitNodeCollector;
@@ -24,8 +26,9 @@ import net.minecraft.world.phys.Vec3;
 
 /**
  * Draws the billboard's screen above the post: the {@link BoardTexture} (background and live chart) and, on top of it,
- * the market's title, time window, countdown, Up/Down probabilities and prices. Layout units: 100 per block, origin at
- * the screen's top-left corner, y pointing down (like the texture).
+ * the market's title, time window, countdown, Up/Down probabilities and prices; and, to its right, the leaderboard of
+ * the server's traders. Layout units: 100 per block, origin at the screen's top-left corner, y pointing down (like the
+ * texture).
  */
 public class BillboardRenderer implements BlockEntityRenderer<BillboardBlockEntity, BillboardRenderer.State> {
     public static class State extends BlockEntityRenderState {
@@ -41,6 +44,8 @@ public class BillboardRenderer implements BlockEntityRenderer<BillboardBlockEnti
     private static final int GRAY = 0xFF9CA3AF;
     private static final int WHITE = 0xFFFFFFFF;
     private static final int AMBER = 0xFFFBBF24;
+    /** Gap between the screen and the leaderboard panel. */
+    private static final float PANEL_GAP = 20;
 
     private final Font font;
 
@@ -73,20 +78,55 @@ public class BillboardRenderer implements BlockEntityRenderer<BillboardBlockEnti
         poseStack.scale(UNIT, -UNIT, UNIT);
 
         int light = state.lightCoords;
-        collector.submitCustomGeometry(poseStack, RenderTypes.text(BoardTexture.ID), (pose, buffer) -> {
-            // Front: the board, always lit like a screen.
-            quad(buffer, pose, 0, H, 0, W, H, 0, W, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, LightCoordsUtil.FULL_BRIGHT);
-            // Back and edges in the frame colour, lit by the world.
-            float u = BoardTexture.FRAME_U, v = BoardTexture.FRAME_V, z = -DEPTH;
-            quad(buffer, pose, W, H, z, 0, H, z, 0, 0, z, W, 0, z, u, v, u, v, u, v, u, v, light);
-            quad(buffer, pose, 0, 0, z, 0, 0, 0, W, 0, 0, W, 0, z, u, v, u, v, u, v, u, v, light);
-            quad(buffer, pose, 0, H, 0, 0, H, z, W, H, z, W, H, 0, u, v, u, v, u, v, u, v, light);
-            quad(buffer, pose, 0, H, z, 0, H, 0, 0, 0, 0, 0, 0, z, u, v, u, v, u, v, u, v, light);
-            quad(buffer, pose, W, H, 0, W, H, z, W, 0, z, W, 0, 0, u, v, u, v, u, v, u, v, light);
-        });
-
+        collector.submitCustomGeometry(poseStack, RenderTypes.text(BoardTexture.ID), (pose, buffer) -> box(buffer, pose, 0, W, light));
         drawText(poseStack, collector, snapshot);
+
+        // The leaderboard panel, to the right of the screen.
+        float px = W + PANEL_GAP;
+        float pw = BoardTexture.PANEL_WIDTH;
+        poseStack.pushPose();
+        poseStack.translate(px, 0, 0);
+        collector.submitCustomGeometry(poseStack, RenderTypes.text(BoardTexture.PANEL_ID), (pose, buffer) -> box(buffer, pose, 0, pw, light));
+        drawLeaderboard(poseStack, collector, pw);
         poseStack.popPose();
+        poseStack.popPose();
+    }
+
+    /** A panel of the given width: the texture on the front (lit like a screen), frame colour on the back and edges. */
+    private static void box(VertexConsumer buffer, PoseStack.Pose pose, float x0, float x1, int light) {
+        quad(buffer, pose, x0, H, 0, x1, H, 0, x1, 0, 0, x0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, LightCoordsUtil.FULL_BRIGHT);
+        float u = BoardTexture.FRAME_U, v = BoardTexture.FRAME_V, z = -DEPTH;
+        quad(buffer, pose, x1, H, z, x0, H, z, x0, 0, z, x1, 0, z, u, v, u, v, u, v, u, v, light);
+        quad(buffer, pose, x0, 0, z, x0, 0, 0, x1, 0, 0, x1, 0, z, u, v, u, v, u, v, u, v, light);
+        quad(buffer, pose, x0, H, 0, x0, H, z, x1, H, z, x1, H, 0, u, v, u, v, u, v, u, v, light);
+        quad(buffer, pose, x0, H, z, x0, H, 0, x0, 0, 0, x0, 0, z, u, v, u, v, u, v, u, v, light);
+        quad(buffer, pose, x1, H, 0, x1, H, z, x1, 0, z, x1, 0, 0, u, v, u, v, u, v, u, v, light);
+    }
+
+    private void drawLeaderboard(PoseStack pose, SubmitNodeCollector out, float pw) {
+        Messages.Leaderboard board = ClientState.leaderboard;
+        text(pose, out, Component.literal("Top traders").withStyle(ChatFormatting.BOLD).getVisualOrderText(), 14, 18, 2.2F, AMBER, Align.LEFT);
+        text(pose, out, "Profit in gold", 14, 42, 1.25F, GRAY, Align.LEFT);
+        if (board.entries().isEmpty()) {
+            text(pose, out, "No traders yet", pw / 2, 120, 1.5F, GRAY, Align.CENTER_MIDDLE);
+            text(pose, out, "Right-click the post", pw / 2, 140, 1.2F, GRAY, Align.CENTER_MIDDLE);
+            text(pose, out, "to register", pw / 2, 154, 1.2F, GRAY, Align.CENTER_MIDDLE);
+        }
+        int rank = 0;
+        for (Messages.LeaderboardEntry e : board.entries()) {
+            if (rank >= BoardTexture.PANEL_ROWS) break;
+            float y = BoardTexture.PANEL_FIRST_ROW + rank * BoardTexture.PANEL_ROW_HEIGHT;
+            int color = rank == 0 ? AMBER : WHITE;
+            text(pose, out, String.valueOf(rank + 1), 16, y, 1.5F, color, Align.LEFT);
+            String pnl = (Math.round(e.pnl() * 10) > 0 ? "+" : "") + TradeScreen.gold(e.pnl());
+            float pnlWidth = font.width(pnl) * 1.5F;
+            String name = font.plainSubstrByWidth(e.name(), (int) ((pw - 40 - 16 - pnlWidth - 8) / 1.5F));
+            text(pose, out, name, 40, y, 1.5F, color, Align.LEFT);
+            text(pose, out, pnl, pw - 16, y, 1.5F, e.pnl() >= 0 ? BoardTexture.UP : BoardTexture.DOWN, Align.RIGHT);
+            rank++;
+        }
+        String footer = board.traders() == 1 ? "1 trader" : board.traders() + " traders";
+        text(pose, out, footer, pw / 2, 284, 1.2F, GRAY, Align.CENTER_MIDDLE);
     }
 
     private void drawText(PoseStack pose, SubmitNodeCollector out, Snapshot s) {
@@ -112,7 +152,7 @@ public class BillboardRenderer implements BlockEntityRenderer<BillboardBlockEnti
                 text(pose, out, "Waiting for prices…", W / 2, (BoardTexture.CHART_Y0 + BoardTexture.CHART_Y1) / 2F, 1.4F, GRAY, Align.CENTER_MIDDLE);
             }
         }
-        text(pose, out, "Right-click the post to trade (paper money)", 24, 274, 1.15F, GRAY, Align.LEFT);
+        text(pose, out, "Right-click the post to trade with gold", 24, 274, 1.15F, GRAY, Align.LEFT);
         FormattedCharSequence powered = Component.literal("Powered by ").withColor(GRAY & 0xFFFFFF)
             .append(Component.literal("Polymarket").withStyle(ChatFormatting.BOLD).withColor(WHITE & 0xFFFFFF))
             .getVisualOrderText();

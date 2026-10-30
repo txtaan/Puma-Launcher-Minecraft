@@ -25,8 +25,9 @@ import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
 /**
- * The billboard's post. The screen (5 blocks wide, 3 tall) is drawn on top of it, facing the player who placed it.
- * Right-click the post to open the trading screen.
+ * The billboard's post. The screen (5 blocks wide, 3 tall) is drawn on top of it, facing the player who placed it,
+ * with the traders' leaderboard beside it. Right-click the post to open the trading window. Winnings that don't fit
+ * in a trader's inventory go into a chest behind the post.
  */
 public class BillboardBlock extends BaseEntityBlock {
     public static final EnumProperty<Direction> FACING = HorizontalDirectionalBlock.FACING;
@@ -78,8 +79,8 @@ public class BillboardBlock extends BaseEntityBlock {
 
     @Override
     protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos, Player player, BlockHitResult hit) {
-        // Trading is per player and paper only, so it all happens on the player's own client.
-        if (level.isClientSide()) ClientAccess.openTradeScreen();
+        // The client opens the trading window; trades it sends are checked and carried out by the server.
+        if (level.isClientSide()) ClientAccess.openTradeScreen(pos);
         return InteractionResult.SUCCESS;
     }
 }
