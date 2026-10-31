@@ -1,42 +1,75 @@
-import { useState } from 'react'
+import { useCallback, useEffect, useId, useMemo, useRef, useState, type InputHTMLAttributes } from 'react'
 import type { LanguagePreference, MessageKey, Translate } from '@shared/i18n'
 import type { Settings, ThemePreference, UpdateInfo } from '@shared/types'
 import { api, errorMessage } from '../api'
 import { Avatar } from '../components/Avatar'
 import { Icon } from '../components/Icon'
+import { MemorySlider } from '../components/MemorySlider'
+import { Toggle } from '../components/Toggle'
 import { useStore } from '../store'
 
+// Set by the back link on the Java and Versions pages, so Settings reopens at the section the player came from.
+let reopenAdvanced = false
+
+/** The back link at the top of the pages Settings → Advanced opens (Java, Versions). */
+export function BackToSettings() {
+  const { setPage, t } = useStore()
+  return (
+    <button
+      className="back-link"
+      onClick={() => {
+        reopenAdvanced = true
+        setPage('settings')
+      }}
+    >
+      <Icon name="arrowLeft" size={16} /> {t('nav.settings')}
+    </button>
+  )
+}
+
 export function SettingsPage() {
-  const { settings, saveSettings, accounts, account, selectAccount, refreshAccounts, toast, t, update, checkUpdates, installUpdate, instances } = useStore()
+  const { settings, saveSettings, accounts, account, selectAccount, refreshAccounts, toast, t, update, checkUpdates, installUpdate, instances, setPage } =
+    useStore()
+  const advanced = useRef<HTMLElement>(null)
+  useEffect(() => {
+    if (!reopenAdvanced) return
+    reopenAdvanced = false
+    advanced.current?.scrollIntoView({ block: 'start' })
+  }, [])
   const gameRunning = instances.some((i) => i.running)
   const updateBusy = update?.state.status === 'checking' || update?.state.status === 'downloading'
-  // Only unsaved edits live here, so settings that apply instantly (theme, accounts) don't discard them.
-  const [edits, setEdits] = useState<Partial<Settings>>({})
-  if (!settings) return null
-  const draft = { ...settings, ...edits }
+  const memoryLabel = useId()
 
-  const set = <K extends keyof Settings>(k: K, v: Settings[K]) => setEdits({ ...edits, [k]: v })
-  const save = async () => {
-    try {
-      await saveSettings(edits)
-      setEdits({})
-      toast(t('settings.saved'), 'success')
-    } catch (err) {
-      toast(errorMessage(err), 'error')
-    }
-  }
+  // Every change saves itself; "Saved" shows by the title for a moment after each save (a new key replays its fade).
+  const [saved, setSaved] = useState(0)
+  const savedTimer = useRef<ReturnType<typeof setTimeout>>(undefined)
+  useEffect(() => () => clearTimeout(savedTimer.current), [])
+  const save = (patch: Partial<Settings>) =>
+    saveSettings(patch).then(
+      () => {
+        setSaved((n) => n + 1)
+        clearTimeout(savedTimer.current)
+        savedTimer.current = setTimeout(() => setSaved(0), 2000)
+      },
+      (err) => toast(errorMessage(err), 'error')
+    )
+
+  if (!settings) return null
 
   return (
     <div className="page">
-      <div className="page-head">
-        <div>
-          <h1>{t('nav.settings')}</h1>
-          <p className="muted">{t('settings.subtitle')}</p>
-        </div>
-        <button className="btn btn-primary" onClick={() => void save()}>
-          {t('settings.save')}
-        </button>
+      {/* The title stays in view while the page scrolls, so "Saved" shows after a change further down too */}
+      <div className="page-title settings-title">
+        <h1>{t('nav.settings')}</h1>
+        <span className="save-status" aria-live="polite">
+          {saved > 0 && (
+            <span key={saved} className="saved-flash">
+              <Icon name="check" size={14} /> {t('settings.saved')}
+            </span>
+          )}
+        </span>
       </div>
+      <p className="muted settings-subtitle">{t('settings.subtitle')}</p>
 
       <section className="card settings-section">
         <h2>{t('settings.appearance')}</h2>
@@ -48,7 +81,7 @@ export function SettingsPage() {
                 key={th.key}
                 className={settings.theme === th.key ? 'active' : ''}
                 aria-pressed={settings.theme === th.key}
-                onClick={() => void saveSettings({ theme: th.key }).catch((err) => toast(errorMessage(err), 'error'))}
+                onClick={() => void save({ theme: th.key })}
               >
                 <Icon name={th.icon} size={15} /> {t(th.label)}
               </button>
@@ -63,7 +96,7 @@ export function SettingsPage() {
                 key={l.key}
                 className={settings.language === l.key ? 'active' : ''}
                 aria-pressed={settings.language === l.key}
-                onClick={() => void saveSettings({ language: l.key }).catch((err) => toast(errorMessage(err), 'error'))}
+                onClick={() => void save({ language: l.key })}
               >
                 {l.key === 'system' ? t('settings.system') : l.label}
               </button>
@@ -112,44 +145,21 @@ export function SettingsPage() {
             <Icon name="plus" size={16} /> {t('settings.addAccount')}
           </button>
         </div>
-        <label className="field">
-          <span>{t('settings.msClientId')}</span>
-          <input value={draft.msClientId} placeholder="00000000-0000-0000-0000-000000000000" onChange={(e) => set('msClientId', e.target.value.trim())} />
-          <small className="muted">{t('settings.msClientIdHelp')}</small>
-        </label>
       </section>
 
       <section className="card settings-section">
         <h2>{t('settings.game')}</h2>
-        <div className="form-grid">
-          <label className="field">
-            <span>{t('settings.minMemory')}</span>
-            <input type="number" value={draft.defaultMinMemoryMb} onChange={(e) => set('defaultMinMemoryMb', Number(e.target.value))} />
-          </label>
-          <label className="field">
-            <span>{t('settings.maxMemory')}</span>
-            <input type="number" value={draft.defaultMaxMemoryMb} onChange={(e) => set('defaultMaxMemoryMb', Number(e.target.value))} />
-          </label>
+        <div className="field">
+          <span id={memoryLabel}>{t('memory.label')}</span>
+          <AutoSaveMemory
+            labelId={memoryLabel}
+            valueMb={settings.defaultMaxMemoryMb}
+            // The game starts with up to 1 GB and grows to the chosen amount.
+            onSave={(mb) => void save({ defaultMaxMemoryMb: mb, defaultMinMemoryMb: Math.min(1024, mb) })}
+          />
         </div>
-        <Toggle label={t('settings.autoJava')} checked={draft.autoDownloadJava} onChange={(v) => set('autoDownloadJava', v)} />
-        <Toggle label={t('settings.hideOnLaunch')} checked={draft.closeOnLaunch} onChange={(v) => set('closeOnLaunch', v)} />
-      </section>
-
-      <section className="card settings-section">
-        <h2>{t('settings.downloads')}</h2>
-        <div className="form-grid">
-          <label className="field">
-            <span>{t('settings.refreshMinutes')}</span>
-            <input type="number" min={1} value={draft.versionRefreshMinutes} onChange={(e) => set('versionRefreshMinutes', Math.max(1, Number(e.target.value)))} />
-          </label>
-          <label className="field">
-            <span>{t('settings.parallel')}</span>
-            <input type="number" min={1} max={64} value={draft.concurrentDownloads} onChange={(e) => set('concurrentDownloads', Math.min(64, Math.max(1, Number(e.target.value))))} />
-          </label>
-        </div>
-        <button className="btn btn-ghost btn-sm self-start" onClick={() => void api.openDataFolder()}>
-          <Icon name="folder" size={16} /> {t('settings.openData')}
-        </button>
+        <Toggle label={t('settings.autoJava')} checked={settings.autoDownloadJava} onChange={(v) => void save({ autoDownloadJava: v })} />
+        <Toggle label={t('settings.hideOnLaunch')} checked={settings.closeOnLaunch} onChange={(v) => void save({ closeOnLaunch: v })} />
       </section>
 
       <section className="card settings-section">
@@ -175,6 +185,75 @@ export function SettingsPage() {
           )}
         </div>
       </section>
+
+      <section ref={advanced} className="card settings-section">
+        <h2>{t('settings.advanced')}</h2>
+        <div className="setting-links">
+          <SubPageLink icon="coffee" title={t('settings.java')} text={t('settings.javaHelp')} action={t('settings.open')} onOpen={() => setPage('java')} />
+          <SubPageLink
+            icon="layers"
+            title={t('settings.versions')}
+            text={t('settings.versionsHelp')}
+            action={t('settings.open')}
+            onOpen={() => setPage('versions')}
+          />
+        </div>
+        <div className="form-grid">
+          <label className="field">
+            <span>{t('settings.refreshMinutes')}</span>
+            <AutoSaveInput
+              type="number"
+              min={1}
+              value={settings.versionRefreshMinutes}
+              parse={(text) => whole(text, 1)}
+              onSave={(v) => void save({ versionRefreshMinutes: v })}
+            />
+          </label>
+          <label className="field">
+            <span>{t('settings.parallel')}</span>
+            <AutoSaveInput
+              type="number"
+              min={1}
+              max={64}
+              value={settings.concurrentDownloads}
+              parse={(text) => whole(text, 1, 64)}
+              onSave={(v) => void save({ concurrentDownloads: v })}
+            />
+          </label>
+        </div>
+        <label className="field">
+          <span>{t('settings.msClientId')}</span>
+          <AutoSaveInput
+            value={settings.msClientId}
+            placeholder="00000000-0000-0000-0000-000000000000"
+            parse={(text) => text.trim()}
+            onSave={(v) => void save({ msClientId: v })}
+          />
+          <small className="muted">{t('settings.msClientIdHelp')}</small>
+        </label>
+        <button className="btn btn-ghost btn-sm self-start" onClick={() => void api.openDataFolder()}>
+          <Icon name="folder" size={16} /> {t('settings.openData')}
+        </button>
+      </section>
+    </div>
+  )
+}
+
+/** A row in Settings → Advanced that opens a page of its own. */
+function SubPageLink({ icon, title, text, action, onOpen }: { icon: string; title: string; text: string; action: string; onOpen: () => void }) {
+  const id = useId()
+  return (
+    <div className="setting-link">
+      <span className="setting-icon">
+        <Icon name={icon} />
+      </span>
+      <div className="setting-meta" id={id}>
+        <strong>{title}</strong>
+        <span className="muted">{text}</span>
+      </div>
+      <button className="btn btn-ghost btn-sm" aria-describedby={id} onClick={onOpen}>
+        {action} <Icon name="chevron" size={14} />
+      </button>
     </div>
   )
 }
@@ -212,14 +291,100 @@ const LANGUAGES: { key: LanguagePreference; label: string }[] = [
   { key: 'it', label: 'Italiano' }
 ]
 
-function Toggle({ label, checked, onChange }: { label: string; checked: boolean; onChange: (v: boolean) => void }) {
+/** A whole number typed in a box, kept between `min` and `max`; undefined while the box is empty. */
+function whole(text: string, min: number, max = Infinity): number | undefined {
+  const n = Number(text)
+  if (text.trim() === '' || !Number.isFinite(n)) return undefined
+  return Math.min(max, Math.max(min, Math.round(n)))
+}
+
+/**
+ * Runs `fn` with the latest arguments once calls stop for a moment (`flush` runs a waiting call at once). A call still
+ * waiting when the page closes runs then, so a change made just before leaving Settings is kept.
+ */
+function useDebounced<A extends unknown[]>(fn: (...args: A) => void, ms = 600) {
+  const latest = useRef(fn)
+  useEffect(() => {
+    latest.current = fn
+  })
+  const timer = useRef<ReturnType<typeof setTimeout>>(undefined)
+  const waiting = useRef<A | null>(null)
+  const flush = useCallback(() => {
+    clearTimeout(timer.current)
+    const args = waiting.current
+    waiting.current = null
+    if (args) latest.current(...args)
+  }, [])
+  const run = useCallback(
+    (...args: A) => {
+      waiting.current = args
+      clearTimeout(timer.current)
+      timer.current = setTimeout(flush, ms)
+    },
+    [flush, ms]
+  )
+  useEffect(() => flush, [flush])
+  return useMemo(() => ({ run, flush, isWaiting: () => waiting.current !== null }), [run, flush])
+}
+
+type AutoSaveInputProps<T> = Omit<InputHTMLAttributes<HTMLInputElement>, 'value' | 'onChange'> & {
+  value: T
+  /** What to save for the typed text (cleaned up and kept in range), or undefined while it isn't a value yet. */
+  parse: (text: string) => T | undefined
+  onSave: (value: T) => void
+}
+
+/** A text or number box that saves itself: on Enter, when it loses focus, and after a short pause in typing. */
+function AutoSaveInput<T extends string | number>({ value, parse, onSave, ...input }: AutoSaveInputProps<T>) {
+  const [text, setText] = useState(String(value))
+  const focused = useRef(false)
+  // Show the stored value, except over what's being typed.
+  useEffect(() => {
+    if (!focused.current) setText(String(value))
+  }, [value])
+  const commit = useDebounced((typed: string) => {
+    const next = parse(typed)
+    if (next !== undefined && next !== value) onSave(next)
+  })
+  // Saves now, and shows the value the way it's stored (an empty box gets the stored value back).
+  const finish = () => {
+    commit.flush()
+    setText(String(parse(text) ?? value))
+  }
   return (
-    <label className="toggle">
-      <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} />
-      <span className="toggle-track">
-        <span className="toggle-thumb" />
-      </span>
-      {label}
-    </label>
+    <input
+      {...input}
+      value={text}
+      onFocus={() => (focused.current = true)}
+      onChange={(e) => {
+        setText(e.target.value)
+        commit.run(e.target.value)
+      }}
+      onBlur={() => {
+        focused.current = false
+        finish()
+      }}
+      onKeyDown={(e) => e.key === 'Enter' && finish()}
+    />
+  )
+}
+
+/** The memory slider in Settings: it moves at once, and saves once it stops moving. */
+function AutoSaveMemory({ labelId, valueMb, onSave }: { labelId: string; valueMb: number; onSave: (mb: number) => void }) {
+  const [mb, setMb] = useState(valueMb)
+  const commit = useDebounced(onSave)
+  // Follow the stored value, but not back to an older one while a newer one waits to be saved.
+  useEffect(() => {
+    if (!commit.isWaiting()) setMb(valueMb)
+  }, [valueMb, commit])
+  return (
+    <MemorySlider
+      labelId={labelId}
+      valueMb={mb}
+      onChange={(next) => {
+        setMb(next)
+        commit.run(next)
+      }}
+    />
   )
 }

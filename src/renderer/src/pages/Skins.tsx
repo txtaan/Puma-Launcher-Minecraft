@@ -1,14 +1,16 @@
-import { useState, type DragEvent } from 'react'
+import { useLayoutEffect, useRef, useState, type DragEvent } from 'react'
 import type { SkinModel } from '@shared/types'
 import { Icon } from '../components/Icon'
 import { MODEL_LABEL, SkinThumb, SOURCE_LABEL, templateSkin, useSkinActions } from '../skins/common'
 import { SkinEditor } from '../skins/SkinEditor'
 import { SkinInspect } from '../skins/SkinInspect'
+import { ServerSkinDialog } from '../skins/ServerSkin'
 import { SkinViewer } from '../skins/SkinViewer'
 import { SkinWardrobe } from '../skins/SkinWardrobe'
 import type { Animation } from '../skins/player'
 import { TEMPLATES, type TemplateId } from '../skins/templates'
 import { useStore } from '../store'
+import { prefersReducedMotion } from '../theme'
 
 export type SkinView =
   | { kind: 'home' }
@@ -24,6 +26,13 @@ export function Skins() {
   const [view, setView] = useState<SkinView>({ kind: 'home' })
   const actions = useSkinActions()
   const [dropping, setDropping] = useState(false)
+
+  // The views share the page's scroll container: open each one at the top, like a page of its own.
+  const root = useRef<HTMLDivElement>(null)
+  const viewId = 'id' in view ? view.id : undefined
+  useLayoutEffect(() => {
+    void root.current?.closest('.content')?.scrollTo(0, 0)
+  }, [view.kind, viewId])
 
   // Skins can be dropped anywhere in the section except the editor.
   const droppable = view.kind !== 'editor'
@@ -48,7 +57,7 @@ export function Skins() {
     : {}
 
   return (
-    <div className={`skins-page view-${view.kind}`} {...dropHandlers}>
+    <div ref={root} className={`skins-page view-${view.kind}`} {...dropHandlers}>
       {view.kind === 'home' && <SkinsHome go={setView} actions={actions} />}
       {view.kind === 'wardrobe' && <SkinWardrobe go={setView} actions={actions} />}
       {view.kind === 'inspect' && <SkinInspect id={view.id} go={setView} actions={actions} />}
@@ -78,7 +87,8 @@ function SkinsHome({ go, actions }: { go: (v: SkinView) => void; actions: SkinAc
   const favorites = list.filter((s) => s.favorite)
   const [player, setPlayer] = useState('')
   const [fetching, setFetching] = useState(false)
-  const [animation, setAnimation] = useState<Animation>('idle')
+  const [animation, setAnimation] = useState<Animation>(() => (prefersReducedMotion() ? 'none' : 'idle'))
+  const [showingFriends, setShowingFriends] = useState(false)
   const mannequin = templateSkin('blank')
   const here: SkinView = { kind: 'home' }
 
@@ -210,8 +220,22 @@ function SkinsHome({ go, actions }: { go: (v: SkinView) => void; actions: SkinAc
           <span className="badge">{t('skins.inGame')}</span>
           <Icon name={account?.type === 'microsoft' ? 'external' : 'puzzle'} size={22} className="bento-ingame-icon" />
           <p>{inGame}</p>
+          {/* Microsoft skins already reach every server; other accounts need the server's skin mod */}
+          {account &&
+            account.type !== 'microsoft' &&
+            (worn ? (
+              <button className="btn btn-ghost btn-sm" onClick={() => setShowingFriends(true)}>
+                <Icon name="server" size={16} /> {t('skins.showFriends')}
+              </button>
+            ) : (
+              <button className="btn btn-ghost btn-sm" onClick={() => go({ kind: 'wardrobe' })}>
+                <Icon name="shirt" size={16} /> {t('skins.pickToShow')}
+              </button>
+            ))}
         </section>
       </div>
+
+      {showingFriends && worn && <ServerSkinDialog skin={worn} onClose={() => setShowingFriends(false)} />}
     </div>
   )
 }

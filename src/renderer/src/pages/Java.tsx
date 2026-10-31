@@ -3,6 +3,7 @@ import type { JavaInstall, JavaRuntimeOption } from '@shared/types'
 import { api, errorMessage } from '../api'
 import { Icon } from '../components/Icon'
 import { useStore } from '../store'
+import { BackToSettings } from './Settings'
 
 export function Java() {
   const { toast, tasks, t } = useStore()
@@ -33,6 +34,7 @@ export function Java() {
 
   return (
     <div className="page">
+      <BackToSettings />
       <div className="page-head">
         <div>
           <h1>Java</h1>

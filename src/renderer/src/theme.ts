@@ -18,3 +18,6 @@ export function setThemePreference(p: ThemePreference): void {
 
 prefersLight.addEventListener('change', apply)
 apply()
+
+/** The system asks for less motion: what would move by itself (the 3D skins' idle animation) starts still. */
+export const prefersReducedMotion = (): boolean => window.matchMedia('(prefers-reduced-motion: reduce)').matches

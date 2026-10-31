@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
+import { ConfirmDialog } from '../components/ConfirmDialog'
 import { Icon } from '../components/Icon'
 import type { SkinActions, SkinView } from '../pages/Skins'
 import { useStore } from '../store'
-import { ConfirmDialog, MODEL_LABEL, PART_COLOR, PART_LABEL, RenameDialog, SkinFace, SOURCE_LABEL } from './common'
+import { prefersReducedMotion } from '../theme'
+import { MODEL_LABEL, PART_COLOR, PART_LABEL, RenameDialog, SkinFace, SOURCE_LABEL } from './common'
 import { readPixels } from './image'
 import { ServerSkinDialog } from './ServerSkin'
 import { PARTS, skinStats, type Part, type SkinStats } from './layout'
@@ -18,7 +20,7 @@ export function SkinInspect({ id, go, actions }: { id: string; go: (v: SkinView)
   const skin = list.find((s) => s.id === id)
   const [query, setQuery] = useState('')
   const [stats, setStats] = useState<SkinStats | null>(null)
-  const [playing, setPlaying] = useState(true)
+  const [playing, setPlaying] = useState(() => !prefersReducedMotion())
   const [motion, setMotion] = useState<Exclude<Animation, 'none'>>('idle')
   const [overlay, setOverlay] = useState(true)
   const [tab, setTab] = useState<Tab>('palette')
@@ -111,16 +113,20 @@ export function SkinInspect({ id, go, actions }: { id: string; go: (v: SkinView)
             <button className="icon-btn" title={t('skins.rename')} aria-label={t('skins.rename')} onClick={() => setDialog('rename')}>
               <Icon name="rename" />
             </button>
-            <button className="icon-btn" title={t('skins.server')} aria-label={t('skins.server')} onClick={() => setDialog('server')}>
-              <Icon name="server" size={16} />
-            </button>
             <button className="icon-btn danger" title={t('common.delete')} aria-label={t('common.delete')} onClick={() => setDialog('delete')}>
               <Icon name="trash" />
             </button>
-            <button className={`btn btn-sm ${worn ? 'btn-ghost' : 'btn-primary'}`} disabled={actions.busy === skin.id} onClick={() => void actions.equip(worn ? null : skin)}>
-              {actions.busy === skin.id ? <span className="spinner sm" /> : <Icon name={worn ? 'minus' : 'shirt'} size={16} />}
-              {t(worn ? 'skins.takeOff' : 'skins.wear')}
-            </button>
+            {/* The labelled buttons wrap together under the tools when the row is narrow */}
+            <div className="inspect-buttons">
+              {/* Labelled, unlike the tools: players look for this one */}
+              <button className="btn btn-ghost btn-sm" onClick={() => setDialog('server')}>
+                <Icon name="server" size={16} /> {t('skins.server')}
+              </button>
+              <button className={`btn btn-sm ${worn ? 'btn-ghost' : 'btn-primary'}`} disabled={actions.busy === skin.id} onClick={() => void actions.equip(worn ? null : skin)}>
+                {actions.busy === skin.id ? <span className="spinner sm" /> : <Icon name={worn ? 'minus' : 'shirt'} size={16} />}
+                {t(worn ? 'skins.takeOff' : 'skins.wear')}
+              </button>
+            </div>
           </div>
         </header>
 

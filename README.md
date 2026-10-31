@@ -2,7 +2,8 @@
 
 A modern, open-source Minecraft: Java Edition launcher for Windows, macOS and Linux. It installs any Minecraft
 version, with or without Fabric, Quilt, Forge or NeoForge, downloads the right Java for you, installs mods from
-Modrinth, and has a wardrobe and 3D editor for your skins. Available in English and Italian.
+Modrinth, takes you straight into a friend's server, and has a wardrobe and 3D editor for your skins. Available in
+English and Italian.
 
 <sub>NOT AN OFFICIAL MINECRAFT PRODUCT. NOT APPROVED BY OR ASSOCIATED WITH MOJANG OR MICROSOFT.</sub>
 
@@ -51,13 +52,27 @@ offline right away. You can also use a **Microsoft** account (it needs a one-tim
 
 ### 4. Create an instance
 
-An instance is one Minecraft installation with its own worlds and mods. On the home screen click **Create**. The
-latest Minecraft version is already selected: give it a name, pick a mod loader such as **Fabric** if you want
-mods, and click **Create**. The right Java version starts downloading by itself.
+An instance is one Minecraft installation with its own worlds and mods. On the home screen click **Create** (or
+**New instance** on the **Instances** page). The launcher first asks **What do you want to play?**
 
-With a mod loader picked, the dialog also suggests popular mods that have a build for that exact version and loader
-(Fabric API, Sodium, Lithium, FerriteCore, Iris, JEI and more). The essentials and performance mods start ticked;
-untick or tick any of them, and they're installed with their dependencies as soon as the instance is created.
+- **Vanilla:** Minecraft exactly as Mojang makes it.
+- **With mods:** pick a mod loader. **Fabric** is light and has most performance and map mods, **Forge** is for big
+  content mods, **NeoForge** is a newer fork of Forge, and **Quilt** works with most Fabric mods. Next time the
+  launcher starts from the loader you used last.
+- **On a friend's server:** type the server's address, such as `play.example.net` or `name.aternos.me:12345`, say
+  whether the server uses mods (**No**, or its loader), and pick the Minecraft version the server runs.
+
+<img src="docs/screenshots/new-instance-choice.png" alt="The new instance dialog asking what you want to play: vanilla, with mods, or on a friend's server" width="720">
+
+The latest Minecraft version is already selected; the tabs and the search box find any other. The name is optional:
+leave it empty and the launcher names the instance for you, such as "Minecraft 26.3", "Fabric 26.3" or, for
+`play.example.net`, "Example". Pick an icon if you like and click **Create**. The right Java version starts
+downloading by itself.
+
+With mods, or for a server that uses them, the dialog also suggests popular mods that have a build for that exact
+version and loader (Fabric API, Sodium, Lithium, FerriteCore, Iris, JEI and more). The essentials and performance
+mods start ticked; untick or tick any of them, and they're installed with their dependencies as soon as the instance
+is created.
 
 <img src="docs/screenshots/new-instance.png" alt="New instance dialog with recommended mods" width="720">
 
@@ -68,10 +83,25 @@ minutes; the progress shows in the bottom-right corner. After that the game star
 
 <img src="docs/screenshots/first-launch.png" alt="First launch downloading the game" width="720">
 
+An instance made for a friend's server opens the game straight into that server, and the home screen's **Quick
+actions** card has a **Join …** button for the server you played on last. To give an instance you already have a
+server, or change it, go to **Instances**, click **Settings** on the instance, fill in **Server to join** (leave it
+empty to open the game's menu as usual) and click **Save**.
+
+<img src="docs/screenshots/instances.png" alt="The Instances page: each instance with its icon, version, mods and server, and its Mods and Settings buttons" width="720">
+
+If the game crashes, its log opens by itself so you can see what went wrong. You can also open it with the log button
+next to **Play** (while the game runs and after it closes), or from an instance's **…** menu → **Game log**.
+
 ### 6. Add mods (optional)
 
-Go to **Instances**, click the puzzle-piece icon on your instance, open **Browse mods** and click **Install**.
-Required mods are installed with it. Mods need an instance with a mod loader (Fabric, Quilt, Forge or NeoForge).
+On the home screen click **Add mods** under **Quick actions** to browse mods for the selected instance, or go to
+**Instances**, click **Mods** on your instance and open **Browse mods**. Click **Install**: required mods are
+installed with it.
+
+Mods need a mod loader (Fabric, Quilt, Forge or NeoForge). If your instance doesn't have one, its button says **Add
+mods** and the window offers one first: pick a loader and click **Add Fabric** (or the one you picked), and the mod
+list opens.
 
 <img src="docs/screenshots/mods.png" alt="Installing mods from Modrinth" width="720">
 
@@ -93,15 +123,27 @@ accounts, or on a "cracked" server (such as Aternos with **Cracked** on), the ot
 1. Once, on the server: add **Skin Restorer** (a mod, for Forge, Fabric and NeoForge servers) or **SkinsRestorer** (a
    plugin, for Paper and Spigot), and restart it. On Aternos: **Mods** or **Plugins**, search, **Install**. Players
    don't need to install anything.
-2. In Puma Launcher, open the skin in **Skins** and press the server icon (**Show on a server**), then **Make the
-   command**. The skin is uploaded to [MineSkin](https://mineskin.org), which gives it a link on Minecraft's own skin
-   server.
+2. In Puma Launcher, open **Skins** and press **Show it to friends on a server** in the **In game** card (for the
+   skin you wear), or open any skin and press **Show on a server**. Then press **Make the command**. The skin is
+   uploaded to [MineSkin](https://mineskin.org), which gives it a link on Minecraft's own skin server.
 3. In the game, press **T**, paste the command (`/skin set web classic "https://textures.minecraft.net/…"`) and press
    Enter. Everyone on the server sees your skin from then on; do it again only when you change skin.
 
 <img src="docs/screenshots/skins.png" alt="The Skins section" width="720">
 
-You can switch between the light and dark theme, and between English and Italian, in **Settings → Appearance**.
+### Settings
+
+The sidebar has four sections: **Home**, **Instances**, **Skins** and **Settings**. The Settings page saves by itself
+as you change things; there's no Save button there (an instance's own **Settings** still have **Save**).
+
+- **Appearance:** the light or dark theme (or follow the system), and English or Italian.
+- **Accounts:** switch between your saved accounts, add one or remove one.
+- **Game:** the **Memory for the game** slider, which shows how much is recommended for your PC. To give one instance
+  a different amount, open its **Settings**, turn off **Use the default** and click **Save**.
+- **Updates:** see [Updating](#updating).
+- **Advanced:** the **Java** page (the Java versions the launcher downloads, and the ones on your PC), the **Minecraft
+  versions** page (every release, snapshot and old version), download options, the Azure application ID for
+  [Microsoft login](#microsoft-login-setup) and the launcher's data folder.
 
 ### Updating
 
@@ -128,17 +170,24 @@ Versions before 0.3.3 can't update themselves: download the latest installer onc
 ## Features
 
 - Login screen: Microsoft, offline, or Ely.by / LittleSkin / custom server, plus saved accounts to switch between
-- Home screen with a jungle-scene hero (moonlit or daylight, following the theme), latest release/snapshot cards and a large **Play** button
-- Instances: create with any version and mod loader; edit version, loader, Java, memory, JVM args and resolution
+- Home screen with a jungle-scene hero (moonlit or daylight, following the theme), latest release/snapshot cards, a
+  large **Play** button and quick actions (join your last server, add mods, change skin, open the game folder)
+- A short sidebar (Home, Instances, Skins, Settings); the Java and Minecraft versions pages are in
+  **Settings → Advanced**
+- Instances: start from "What do you want to play?" (vanilla, with mods, or a friend's server), any version and mod
+  loader, and a pixel-art icon; edit version, loader, server, icon, Java, memory, JVM args and resolution
+- Join a friend's server straight from **Play** (see [step 5](#5-press-play))
 - Mods: recommended mods when creating an instance, a Modrinth browser with dependency resolution, plus an
-  installed-mod list with enable, disable and delete
+  installed-mod list with enable, disable and delete; a vanilla instance can get a mod loader from the same window
 - Versions browser: releases, snapshots, beta and alpha, with search and "installed" badges
 - Java manager: one-click Mojang and Temurin runtimes plus the Java installations found on this PC
 - Download manager: parallel downloads with SHA-1/SHA-256 checks, retries and live progress
+- Memory in GB on a slider, with the amount recommended for your PC; settings save as you change them
 - Skins: a wardrobe of your skins (search, filters, bookmarks), an inspect view (turnable 3D model, animations,
   screenshots, colour palette and per-part stats) and a 3D skin editor; wear a skin with one click (see
   [step 7](#7-wear-a-skin-optional))
-- Game console showing the game log (log4j XML converted to readable lines), with errors highlighted
+- Game log (log4j XML converted to readable lines) with errors highlighted: it opens by itself when the game crashes,
+  or from the button next to **Play** and an instance's **…** menu
 - Light and dark themes, or follow the system setting (**Settings → Appearance**); dark is the default
 - English and Italian: follows your system language, or pick one in **Settings → Appearance**
 
@@ -150,9 +199,10 @@ them, and a countdown to the end of each window. Players register a trader name 
 at the real order-book prices; winners are paid in gold and ranked on a leaderboard beside the screen. See
 [its README](mods/polymarket/README.md) for how to play it and build it.
 
-Puma Launcher installs it for you. Create an instance with Minecraft 26.3 and Forge and tick **Polymarket Prediction Market**
-among the recommended mods, or open an instance's mods (puzzle icon) → **Browse mods** → **Install**. Every
-[release](https://github.com/txtaan/Puma-Launcher-Minecraft/releases/latest) also has the `.jar`, for a server.
+Puma Launcher installs it for you. Create an instance **With mods**, with Minecraft 26.3 and Forge, and tick
+**Polymarket Prediction Market** among the recommended mods, or click **Mods** on an instance → **Browse mods** →
+**Install**. Every [release](https://github.com/txtaan/Puma-Launcher-Minecraft/releases/latest) also has the `.jar`,
+for a server.
 
 <img src="mods/polymarket/docs/situation-room.png" alt="A Polymarket situation room in Minecraft 26.3: the live billboard and leaderboard above the bar, a world-map wall and a globe" width="720">
 
@@ -168,12 +218,13 @@ Puma Launcher is modelled on the most active open-source launchers, checked in O
 
 | Feature | Comes from | How it works here |
 | --- | --- | --- |
-| Always up-to-date versions | HMCL, Prism | Mojang's `version_manifest_v2.json`, re-checked in the background (every 10 min by default). New releases and snapshots trigger a notification. |
+| Always up-to-date versions | HMCL, Prism | Mojang's `version_manifest_v2.json`, re-checked in the background (every 10 min by default; change it in **Settings → Advanced**). New releases and snapshots trigger a notification. |
 | Fabric, Quilt, Forge, NeoForge | Prism | Loader versions and libraries come from Prism's metadata server (`meta.prismlauncher.org`), which is updated within hours of each loader release. Components are applied over vanilla the same way Prism's `LaunchProfile` does. Modern Forge/NeoForge run through Prism's **ForgeWrapper**, which runs the official installer steps on first launch. Legacy Forge (1.12.2 and older) uses LaunchWrapper tweakers. |
 | One-click Java | HMCL, Prism | Mojang's own runtimes first (Java 8/16/17/21/25), then **Eclipse Temurin** from Prism's metadata for anything Mojang doesn't ship (Linux ARM64, newer Java). You never need to install Java yourself: the right version starts downloading as soon as you create an instance (or change its version), so it is ready before you press **Play**. Java installed on your PC is only used if you pick it for an instance, turn automatic downloads off, or the download fails. |
 | Use the Java already on your PC | Prism forks | Scans `JAVA_HOME`, `PATH` and the usual install folders. Each instance can be pinned to any detected Java or a custom path. |
 | Mods from Modrinth | Prism, HMCL | Search mods compatible with the instance's loader and version, install them with their required dependencies (SHA-1 verified), and enable, disable or delete installed mods. |
-| Isolated instances | Prism | Each instance has its own game folder, loader, Java, memory, JVM arguments and window size. |
+| Isolated instances | Prism | Each instance has its own game folder, loader, Java, memory, JVM arguments, window size and server to join. |
+| Join a server on launch | Prism, HMCL | An instance with a server address opens the game straight into it: Minecraft 1.20 and newer through Mojang's quick play (`--quickPlayMultiplayer`), older versions with `--server` and `--port`. |
 | Accounts | HMCL, Prism, ElyPrism, Fjord | Microsoft (device code), offline, and **authlib-injector** servers (Ely.by, LittleSkin or any custom Yggdrasil server). Tokens are encrypted with the OS keychain. |
 
 ### Skins
@@ -196,8 +247,8 @@ leaving gaps, the old 64×32 format upgraded the way the game does it, and an in
 per-part numbers. MineSkin has things Puma's editor doesn't have yet: posing limbs by hand, reference images and clip
 recording.
 
-The 3D model is built with [three.js](https://threejs.org) (MIT). Templates are drawn in code: Puma ships no Mojang
-textures.
+The 3D model is built with [three.js](https://threejs.org) (MIT). Templates, like the instance icons, are drawn in
+code: Puma ships no Mojang textures.
 
 No code was copied from HMCL or Prism Launcher. The launcher uses their public metadata services and the
 ForgeWrapper and authlib-injector jars at runtime. It is licensed GPL-3.0-or-later, the same licence as both projects.
@@ -231,7 +282,7 @@ Microsoft requires every launcher to use its own Azure application:
 1. In the [Azure portal](https://portal.azure.com) go to **App registrations → New registration**.
    Choose **Personal Microsoft accounts only**.
 2. Under **Authentication**, turn on **Allow public client flows**. This enables the device-code flow.
-3. Copy the **Application (client) ID** into **Settings → Accounts** in the launcher, or set the
+3. Copy the **Application (client) ID** into **Settings → Advanced** in the launcher, or set the
    `PUMA_MS_CLIENT_ID` environment variable.
 4. New Azure apps also need Mojang's approval before they can use the Minecraft API. Submit the
    [Minecraft API access form](https://aka.ms/mce-reviewappid). Until it is approved, sign-in stops
@@ -249,7 +300,7 @@ Offline mode works without any of this.
 
 To use another folder, set the `PUMA_HOME` environment variable. Data from older versions (the `txtaan-launcher` folder, from before the rename) is moved to the new folder automatically on first start. The layout follows `.minecraft`
 (`versions/`, `libraries/`, `assets/`), plus `runtime/` for downloaded Java, `instances/` for instances and `skins/`
-for your skin library.
+for your skin library. **Settings → Advanced → Open launcher data folder** opens it.
 
 ## Building from source
 
@@ -304,7 +355,8 @@ src/
   renderer/        React UI
     src/styles/theme.css  all colours, gradients and radii for the dark and light themes (edit this file to re-theme)
     src/styles/app.css    layout and components
-    src/pages/            Login, Home, Instances, Versions, Java, Skins, Settings
+    src/pages/            Login, Home, Instances, Skins, Settings, and Versions and Java (opened from Settings)
+    src/components/       sidebar, dialogs (new instance, mods), instance icons, memory slider, game log
     src/skins/            the 3D player model (three.js), skin layout maths, the editor, and the Skins screens
   shared/types.ts  types shared by all three layers
   shared/i18n/     English (en.ts, the source of every message) and Italian (it.ts) text
@@ -321,8 +373,9 @@ Downloads and launches are simulated, so you can click through every screen with
 
 The UI only talks to the launcher through `window.launcher` (see `src/preload/index.ts`), so the
 renderer can be redesigned or replaced freely. To change the look, start with the tokens in
-`src/renderer/src/styles/theme.css`, for example `--accent` and `--brand-gradient` for buttons and highlights, and
-`--cover-gradient` for the instance covers. The jungle scenes on the welcome and home screens are images in
+`src/renderer/src/styles/theme.css`, for example `--accent` and `--brand-gradient` for buttons and highlights. The
+instance icons are 16×16 pixel art in `src/renderer/src/components/InstanceIcon.tsx`, each with the tint its tile and
+instance card use. The jungle scenes on the welcome and home screens are images in
 `src/renderer/src/assets`; the home hero shows the night art in the dark theme and the day art in the light one.
 `:root` holds the dark theme and `:root[data-theme='light']` overrides its colours for the light theme, so a new
 colour token needs a value in both.

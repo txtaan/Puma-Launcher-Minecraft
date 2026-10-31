@@ -8,6 +8,7 @@ import {
   activeLibraries,
   assetIndexId,
   classpath,
+  hasQuickPlayMultiplayer,
   installVersion,
   libraryArtifact,
   legacyAssetsDir,
@@ -85,6 +86,12 @@ function expandArgs(args: Argument[], vars: Record<string, string>, features: Re
   return out.map((a) => a.replace(/\$\{(\w+)\}/g, (m, k: string) => vars[k] ?? m))
 }
 
+/** Older versions join a server with --server/--port; the port defaults to Minecraft's 25565. */
+function legacyServerArgs(address: string): string[] {
+  const m = /^([^:]+):(\d+)$/.exec(address)
+  return ['--server', m ? m[1] : address, '--port', m ? m[2] : '25565']
+}
+
 const FORGE_WRAPPER_MAIN = 'io.github.zekerzhayard.forgewrapper.installer.Main'
 
 /**
@@ -158,6 +165,10 @@ export async function launchInstance(
 
   const assetIndex = await readAssetIndex(version)
   const hasResolution = !!(instance.width && instance.height)
+  const server = instance.server?.trim()
+  // 1.20+ joins a server through quick play; older versions take --server/--port (added below).
+  const quickPlay = version.quickPlayMultiplayer || hasQuickPlayMultiplayer(version.arguments?.game)
+  const quickPlayServer = server && quickPlay ? server : undefined
   const vars: Record<string, string> = {
     auth_player_name: account.username,
     auth_uuid: account.uuid,
@@ -182,10 +193,19 @@ export async function launchInstance(
     resolution_width: String(instance.width ?? 854),
     resolution_height: String(instance.height ?? 480)
   }
-  const features = { has_custom_resolution: hasResolution, is_demo_user: false }
+  if (quickPlayServer) vars.quickPlayMultiplayer = quickPlayServer
+  // The other quick-play features (singleplayer, realms, has_quick_plays_support) stay off: rulesAllow counts a
+  // missing feature as false, so their arguments aren't emitted with empty values.
+  const features = {
+    has_custom_resolution: hasResolution,
+    is_demo_user: false,
+    is_quick_play_multiplayer: !!quickPlayServer
+  }
 
   const maxMem = instance.maxMemoryMb ?? settings.defaultMaxMemoryMb
-  const minMem = instance.minMemoryMb ?? settings.defaultMinMemoryMb
+  // An instance's memory slider only sets the maximum, which can be below the default starting memory, and Java
+  // won't start when the starting memory is above the maximum.
+  const minMem = Math.min(instance.minMemoryMb ?? settings.defaultMinMemoryMb, maxMem)
   const jvm: string[] = [`-Xms${minMem}M`, `-Xmx${maxMem}M`]
   if (version.arguments?.jvm) {
     jvm.push(...expandArgs(version.arguments.jvm, vars, features))
@@ -208,6 +228,9 @@ export async function launchInstance(
     ? expandArgs(version.arguments.game, vars, features)
     : (version.minecraftArguments ?? '').split(' ').filter(Boolean).map((a) => a.replace(/\$\{(\w+)\}/g, (m, k: string) => vars[k] ?? m))
   if (!version.arguments?.game && hasResolution) game.push('--width', vars.resolution_width, '--height', vars.resolution_height)
+  // Forge/NeoForge's own argument string has no quick-play entry for expandArgs to fill in.
+  if (quickPlayServer && !version.arguments?.game) game.push('--quickPlayMultiplayer', quickPlayServer)
+  else if (server && !quickPlayServer) game.push(...legacyServerArgs(server))
   for (const tweaker of version.tweakers ?? []) game.push('--tweakClass', tweaker)
 
   const args = [...jvm, version.mainClass, ...game]
@@ -217,6 +240,7 @@ export async function launchInstance(
     'launcher'
   )
   cb.onLog(tr('log.launching', { version: version.id, loader: loaderLabel, java }), 'launcher')
+  if (server) cb.onLog(tr('log.joiningServer', { server }), 'launcher')
   cb.onLog(
     tr('log.arguments', { args: args.map((a) => (a === account.accessToken && a !== '0' ? '<access token>' : a)).join(' ') }),
     'launcher'

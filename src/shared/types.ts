@@ -128,6 +128,10 @@ export interface Instance {
   jvmArgs?: string
   width?: number
   height?: number
+  /** Id of the instance's icon. Unset = the default icon for its loader. */
+  icon?: string
+  /** Server address (`host` or `host:port`) the game joins as soon as it starts. Unset = the game's own menu. */
+  server?: string
 }
 
 /** "system" follows the operating system's light/dark setting. */

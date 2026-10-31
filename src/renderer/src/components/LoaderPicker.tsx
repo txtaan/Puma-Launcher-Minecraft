@@ -6,14 +6,36 @@ import { useStore } from '../store'
 export const LOADERS: { key: LoaderType; label: string }[] = [
   { key: 'vanilla', label: 'Vanilla' },
   { key: 'fabric', label: 'Fabric' },
-  { key: 'quilt', label: 'Quilt' },
   { key: 'forge', label: 'Forge' },
-  { key: 'neoforge', label: 'NeoForge' }
+  { key: 'neoforge', label: 'NeoForge' },
+  { key: 'quilt', label: 'Quilt' }
 ]
+
+export type ModLoaderType = Exclude<LoaderType, 'vanilla'>
 
 export function loaderLabel(loader: Instance['loader']): string {
   if (!loader) return 'Vanilla'
   return LOADERS.find((l) => l.key === loader.type)?.label ?? loader.type
+}
+
+const LAST_LOADER = 'puma.lastLoader'
+
+/** The mod loader the player chose last time (for a new instance, or added in the Mods window), if any. */
+export function rememberedLoader(): ModLoaderType | undefined {
+  try {
+    const saved = localStorage.getItem(LAST_LOADER)
+    return LOADERS.find((l) => l.key !== 'vanilla' && l.key === saved)?.key as ModLoaderType | undefined
+  } catch {
+    return undefined
+  }
+}
+
+export function rememberLoader(type: ModLoaderType): void {
+  try {
+    localStorage.setItem(LAST_LOADER, type)
+  } catch {
+    // No storage (e.g. disabled): the next dialog just starts from Fabric.
+  }
 }
 
 /**
@@ -23,11 +45,23 @@ export function loaderLabel(loader: Instance['loader']): string {
 export function LoaderPicker({
   mcVersion,
   value,
-  onChange
+  onChange,
+  allowVanilla = true,
+  describe = false,
+  label,
+  vanillaLabel
 }: {
   mcVersion: string
   value: Instance['loader']
   onChange: (loader: Instance['loader'] | undefined, ready: boolean) => void
+  /** false where the player has already said they want mods: only the loaders are offered. */
+  allowVanilla?: boolean
+  /** Show a one-line description of the chosen loader under the choices. */
+  describe?: boolean
+  /** Replaces the "Mod loader" title. */
+  label?: string
+  /** Replaces "Vanilla" on the no-loader choice (e.g. "No" under "Does the server use mods?"). */
+  vanillaLabel?: string
 }) {
   const { t } = useStore()
   const type: LoaderType = value?.type ?? 'vanilla'
@@ -36,9 +70,15 @@ export function LoaderPicker({
   const [showUnstable, setShowUnstable] = useState(false)
 
   useEffect(() => {
-    if (type === 'vanilla' || !mcVersion) {
+    if (type === 'vanilla') {
       setVersions(null)
       onChange(undefined, true)
+      return
+    }
+    // No Minecraft version picked yet: keep the loader, but there's nothing to look up.
+    if (!mcVersion) {
+      setVersions(null)
+      onChange(value, false)
       return
     }
     let cancelled = false
@@ -66,20 +106,22 @@ export function LoaderPicker({
 
   return (
     <div className="field">
-      <span>{t('loader.title')}</span>
-      <div className="segmented">
-        {LOADERS.map((l) => (
+      <span>{label ?? t('loader.title')}</span>
+      <div className="segmented self-start">
+        {LOADERS.filter((l) => allowVanilla || l.key !== 'vanilla').map((l) => (
           <button
             key={l.key}
             type="button"
             className={type === l.key ? 'active' : ''}
+            aria-pressed={type === l.key}
             onClick={() => onChange(l.key === 'vanilla' ? undefined : { type: l.key, version: '' }, l.key === 'vanilla')}
           >
-            {l.label}
+            {l.key === 'vanilla' && vanillaLabel ? vanillaLabel : l.label}
           </button>
         ))}
       </div>
-      {type !== 'vanilla' && (
+      {describe && type !== 'vanilla' && <p className="loader-about">{t(`loader.about.${type}`)}</p>}
+      {type !== 'vanilla' && mcVersion && (
         <div className="loader-version">
           {error && <div className="error-box">{error}</div>}
           {!versions && !error && (
@@ -96,7 +138,7 @@ export function LoaderPicker({
                 className="grow"
                 aria-label={t('loader.version')}
                 value={value?.version}
-                onChange={(e) => onChange({ type: type as Exclude<LoaderType, 'vanilla'>, version: e.target.value }, true)}
+                onChange={(e) => onChange({ type: type as ModLoaderType, version: e.target.value }, true)}
               >
                 {shown.map((v) => (
                   <option key={v.version} value={v.version}>

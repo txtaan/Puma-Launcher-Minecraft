@@ -6,29 +6,34 @@ import { Icon } from './Icon'
 const NAV: { page: Page; label: MessageKey; icon: string }[] = [
   { page: 'home', label: 'nav.home', icon: 'home' },
   { page: 'instances', label: 'nav.instances', icon: 'grid' },
-  { page: 'versions', label: 'nav.versions', icon: 'layers' },
-  { page: 'java', label: 'nav.java', icon: 'coffee' },
   { page: 'skins', label: 'nav.skins', icon: 'shirt' },
   { page: 'settings', label: 'nav.settings', icon: 'settings' }
 ]
 
+/** The nav item a page belongs to: Java and Versions open from Settings → Advanced. */
+const navPage = (page: Page): Page => (page === 'java' || page === 'versions' ? 'settings' : page)
+
 export function Sidebar() {
-  const { page, setPage, account, selectAccount, setConsoleOpen, consoleOpen, t, update, installUpdate, instances } = useStore()
+  const { page, setPage, account, selectAccount, t, update, installUpdate, instances } = useStore()
   const readyVersion = update && update.state.status === 'ready' ? update.state.version : null
   const gameRunning = instances.some((i) => i.running)
   return (
     <nav className="sidebar">
       <div className="nav">
-        {NAV.map((n) => (
-          <button key={n.page} className={`nav-item ${page === n.page ? 'active' : ''}`} onClick={() => setPage(n.page)}>
-            <Icon name={n.icon} />
-            <span>{t(n.label)}</span>
-          </button>
-        ))}
-        <button className={`nav-item ${consoleOpen ? 'active' : ''}`} onClick={() => setConsoleOpen(!consoleOpen)}>
-          <Icon name="terminal" />
-          <span>{t('nav.console')}</span>
-        </button>
+        {NAV.map((n) => {
+          const active = navPage(page) === n.page
+          return (
+            <button
+              key={n.page}
+              className={`nav-item ${active ? 'active' : ''}`}
+              aria-current={active ? 'page' : undefined}
+              onClick={() => setPage(n.page)}
+            >
+              <Icon name={n.icon} />
+              <span>{t(n.label)}</span>
+            </button>
+          )
+        })}
       </div>
       <div className="sidebar-foot">
         {readyVersion && (

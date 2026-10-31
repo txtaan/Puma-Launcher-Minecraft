@@ -32,10 +32,10 @@ with gold ingots and compete on a leaderboard beside the screen.
 
 **With Puma Launcher:**
 
-1. Create an instance with **Minecraft 26.3** and **Forge** (66.1 or newer). Among the recommended mods, tick
-   **Polymarket Prediction Market**.
-2. Or, for an instance you already have: **Instances** → the puzzle icon → **Browse mods** → **Polymarket Prediction Market** →
-   **Install**.
+1. Create an instance **With mods**, with **Minecraft 26.3** and **Forge** (66.1 or newer). Among the recommended
+   mods, tick **Polymarket Prediction Market**.
+2. Or, for an instance you already have: **Instances** → **Mods** on the instance → **Browse mods** → **Polymarket
+   Prediction Market** → **Install**.
 3. Start the game.
 
 The launcher downloads the jar from its GitHub release and checks it against the SHA-256 checksum GitHub publishes.

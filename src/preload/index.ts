@@ -36,10 +36,16 @@ export type InstanceWithState = Instance & {
   running: boolean
   /** The game's window is open; while `running` without it, the game is still opening. */
   windowOpen: boolean
+  /** Enabled mod jars in the instance's mods folder; undefined for vanilla instances. */
+  modCount?: number
 }
 
 const api = {
   platform: process.platform,
+  system: {
+    /** This computer's RAM, for sizing the game's memory. */
+    memory: () => invoke<{ totalMb: number }>('system:memory')
+  },
   window: {
     minimize: () => ipcRenderer.send('window:minimize'),
     maximize: () => ipcRenderer.send('window:maximize'),
@@ -75,8 +81,13 @@ const api = {
   },
   instances: {
     list: () => invoke<InstanceWithState[]>('instances:list'),
-    create: (name: string, versionId: string, loader?: Instance['loader'], modIds: string[] = []) =>
-      invoke<Instance>('instances:create', name, versionId, loader, modIds),
+    create: (
+      name: string,
+      versionId: string,
+      loader?: Instance['loader'],
+      modIds: string[] = [],
+      extra?: Pick<Instance, 'icon' | 'server'>
+    ) => invoke<Instance>('instances:create', name, versionId, loader, modIds, extra),
     update: (id: string, patch: Partial<Instance>) => invoke<Instance>('instances:update', id, patch),
     remove: (id: string) => invoke<void>('instances:delete', id),
     openFolder: (id: string) => invoke<string>('instances:openFolder', id),
