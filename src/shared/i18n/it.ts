@@ -34,7 +34,7 @@ export const it: Messages = {
   'account.microsoft': 'Microsoft',
   'account.microsoftAccount': 'Account Microsoft',
   'account.offline': 'Offline',
-  'account.offlineAccount': 'Account offline',
+  'account.offlineAccount': 'Account del launcher',
   'account.serverAccount': 'Account {server}',
 
   // Welcome / sign-in
@@ -300,7 +300,9 @@ export const it: Messages = {
   'skins.wardrobeEmpty': 'Il guardaroba è vuoto. Crea o importa una skin per iniziare.',
   'skins.openWardrobe': 'Apri il guardaroba',
   'skins.create': 'Crea',
-  'skins.createHint': 'Parti da un modello e dipingi sul personaggio in 3D.',
+  'skins.createTitle': 'Crea la tua skin',
+  'skins.createHint': 'Dipingi una nuova skin pixel per pixel, direttamente sul personaggio in 3D.',
+  'skins.createButton': 'Crea una skin',
   'skins.template.puma': 'Puma',
   'skins.template.explorer': 'Esploratore',
   'skins.template.blank': 'Vuota',

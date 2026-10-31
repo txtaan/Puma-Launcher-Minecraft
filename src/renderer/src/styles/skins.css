@@ -44,16 +44,16 @@
 .bento-count span { color: var(--text-muted); }
 .thumb-stack { display: flex; align-items: flex-end; height: 84px; padding-left: 2px; }
 .thumb-stack .skin-thumb { width: 56px; height: 84px; margin-right: -14px; filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.35)); }
-.template-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: auto; }
-.template-tile, .fav-tile {
+.bento-create-icon { color: var(--accent-text); }
+.bento-create-title { font-size: 18px; line-height: 1.25; }
+.bento-create-btn { align-self: flex-start; margin-top: auto; }
+.fav-tile {
   display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px 4px; font-size: 12px;
   border-radius: var(--radius); background: var(--surface); border: 1px solid var(--glass-border);
   transition: border-color 0.15s, transform 0.15s, background 0.15s;
 }
-.template-tile:hover, .fav-tile:hover { background: var(--surface-hover); border-color: var(--border-strong); transform: translateY(-2px); }
-.template-tile { font-size: 11px; }
-.template-tile .skin-thumb { width: 48px; height: 72px; }
-.template-tile span, .fav-tile span { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fav-tile:hover { background: var(--surface-hover); border-color: var(--border-strong); transform: translateY(-2px); }
+.fav-tile span { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .import-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: auto; }
 .player-fetch { flex: 1; min-width: 240px; display: flex; gap: 6px; padding: 4px; border-radius: var(--radius); background: var(--input-bg); border: 1px solid var(--border-strong); }
 .player-fetch input { flex: 1; min-width: 0; padding: 0 10px; background: none; border: 0; outline: none; color: var(--text); }
@@ -247,5 +247,5 @@
 
 /* Less motion (see app.css): skins don't lift or grow on hover */
 @media (prefers-reduced-motion: reduce) {
-  .template-tile:hover, .fav-tile:hover, .skin-card:hover, .skin-card:hover .skin-cover img { transform: none; }
+  .fav-tile:hover, .skin-card:hover, .skin-card:hover .skin-cover img { transform: none; }
 }

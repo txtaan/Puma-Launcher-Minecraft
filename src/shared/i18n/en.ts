@@ -33,7 +33,7 @@ export const en = {
   'account.microsoft': 'Microsoft',
   'account.microsoftAccount': 'Microsoft account',
   'account.offline': 'Offline',
-  'account.offlineAccount': 'Offline account',
+  'account.offlineAccount': 'Launcher account',
   'account.serverAccount': '{server} account',
 
   // Welcome / sign-in
@@ -298,7 +298,9 @@ export const en = {
   'skins.wardrobeEmpty': 'Your wardrobe is empty. Make a skin or import one to start.',
   'skins.openWardrobe': 'Open wardrobe',
   'skins.create': 'Create',
-  'skins.createHint': 'Start from a template and paint on the 3D model.',
+  'skins.createTitle': 'Make your own skin',
+  'skins.createHint': 'Paint a new skin pixel by pixel, right on the 3D model.',
+  'skins.createButton': 'Create a skin',
   'skins.template.puma': 'Puma',
   'skins.template.explorer': 'Explorer',
   'skins.template.blank': 'Blank',

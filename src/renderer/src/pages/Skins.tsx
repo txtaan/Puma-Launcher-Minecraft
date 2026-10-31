@@ -8,7 +8,7 @@ import { ServerSkinDialog } from '../skins/ServerSkin'
 import { SkinViewer } from '../skins/SkinViewer'
 import { SkinWardrobe } from '../skins/SkinWardrobe'
 import type { Animation } from '../skins/player'
-import { TEMPLATES, type TemplateId } from '../skins/templates'
+import type { TemplateId } from '../skins/templates'
 import { useStore } from '../store'
 import { prefersReducedMotion } from '../theme'
 
@@ -164,15 +164,12 @@ function SkinsHome({ go, actions }: { go: (v: SkinView) => void; actions: SkinAc
 
         <section className="bento-card glass bento-create">
           <span className="badge">{t('skins.create')}</span>
+          <Icon name="pencil" size={22} className="bento-create-icon" />
+          <strong className="bento-create-title">{t('skins.createTitle')}</strong>
           <p className="muted small">{t('skins.createHint')}</p>
-          <div className="template-row">
-            {TEMPLATES.map((id) => (
-              <button key={id} className="template-tile" onClick={() => go({ kind: 'editor', template: id, back: here })}>
-                <SkinThumb skin={templateSkin(id)} />
-                <span>{t(`skins.template.${id}`)}</span>
-              </button>
-            ))}
-          </div>
+          <button className="btn btn-primary btn-sm bento-create-btn" onClick={() => go({ kind: 'editor', template: 'puma', back: here })}>
+            <Icon name="plus" size={16} /> {t('skins.createButton')}
+          </button>
         </section>
 
         <section className="bento-card glass bento-import">

@@ -107,7 +107,7 @@ list opens.
 
 ### 7. Wear a skin (optional)
 
-Open **Skins**. Pick a skin in the **Wardrobe** and press **+** to wear it, or make your own: start from a template
+Open **Skins**. Pick a skin in the **Wardrobe** and press **+** to wear it, or make your own: press **Create a skin**
 under **Create** and paint it on the 3D model. You can also drop PNG skins onto the page, pick them with **From file**,
 or copy the skin any Java Edition player wears by typing their name.
 
