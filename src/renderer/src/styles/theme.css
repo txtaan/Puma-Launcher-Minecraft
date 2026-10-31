@@ -51,9 +51,6 @@
   --console-bg: rgba(8, 8, 14, 0.96);
   --log-text: #c9c9d9;
 
-  /* Instance cover tiles */
-  --cover-gradient: linear-gradient(125deg, #20314c 0%, #355888 45%, #6285b2 75%, #6a639c 100%);
-
   /* Primary button / brand gradient */
   --brand-gradient: linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%);
   /* Welcome screen: primary button and hint text over the jungle scene */
@@ -67,13 +64,12 @@
   --nav-indicator: #5485a7;
   --avatar-bg: linear-gradient(135deg, #20314c 0%, #6a639c 100%);
 
-  /* Home screen: hero glow, subtitle, Play button, version-card glows and recent-instance icons */
+  /* Home screen: hero glow, subtitle, Play button and version-card glows */
   --hero-shadow: 0 20px 60px rgba(216, 216, 216, 0.25);
   --hero-sub: #c2c2c2;
   --play-gradient: linear-gradient(90deg, #ffffff 0%, #999999 100%);
   --release-glow: #6285b2;
   --snapshot-glow: #355888;
-  --recent-icon-bg: var(--avatar-bg);
 
   /* Skins: behind the 3D models and skin pictures */
   --stage-bg: radial-gradient(ellipse at 50% 30%, #25304a 0%, #151522 58%, #0e0e17 100%);
@@ -111,7 +107,7 @@
   --accent-soft: rgba(229, 164, 61, 0.2);
   --accent-text: #8a5f1c;
   --success-soft: rgba(22, 163, 74, 0.12);
-  --success-text: #15803d;
+  --success-text: #166534; /* AA on --success-soft for small text (the "Saved" status, pills) */
   --danger-soft: rgba(220, 38, 38, 0.08);
   --danger-border: rgba(220, 38, 38, 0.3);
   --danger-text: #b91c1c;
@@ -136,7 +132,6 @@
   --hero-sub: #ffffff;
   --release-glow: transparent;
   --snapshot-glow: #b97c0c;
-  --recent-icon-bg: #be803b;
   --console-bg: rgba(255, 255, 255, 0.97);
   --log-text: #3b3852;
 
@@ -144,7 +139,6 @@
 
   --shadow: 0 10px 30px rgba(24, 20, 56, 0.12);
   --shadow-glow: 0 8px 24px rgba(190, 128, 59, 0.3);
-  --cover-gradient: linear-gradient(125deg, #9d712f 0%, #be803b 45%, #dead5f 80%, #e5a43d 100%);
 }
 
 /* The home screen hero sits on its own vivid gradient, so it keeps light text and dark glass in every theme. */

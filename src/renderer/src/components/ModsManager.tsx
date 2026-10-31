@@ -4,17 +4,30 @@ import { api, errorMessage } from '../api'
 import { modIcon } from '../modIcons'
 import { useStore } from '../store'
 import { Icon } from './Icon'
-import { loaderLabel } from './LoaderPicker'
+import { LoaderPicker, loaderLabel, rememberLoader, rememberedLoader } from './LoaderPicker'
 import { Modal } from './Modal'
 
 function compact(n: number, locale: string | undefined): string {
   return Intl.NumberFormat(locale, { notation: 'compact', maximumFractionDigits: 1 }).format(n)
 }
 
-/** Installed mods + Modrinth browser for one instance (Prism/HMCL-style mod management). */
-export function ModsManager({ instance, onClose }: { instance: Instance; onClose: () => void }) {
-  const { toast, t } = useStore()
-  const [tab, setTab] = useState<'installed' | 'browse'>('installed')
+/**
+ * Installed mods + Modrinth browser for one instance (Prism/HMCL-style mod management). `startTab` "browse" is for
+ * buttons that say "Add mods".
+ */
+export function ModsManager({
+  instance: opened,
+  startTab = 'installed',
+  onClose
+}: {
+  instance: Instance
+  startTab?: 'installed' | 'browse'
+  onClose: () => void
+}) {
+  const { refreshInstances, toast, t } = useStore()
+  // A vanilla instance can get a mod loader in here, so the window works from its own up-to-date copy.
+  const [instance, setInstance] = useState(opened)
+  const [tab, setTab] = useState(startTab)
   const [mods, setMods] = useState<InstalledMod[] | null>(null)
 
   const refresh = useCallback(async () => {
@@ -28,18 +41,26 @@ export function ModsManager({ instance, onClose }: { instance: Instance; onClose
 
   useEffect(() => void refresh(), [refresh])
 
+  // Instance cards show how many mods are on, so installing, removing or switching one updates them too.
+  const changed = useCallback(async () => {
+    await refresh()
+    void refreshInstances()
+  }, [refresh, refreshInstances])
+
   return (
     <Modal title={t('mods.title', { name: instance.name })} onClose={onClose} wide>
       <div className="row gap-s mods-head">
-        <div className="segmented">
-          <button className={tab === 'installed' ? 'active' : ''} onClick={() => setTab('installed')}>
-            {t('mods.installedTab')}
-            {mods ? ` (${mods.length})` : ''}
-          </button>
-          <button className={tab === 'browse' ? 'active' : ''} onClick={() => setTab('browse')}>
-            {t('mods.browse')}
-          </button>
-        </div>
+        {instance.loader && (
+          <div className="segmented">
+            <button className={tab === 'installed' ? 'active' : ''} onClick={() => setTab('installed')}>
+              {t('mods.installedTab')}
+              {mods ? ` (${mods.length})` : ''}
+            </button>
+            <button className={tab === 'browse' ? 'active' : ''} onClick={() => setTab('browse')}>
+              {t('mods.browse')}
+            </button>
+          </div>
+        )}
         <span className="pill">
           {loaderLabel(instance.loader)} · {instance.versionId}
         </span>
@@ -49,16 +70,63 @@ export function ModsManager({ instance, onClose }: { instance: Instance; onClose
       </div>
 
       {!instance.loader ? (
-        <div className="empty">
-          <Icon name="layers" size={28} />
-          <p>{t('mods.vanilla')}</p>
-        </div>
+        <AddLoader
+          instance={instance}
+          onAdded={(updated) => {
+            setInstance(updated)
+            setTab('browse')
+          }}
+        />
       ) : tab === 'installed' ? (
-        <InstalledList instance={instance} mods={mods} refresh={refresh} onBrowse={() => setTab('browse')} />
+        <InstalledList instance={instance} mods={mods} refresh={changed} onBrowse={() => setTab('browse')} />
       ) : (
-        <Browse instance={instance} onInstalled={refresh} />
+        <Browse instance={instance} onInstalled={changed} />
       )}
     </Modal>
+  )
+}
+
+/** A vanilla instance can't use mods yet: rather than a dead end, offer to add a mod loader right here. */
+function AddLoader({ instance, onAdded }: { instance: Instance; onAdded: (updated: Instance) => void }) {
+  const { refreshInstances, toast, t } = useStore()
+  const [loader, setLoader] = useState<Instance['loader']>({ type: rememberedLoader() ?? 'fabric', version: '' })
+  const [ready, setReady] = useState(false)
+  const [busy, setBusy] = useState(false)
+
+  const add = async () => {
+    if (!loader) return
+    setBusy(true)
+    try {
+      const updated = await api.instances.update(instance.id, { loader })
+      rememberLoader(loader.type)
+      await refreshInstances()
+      toast(t('mods.loaderAdded', { loader: loaderLabel(loader), name: instance.name }), 'success')
+      onAdded(updated)
+    } catch (err) {
+      toast(errorMessage(err), 'error')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <div className="empty add-loader">
+      <Icon name="layers" size={28} />
+      <p>{t('mods.vanilla')}</p>
+      <LoaderPicker
+        allowVanilla={false}
+        describe
+        mcVersion={instance.versionId}
+        value={loader}
+        onChange={(l, isReady) => {
+          setLoader(l)
+          setReady(isReady)
+        }}
+      />
+      <button className="btn btn-primary" disabled={!ready || busy} onClick={() => void add()}>
+        <Icon name="plus" size={16} /> {t('mods.addLoader', { loader: loaderLabel(loader) })}
+      </button>
+    </div>
   )
 }
 

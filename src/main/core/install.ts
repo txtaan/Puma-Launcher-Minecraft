@@ -53,6 +53,8 @@ export interface VersionJson {
   tweakers?: string[]
   extraJvmArgs?: string[]
   traits?: string[]
+  /** Vanilla's game arguments offer quick play's "join a server"; kept when a loader's `minecraftArguments` replace them. */
+  quickPlayMultiplayer?: boolean
 }
 
 interface AssetIndex {
@@ -117,6 +119,11 @@ export function nativePath(lib: Library, art: Artifact, classifier: string): str
   return art.path ?? mavenPath(`${lib.name}:${classifier}`)
 }
 
+/** Mojang's game arguments include quick play's "join this server" option (1.20 and later). */
+export function hasQuickPlayMultiplayer(args: Argument[] | undefined): boolean {
+  return !!args?.some((a) => typeof a !== 'string' && [a.value].flat().includes('--quickPlayMultiplayer'))
+}
+
 /**
  * Apply mod loader components (Prism's OneSix format) on top of a vanilla version, the way
  * Prism Launcher's LaunchProfile does: libraries are prepended (so they win de-duplication),
@@ -129,9 +136,13 @@ export function applyComponents(vanilla: VersionJson, components: Component[]): 
     out.libraries = [...libs, ...out.libraries]
     if (c.mainClass) out.mainClass = c.mainClass
     if (c.minecraftArguments) {
-      // Forge/NeoForge ship a complete legacy-style argument string; it replaces vanilla's game args.
+      // Forge/NeoForge ship a complete legacy-style argument string; it replaces vanilla's game args. Whether those
+      // had quick play is kept: 1.20+ ignores --server/--port, so a server is still joined through quick play.
       out.minecraftArguments = c.minecraftArguments
-      if (out.arguments) out.arguments = { ...out.arguments, game: undefined }
+      if (out.arguments) {
+        out.quickPlayMultiplayer ||= hasQuickPlayMultiplayer(out.arguments.game)
+        out.arguments = { ...out.arguments, game: undefined }
+      }
     }
     if (c.mavenFiles) out.mavenFiles = [...(out.mavenFiles ?? []), ...c.mavenFiles]
     if (c['+tweakers']) out.tweakers = [...(out.tweakers ?? []), ...c['+tweakers']]

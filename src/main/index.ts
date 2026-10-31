@@ -1,5 +1,6 @@
 import { app, BrowserWindow, clipboard, dialog, ipcMain, nativeTheme, shell } from 'electron'
 import { copyFile, mkdir, readFile, writeFile } from 'node:fs/promises'
+import { totalmem } from 'node:os'
 import { basename, extname, join } from 'node:path'
 import type { Instance, LoaderType, RawSkin, Settings, SkinSaveInput, ThemePreference } from '@shared/types'
 import * as auth from './core/auth'
@@ -187,14 +188,30 @@ function registerIpc(): void {
   })
 
   handle('instances:list', async () =>
-    (await instances.listInstances()).map((i) => ({ ...i, running: isRunning(i.id), windowOpen: isWindowOpen(i.id) }))
+    Promise.all(
+      (await instances.listInstances()).map(async (i) => ({
+        ...i,
+        running: isRunning(i.id),
+        windowOpen: isWindowOpen(i.id),
+        modCount: i.loader ? await mods.enabledModCount(i.id) : undefined
+      }))
+    )
   )
-  handle('instances:create', async (name: string, versionId: string, loader?: Instance['loader'], modIds: string[] = []) => {
-    const inst = await instances.createInstance(name, versionId, loader)
-    void prepareJava(inst)
-    if (modIds.length) void installModsInBackground(inst, modIds)
-    return inst
-  })
+  handle(
+    'instances:create',
+    async (
+      name: string,
+      versionId: string,
+      loader?: Instance['loader'],
+      modIds: string[] = [],
+      extra?: Pick<Instance, 'icon' | 'server'>
+    ) => {
+      const inst = await instances.createInstance(name, versionId, loader, extra)
+      void prepareJava(inst)
+      if (modIds.length) void installModsInBackground(inst, modIds)
+      return inst
+    }
+  )
   handle('instances:update', async (id: string, patch: Partial<Instance>) => {
     const before = await instances.getInstance(id)
     const inst = await instances.updateInstance(id, patch)
@@ -239,6 +256,7 @@ function registerIpc(): void {
     }
   })
   handle('paths:openRoot', () => shell.openPath(paths.root()))
+  handle('system:memory', () => ({ totalMb: Math.round(totalmem() / 1024 / 1024) }))
 
   // Skins
   handle('skins:list', () => skins.listSkins())

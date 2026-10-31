@@ -86,7 +86,8 @@ const versionList = (): VersionList => ({
 })
 
 /** Fake a multi-stage download, reporting progress like the real main process does. */
-async function simulate(taskId: string, title: string, stages: [string, number][]): Promise<void> {
+/** `work` runs before the task reports it's finished, like the real work in the main process. */
+async function simulate(taskId: string, title: string, stages: [string, number][], work?: () => void): Promise<void> {
   for (const [stage, total] of stages) {
     const step = Math.max(1, Math.round(total / 18))
     for (let done = 0; done <= total; done += step) {
@@ -94,6 +95,7 @@ async function simulate(taskId: string, title: string, stages: [string, number][
       await wait(60)
     }
   }
+  work?.()
   emit<ProgressEvent>('progress', { taskId, title, stage: tr('task.done'), done: 1, total: 1, finished: true })
 }
 
@@ -171,6 +173,7 @@ let update: UpdateInfo = { current: pkg.version, supported: true, method: 'resta
 
 const api: LauncherApi = {
   platform: 'win32',
+  system: { memory: async () => ({ totalMb: 16384 }) },
   window: { minimize: () => undefined, maximize: () => undefined, close: () => undefined },
   openExternal: async (url) => void window.open(url, '_blank'),
   copy: async (text) => void (await navigator.clipboard?.writeText(text).catch(() => undefined)),
@@ -230,13 +233,26 @@ const api: LauncherApi = {
     list: async (): Promise<InstanceWithState[]> =>
       [...instances]
         .sort((a, b) => (b.lastPlayed ?? b.createdAt) - (a.lastPlayed ?? a.createdAt))
-        .map((i) => ({ ...i, running: running.has(i.id), windowOpen: windowOpen.has(i.id) })),
-    create: async (name, versionId, loader, modIds = []) => {
-      const inst: Instance = { id: uuid(), name: name.trim() || versionId, versionId, loader, createdAt: Date.now() }
+        .map((i) => ({
+          ...i,
+          running: running.has(i.id),
+          windowOpen: windowOpen.has(i.id),
+          modCount: i.loader ? (mods.get(i.id) ?? []).filter((m) => m.enabled).length : undefined
+        })),
+    create: async (name, versionId, loader, modIds = [], extra) => {
+      const inst: Instance = {
+        id: uuid(),
+        name: name.trim() || versionId,
+        versionId,
+        loader,
+        icon: extra?.icon || undefined,
+        server: extra?.server?.trim() || undefined,
+        createdAt: Date.now()
+      }
       instances.push(inst)
       void prepareJava(inst)
       if (modIds.length) {
-        void simulate(`mods:${inst.id}`, `Mods for ${inst.name}`, [['Installing mods', modIds.length * 6]]).then(() =>
+        void simulate(`mods:${inst.id}`, `Mods for ${inst.name}`, [['Installing mods', modIds.length * 6]], () =>
           mods.set(
             inst.id,
             modIds.map((projectId) => {
@@ -253,8 +269,11 @@ const api: LauncherApi = {
     },
     update: async (id, patch) => {
       const i = instances.findIndex((x) => x.id === id)
-      instances[i] = { ...instances[i], ...patch, id }
-      return instances[i]
+      // Like the main process: the server is stored trimmed, and the list's live state isn't stored.
+      const { running: _running, windowOpen: _windowOpen, modCount: _modCount, ...changes } = patch as Partial<InstanceWithState>
+      instances[i] = { ...instances[i], ...changes, id }
+      if ('server' in changes) instances[i].server = changes.server?.trim() || undefined
+      return { ...instances[i] }
     },
     remove: async (id) => {
       const i = instances.findIndex((x) => x.id === id)
@@ -279,6 +298,7 @@ const api: LauncherApi = {
       const launchLine = tr('log.launching', { version: inst.versionId, loader: inst.loader ? ` + ${inst.loader.type} ${inst.loader.version}` : '', java: 'java' })
       const note = previewOnly('browser preview: no real game is started', 'anteprima nel browser: nessuna partita viene avviata davvero')
       emit<GameLogEvent>('game:log', { instanceId: id, stream: 'launcher', line: `${launchLine} (${note})` })
+      if (inst.server) emit<GameLogEvent>('game:log', { instanceId: id, stream: 'launcher', line: tr('log.joiningServer', { server: inst.server }) })
       for (const line of GAME_LOG) {
         // The real game takes a few seconds to open its window, which the launcher shows as "Opening…".
         await wait(line.startsWith('Backend library') ? 2500 : 250)

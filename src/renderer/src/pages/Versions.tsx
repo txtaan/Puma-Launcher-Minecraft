@@ -4,6 +4,7 @@ import type { VersionType } from '@shared/types'
 import { CreateInstance } from '../components/CreateInstance'
 import { Icon } from '../components/Icon'
 import { useStore } from '../store'
+import { BackToSettings } from './Settings'
 
 const TABS: { key: VersionType | 'all'; label: MessageKey }[] = [
   { key: 'release', label: 'type.releases' },
@@ -30,9 +31,10 @@ export function Versions() {
 
   return (
     <div className="page">
+      <BackToSettings />
       <div className="page-head">
         <div>
-          <h1>{t('nav.versions')}</h1>
+          <h1>{t('versions.title')}</h1>
           <p className="muted">
             {t('versions.subtitle')}
             {versions?.fetchedAt

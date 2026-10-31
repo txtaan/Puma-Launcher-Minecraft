@@ -104,6 +104,15 @@ export async function listMods(instanceId: string): Promise<InstalledMod[]> {
   return mods.sort((a, b) => a.name.localeCompare(b.name))
 }
 
+/** Enabled mod jars in an instance, for the instance list. Only reads the folder, so it stays cheap. */
+export async function enabledModCount(instanceId: string): Promise<number> {
+  try {
+    return (await readdir(modsDir(instanceId))).filter((f) => /\.jar$/i.test(f)).length
+  } catch {
+    return 0
+  }
+}
+
 export async function setModEnabled(instanceId: string, fileName: string, enabled: boolean): Promise<void> {
   const dir = modsDir(instanceId)
   const base = fileName.replace(/\.disabled$/i, '')

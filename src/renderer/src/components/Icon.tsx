@@ -52,7 +52,8 @@ const PATHS: Record<string, string> = {
   image: 'M4 4h16v16H4zM4 16l5-5 4 4 2-2 5 5M15.5 9h.01',
   save: 'M5 3.5h11l3 3V20.5H5zM8 3.5V8h7V3.5M8 20.5V14h8v6.5',
   dots: 'M5 12h.01M12 12h.01M19 12h.01',
-  rename: 'M5 7V5h14v2M12 5v14M9 19h6'
+  rename: 'M5 7V5h14v2M12 5v14M9 19h6',
+  cube: 'M12 2.5 20.5 7v10L12 21.5 3.5 17V7zM3.5 7l8.5 4.5L20.5 7M12 11.5v10'
 }
 
 /** Icons drawn as solid shapes rather than outlines. */

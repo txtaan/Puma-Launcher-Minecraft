@@ -1,12 +1,31 @@
+import { useLayoutEffect, useRef } from 'react'
 import { useStore } from '../store'
 
 /** Floating panel listing running downloads/launches with progress bars. */
 export function TaskDock() {
   const { tasks, t } = useStore()
   const list = Object.values(tasks)
-  if (!list.length) return null
+  const dock = useRef<HTMLDivElement>(null)
+  const shown = list.length > 0
+
+  // Toasts stack just above the dock (see .toasts in app.css), so they're told how much room it takes.
+  useLayoutEffect(() => {
+    const el = dock.current
+    if (!el) return
+    const root = document.documentElement.style
+    const measure = () => root.setProperty('--task-dock-space', `${el.offsetHeight + 8}px`)
+    const observer = new ResizeObserver(measure)
+    observer.observe(el)
+    measure()
+    return () => {
+      observer.disconnect()
+      root.removeProperty('--task-dock-space')
+    }
+  }, [shown])
+
+  if (!shown) return null
   return (
-    <div className="task-dock">
+    <div ref={dock} className="task-dock">
       {list.map((task) => {
         const pct = task.total ? Math.round((task.done / task.total) * 100) : 0
         return (

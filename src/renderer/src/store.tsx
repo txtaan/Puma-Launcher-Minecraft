@@ -5,6 +5,7 @@ import type { InstanceWithState } from '../../preload/index'
 import { api, errorMessage } from './api'
 import { setThemePreference } from './theme'
 
+/** `versions` and `java` aren't in the sidebar: they open from Settings → Advanced. */
 export type Page = 'home' | 'instances' | 'versions' | 'java' | 'skins' | 'settings'
 
 /** Asked before leaving a page with unsaved work: call `proceed` to leave. */
@@ -94,7 +95,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const toast = useCallback((text: string, kind: Toast['kind'] = 'info') => {
     const id = Date.now() + Math.random()
     setToasts((t) => [...t, { id, kind, text }])
-    setTimeout(() => setToasts((t) => t.filter((x) => x.id !== id)), kind === 'error' ? 8000 : 4500)
+    // Confirmations go quickly; errors and hints stay long enough to read.
+    setTimeout(() => setToasts((t) => t.filter((x) => x.id !== id)), kind === 'error' ? 8000 : kind === 'info' ? 4500 : 3000)
   }, [])
 
   const refreshAccounts = useCallback(async () => {
@@ -178,6 +180,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         setTasks((t) => ({ ...t, [e.taskId]: e }))
         if (e.finished) {
           if (e.error) toast(e.error, 'error')
+          // Mods picked when an instance was made install in the background; its card counts them.
+          if (e.taskId.startsWith('mods:')) void refreshInstances()
           setTimeout(() => setTasks(({ [e.taskId]: _, ...rest }) => rest), e.error ? 0 : 1200)
         }
       }),

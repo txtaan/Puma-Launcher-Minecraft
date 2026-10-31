@@ -57,8 +57,8 @@ rest="$(awk '/<!-- download-guide:start -->/{skip=1} !skip{print} /<!-- download
     echo
     echo '### 🧩 Polymarket Prediction Market mod (Forge 26.3)'
     echo
-    echo 'In Puma Launcher: a Forge 26.3 instance → mods (puzzle icon) → **Browse mods** → **Polymarket Prediction Market** → **Install**.  '
-    echo 'In Puma Launcher: un'"'"'istanza Forge 26.3 → mod (icona del puzzle) → **Sfoglia mod** → **Polymarket Prediction Market** → **Installa**.'
+    echo 'In Puma Launcher: a Forge 26.3 instance → **Mods** → **Browse mods** → **Polymarket Prediction Market** → **Install**.  '
+    echo 'In Puma Launcher: un'"'"'istanza Forge 26.3 → **Mod** → **Sfoglia mod** → **Polymarket Prediction Market** → **Installa**.'
     echo
     printf 'For a server or to install it by hand · Per un server o per installarla a mano: [`%s`](%s/%s)\n' "$mod" "$base" "$mod"
   fi

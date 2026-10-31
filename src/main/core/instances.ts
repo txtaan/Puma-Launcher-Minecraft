@@ -32,8 +32,27 @@ export async function getInstance(id: string): Promise<Instance> {
   return inst
 }
 
-export async function createInstance(name: string, versionId: string, loader?: Instance['loader']): Promise<Instance> {
-  const inst: Instance = { id: randomUUID(), name: name.trim() || versionId, versionId, loader, createdAt: Date.now() }
+/** Server addresses are stored trimmed; an empty one means "no server". */
+const cleanServer = (server?: string) => server?.trim() || undefined
+
+/** Live state the instance list adds to each instance (InstanceWithState in the preload); never stored. */
+const LIVE_FIELDS = ['running', 'windowOpen', 'modCount']
+
+export async function createInstance(
+  name: string,
+  versionId: string,
+  loader?: Instance['loader'],
+  extra?: Pick<Instance, 'icon' | 'server'>
+): Promise<Instance> {
+  const inst: Instance = {
+    id: randomUUID(),
+    name: name.trim() || versionId,
+    versionId,
+    loader,
+    icon: extra?.icon || undefined,
+    server: cleanServer(extra?.server),
+    createdAt: Date.now()
+  }
   await mkdir(gameDir(inst.id), { recursive: true })
   await writeJson(metaFile(inst.id), inst)
   return inst
@@ -41,6 +60,9 @@ export async function createInstance(name: string, versionId: string, loader?: I
 
 export async function updateInstance(id: string, patch: Partial<Instance>): Promise<Instance> {
   const inst = { ...(await getInstance(id)), ...patch, id }
+  if ('server' in patch) inst.server = cleanServer(patch.server)
+  // The renderer edits copies of listed instances, so their live state can come back in the patch.
+  for (const key of LIVE_FIELDS) delete (inst as Record<string, unknown>)[key]
   await writeJson(metaFile(id), inst)
   return inst
 }
